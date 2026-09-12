@@ -13,7 +13,9 @@ import android.graphics.Paint;
 import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.Typeface;
+import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
+import java.util.regex.Pattern;
 import android.os.Handler;
 import android.os.Looper;
 import android.text.Editable;
@@ -353,10 +355,25 @@ public class LayoutEditorActivity extends Activity
     }
   }
 
+  private static class QuickChip {
+    final Button button;
+    final String attrName;
+    final String insertText;
+    final String desc;
+    QuickChip(Button b, String attr, String insertText, String desc) {
+      this.button = b;
+      this.attrName = attr;
+      this.insertText = insertText;
+      this.desc = desc;
+    }
+  }
+  private final List<QuickChip> _quickChips = new ArrayList<QuickChip>();
+
   private void setup_quick_chips()
   {
     LinearLayout chipsBar = findViewById(R.id.layout_editor_quick_chips_bar);
     chipsBar.removeAllViews();
+    _quickChips.clear();
 
     final String[][] chips = new String[][]{
             {"⊙ c=\"\"", "c=\"\"", "c : Center primary character"},
@@ -381,6 +398,8 @@ public class LayoutEditorActivity extends Activity
     };
 
     int primaryColor = ContextCompat.getColor(this, R.color.settings_primary);
+    int normalBgColor = ContextCompat.getColor(this, R.color.settings_background);
+    int dividerColor = ContextCompat.getColor(this, R.color.settings_divider);
 
     for (final String[] chip : chips)
     {
@@ -388,13 +407,24 @@ public class LayoutEditorActivity extends Activity
       final String insertText = chip[1];
       final String desc = chip[2];
 
+      String attr = "";
+      if (insertText.contains("=")) {
+        attr = insertText.substring(0, insertText.indexOf("=")).trim();
+      } else if (insertText.startsWith("<") || insertText.startsWith("/")) {
+        attr = insertText.trim();
+      }
+
       Button b = new Button(this);
       b.setText(label);
       b.setTextSize(11.5f);
       b.setTextColor(primaryColor);
-      b.setBackgroundResource(R.drawable.bg_settings_card);
-      b.setBackgroundTintList(android.content.res.ColorStateList.valueOf(
-              ContextCompat.getColor(this, R.color.settings_background)));
+
+      GradientDrawable gd = new GradientDrawable();
+      gd.setColor(normalBgColor);
+      gd.setCornerRadius(dp(8));
+      gd.setStroke(dp(1), dividerColor);
+      b.setBackground(gd);
+
       b.setPadding(dp(6), dp(1), dp(6), dp(1));
       b.setMinHeight(0);
       b.setMinimumHeight(0);
@@ -423,6 +453,12 @@ public class LayoutEditorActivity extends Activity
               _input_editor.setSelection(Math.min(start, end) + quoteIdx + 1);
             else
               _input_editor.setSelection(Math.min(start, end) + insertText.length());
+
+            Layout l = _input_editor.getLayout();
+            if (l != null) {
+              int curLine = l.getLineForOffset(_input_editor.getSelectionStart());
+              highlight_key_for_line(curLine);
+            }
           }
         }
       });
@@ -440,6 +476,52 @@ public class LayoutEditorActivity extends Activity
       });
 
       chipsBar.addView(b);
+      _quickChips.add(new QuickChip(b, attr, insertText, desc));
+    }
+  }
+
+  private void update_quick_chips_highlight(String lineText)
+  {
+    int normalTextColor = ContextCompat.getColor(this, R.color.settings_primary);
+    int normalBgColor = ContextCompat.getColor(this, R.color.settings_background);
+    int dividerColor = ContextCompat.getColor(this, R.color.settings_divider);
+    int activeBgColor = Color.rgb(56, 189, 248); // Glowing cyan
+    int activeTextColor = Color.rgb(4, 43, 89);  // Contrast deep navy
+
+    for (QuickChip chip : _quickChips)
+    {
+      boolean isActive = false;
+      if (lineText != null && chip.attrName != null && !chip.attrName.isEmpty())
+      {
+        if (chip.attrName.startsWith("<") || chip.attrName.startsWith("/"))
+        {
+          isActive = lineText.contains(chip.attrName);
+        }
+        else
+        {
+          Pattern pattern = Pattern.compile("(?:\\s|^)" + Pattern.quote(chip.attrName) + "\\s*=");
+          isActive = pattern.matcher(lineText).find();
+        }
+      }
+
+      GradientDrawable gd = new GradientDrawable();
+      gd.setCornerRadius(dp(8));
+      if (isActive)
+      {
+        gd.setColor(activeBgColor);
+        gd.setStroke(dp(1.2f), Color.rgb(224, 242, 254));
+        chip.button.setBackground(gd);
+        chip.button.setTextColor(activeTextColor);
+        chip.button.setTypeface(null, Typeface.BOLD);
+      }
+      else
+      {
+        gd.setColor(normalBgColor);
+        gd.setStroke(dp(1), dividerColor);
+        chip.button.setBackground(gd);
+        chip.button.setTextColor(normalTextColor);
+        chip.button.setTypeface(null, Typeface.NORMAL);
+      }
     }
   }
 
@@ -553,7 +635,8 @@ public class LayoutEditorActivity extends Activity
         end--;
 
       _input_editor.setHighlightedLine(targetLine);
-      _input_editor.setSelection(start, end);
+      _input_editor.setSelection(start);
+      update_quick_chips_highlight(text.subSequence(start, end).toString());
       _input_editor.post(new Runnable() {
         @Override
         public void run() { _input_editor.scrollTo(0, _input_editor.getScrollY()); }
@@ -636,6 +719,21 @@ public class LayoutEditorActivity extends Activity
   private void highlight_key_for_line(int lineIndex)
   {
     _input_editor.setHighlightedLine(lineIndex);
+    Layout layout = _input_editor.getLayout();
+    Editable text = _input_editor.getText();
+    if (layout != null && text != null && lineIndex >= 0 && lineIndex < layout.getLineCount())
+    {
+      int start = layout.getLineStart(lineIndex);
+      int end = layout.getLineEnd(lineIndex);
+      while (end > start && (text.charAt(end - 1) == '\n' || text.charAt(end - 1) == '\r'))
+        end--;
+      update_quick_chips_highlight(text.subSequence(start, end).toString());
+    }
+    else
+    {
+      update_quick_chips_highlight(null);
+    }
+
     if (_keyboard_view == null) return;
     KeyboardData kd = _keyboard_view.getKeyboard();
     if (kd == null || kd.rows == null) return;
@@ -656,6 +754,11 @@ public class LayoutEditorActivity extends Activity
   }
 
   private int dp(int val)
+  {
+    return (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, val, getResources().getDisplayMetrics());
+  }
+
+  private int dp(float val)
   {
     return (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, val, getResources().getDisplayMetrics());
   }

@@ -46,6 +46,7 @@
         android:label="Layout Editor"
         android:theme="@style/settingsTheme"
         android:windowSoftInputMode="adjustResize"
+        android:exported="true"
         android:configChanges="orientation|screenSize|screenLayout|keyboardHidden" />
 
     <activity

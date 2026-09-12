@@ -610,7 +610,13 @@ public class CustomLayoutEditDialog
       setGravity(Gravity.TOP | Gravity.START);
       setMinLines(3);
       setMaxLines(Integer.MAX_VALUE);
-      style_input_box(this);
+      final boolean isDark = is_dark_theme(ctx);
+      final int text_color = isDark ? Color.rgb(241, 245, 249) : Color.rgb(23, 32, 42);
+      final int hint_color = isDark ? Color.rgb(100, 116, 139) : Color.rgb(152, 162, 171);
+      setTextColor(text_color);
+      setHintTextColor(hint_color);
+      setBackground(null);
+      setBackgroundColor(Color.TRANSPARENT);
       _on_change_throttler = new Handler(ctx.getMainLooper());
       checkAndUpdateGutterWidth();
     }
@@ -708,14 +714,7 @@ public class CustomLayoutEditDialog
               {
                 setHighlightedLine(line);
                 int start = layout.getLineStart(line);
-                int end = layout.getLineEnd(line);
-                CharSequence txt = getText();
-                if (txt != null)
-                {
-                  while (end > start && (txt.charAt(end - 1) == '\n' || txt.charAt(end - 1) == '\r'))
-                    end--;
-                }
-                setSelection(start, end);
+                setSelection(start);
                 if (_line_select_listener != null)
                   _line_select_listener.onLineSelected(line);
                 return true;
