@@ -269,6 +269,7 @@ public final class Pointers implements Handler.Callback
     }
     else
     {
+      stopLongPress(ptr);
       double a = Math.atan2(dy, dx) + Math.PI;
       int direction = ((int)(a * 8 / Math.PI) + 12) % 16;
       if (ptr.gesture == null)
@@ -294,7 +295,6 @@ public final class Pointers implements Handler.Callback
         else
         {
           ptr.value = apply_gesture(ptr, ptr.gesture.get_gesture());
-          restartLongPress(ptr);
           ptr.flags = 0;
           _handler.onPointerFlagsChanged(true);
         }
@@ -393,6 +393,8 @@ public final class Pointers implements Handler.Callback
 
   private void handleLongPress(Pointer ptr)
   {
+    if (ptr.gesture != null || ptr.hasFlagsAny(FLAG_P_SLIDING))
+      return;
     if ((ptr.flags & FLAG_P_LATCHABLE) != 0)
     {
       if (!ptr.hasFlagsAny(FLAG_P_CANT_LOCK))
