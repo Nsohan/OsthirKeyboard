@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/tab_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fitsSystemWindows="true"
+    android:background="@color/settings_background"
+    android:orientation="vertical">
+
+    <com.google.android.material.appbar.MaterialToolbar
+        android:id="@+id/tab_toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:background="@color/settings_background"
+        app:title="@string/tasker_builder_activity_title"
+        app:titleTextColor="@color/settings_on_surface"
+        app:navigationIconTint="@color/settings_on_surface"
+        app:navigationIcon="?attr/homeAsUpIndicator"
+        app:contentInsetStart="20dp"
+        app:contentInsetStartWithNavigation="16dp"
+        android:elevation="0dp" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingStart="20dp"
+        android:paddingTop="4dp"
+        android:paddingEnd="20dp"
+        android:paddingBottom="8dp"
+        android:text="@string/tasker_builder_activity_subtitle"
+        android:textColor="@color/settings_on_surface_variant"
+        android:textSize="13sp" />
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:clipToPadding="false"
+        android:fillViewport="true"
+        android:paddingStart="16dp"
+        android:paddingTop="4dp"
+        android:paddingEnd="16dp"
+        android:paddingBottom="8dp"
+        android:scrollbars="vertical">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <!-- nhck_replace / nhck_append / nhck_timeout: 3 fixed rows,
+                 always present, never added/removed. -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:text="@string/tasker_builder_section_global"
+                android:textColor="@color/settings_on_surface_variant"
+                android:textSize="12sp"
+                android:textStyle="bold" />
+
+            <LinearLayout
+                android:id="@+id/tab_global_card"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:background="@drawable/bg_settings_card"
+                android:elevation="0dp"
+                android:orientation="vertical"
+                android:padding="12dp" />
+
+            <!-- Dynamic keyword -> Tasker task name rows, used with
+                 nhck_replace / nhck_append triggers. -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:text="@string/tasker_builder_section_tasks"
+                android:textColor="@color/settings_on_surface_variant"
+                android:textSize="12sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:text="@string/tasker_builder_section_tasks_hint"
+                android:textColor="@color/settings_on_surface_variant"
+                android:textSize="11sp" />
+
+            <LinearLayout
+                android:id="@+id/tab_tasks_container"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:orientation="vertical" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/tab_add_task_button"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:minHeight="44dp"
+                app:cornerRadius="20dp"
+                app:strokeColor="@color/settings_divider"
+                android:textColor="@color/settings_primary"
+                android:text="@string/tasker_builder_add_task"
+                android:textAllCaps="false"
+                android:textSize="13sp" />
+
+            <!-- Dynamic nhck_patterns entries: each one gets its own
+                 card with 4 stacked fields (prefix / optional regex /
+                 suffix / task), since fitting 4 inputs side by side
+                 would be unreadable on a phone-width screen. -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:text="@string/tasker_builder_section_patterns"
+                android:textColor="@color/settings_on_surface_variant"
+                android:textSize="12sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:text="@string/tasker_builder_section_patterns_hint"
+                android:textColor="@color/settings_on_surface_variant"
+                android:textSize="11sp" />
+
+            <LinearLayout
+                android:id="@+id/tab_patterns_container"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:orientation="vertical" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/tab_add_pattern_button"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:layout_marginBottom="4dp"
+                android:minHeight="44dp"
+                app:cornerRadius="20dp"
+                app:strokeColor="@color/settings_divider"
+                android:textColor="@color/settings_primary"
+                android:text="@string/tasker_builder_add_pattern"
+                android:textAllCaps="false"
+                android:textSize="13sp" />
+
+        </LinearLayout>
+
+    </ScrollView>
+
+    <TextView
+        android:id="@+id/tab_error_text"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        android:textColor="@color/settings_error"
+        android:textSize="12sp"
+        android:visibility="gone" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/tab_save_button"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="16dp"
+        android:minHeight="48dp"
+        android:backgroundTint="@color/settings_primary"
+        android:textColor="@color/settings_on_primary"
+        app:cornerRadius="24dp"
+        android:text="@string/tasker_builder_save"
+        android:textAllCaps="false"
+        android:textSize="15sp"
+        android:textStyle="bold" />
+
+</LinearLayout>

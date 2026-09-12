@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<keyboard name="বাংলা (প্রভাত)" script="bengali" dictionary="bn">
+  <!-- Row 1 (12 keys - Width: 12.0) -->
+  <row>
+    <key c="দ" n="ধ" sw="!" se="loc esc" />
+    <key c="ূ" n="ঊ" sw="\@" />
+    <key c="ী" n="ঈ" sw="\#" />
+    <key c="র" n="ড়" se="র্" />
+    <key c="ট" n="ঠ" sw="%" se="৳" />
+    <key c="এ" n="ঐ" sw="^" se="ঞ" />
+    <key c="ু" n="উ" sw="&amp;" />
+    <key c="ি" n="ই" sw="*" />
+    <key c="ও" n="ঔ" se=")" />
+    <key c="প" n="ফ" se="_" />
+    <key c="ে" n="ৈ" sw="=" se="+" />
+    <key c="ো" n="ৌ" sw="[" se="]" />
+  </row>
+
+  <!-- Row 2 (9 keys - Width: 12.0, centered with 0.6 half-key stagger) -->
+  <row>
+    <key shift="0.6" width="1.2" c="া" n="অ" se="loc tab" />
+    <key width="1.2" c="স" n="ষ" />
+    <key width="1.2" c="ড" n="ঢ" />
+    <key width="1.2" c="ত" n="থ" />
+    <key width="1.2" c="গ" n="ঘ" />
+    <key width="1.2" c="হ" n="ঃ" />
+    <key width="1.2" c="জ" n="ঝ" />
+    <key width="1.2" c="ক" n="খ" />
+    <key width="1.2" c="ল" n="ং" se="॥" />
+  </row>
+
+  <!-- Row 3 (1.5 + 9 keys + 1.5 = 12.0) -->
+  <row>
+    <key role="action" width="1.5" c="shift" ne="loc capslock" />
+    <key c="য়" n="য" />
+    <key c="শ" n="ঢ়" />
+    <key c="চ" n="ছ" />
+    <key c="আ" n="ঋ" />
+    <key c="ব" n="ভ" sw="\?" />
+    <key c="ন" n="ণ" />
+    <key c="ম" n="ঙ" />
+    <key c="," n="&lt;" nw="্" ne="ৎ" />
+    <key c="." n="&gt;" nw="।" se="ৃ" sw="ঁ" ne="়" />
+    <key role="action" width="1.5" c="backspace" ne="delete" />
+  </row>
+</keyboard>

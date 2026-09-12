@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/settings_background"
+    android:fitsSystemWindows="true">
+
+  <com.google.android.material.appbar.MaterialToolbar
+      android:id="@+id/dictionaries_toolbar"
+      android:layout_width="match_parent"
+      android:layout_height="?attr/actionBarSize"
+      android:background="@color/settings_background"
+      app:titleTextColor="@color/settings_on_surface"
+      app:navigationIconTint="@color/settings_on_surface"
+      app:navigationIcon="?attr/homeAsUpIndicator"
+      app:contentInsetStart="20dp"
+      app:contentInsetStartWithNavigation="16dp"
+      android:elevation="0dp"/>
+
+  <androidx.core.widget.NestedScrollView
+      android:layout_width="match_parent"
+      android:layout_height="match_parent"
+      android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingTop="8dp"
+        android:paddingBottom="24dp">
+
+      <TextView
+          android:id="@+id/dictionaries_header"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:paddingStart="24dp"
+          android:paddingEnd="24dp"
+          android:paddingTop="12dp"
+          android:paddingBottom="8dp"
+          android:text="@string/dictionaries_from_internet"
+          android:textColor="@color/settings_on_surface_variant"
+          android:textAppearance="@style/settingsCategoryTitle"
+          android:fontFamily="sans-serif-medium"
+          android:textSize="12sp"
+          android:textAllCaps="true"
+          android:letterSpacing="0.04"/>
+
+      <com.nhs.customkeyboard.dict.DictionaryListView
+          android:id="@+id/dictionaries_device_locales"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          device_locales="true"/>
+
+      <com.nhs.customkeyboard.dict.DictionaryListView
+          android:id="@+id/dictionaries_all_locales"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:layout_marginTop="16dp"
+          device_locales="false"/>
+
+    </LinearLayout>
+  </androidx.core.widget.NestedScrollView>
+
+</LinearLayout>

@@ -1,0 +1,212 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto">
+
+  <!-- Group 1: Languages, Preferences, Theme -->
+  <PreferenceCategory android:key="cat_group_general" android:layout="@layout/pref_category_space">
+    <!-- 1. Languages -->
+    <PreferenceScreen
+        android:key="screen_languages"
+        android:title="@string/pref_screen_languages_title"
+        android:summary="@string/pref_screen_languages_summary"
+        android:icon="@drawable/ic_globe">
+      <PreferenceCategory android:title="@string/pref_category_layout" android:layout="@layout/pref_category_settings">
+        <com.nhs.customkeyboard.prefs.LayoutsPreference/>
+      </PreferenceCategory>
+      <PreferenceCategory android:title="@string/pref_category_layout_options" android:layout="@layout/pref_category_settings">
+        <com.nhs.customkeyboard.prefs.DefaultLayoutPreference android:title="@string/pref_default_layout_title" android:icon="@drawable/ic_keyboard"/>
+        <PreferenceScreen android:key="extra_keys_screen" android:title="@string/pref_extra_keys_title" android:icon="@drawable/ic_special_key">
+          <PreferenceCategory android:title="@string/pref_extra_keys_custom" android:layout="@layout/pref_category_settings">
+            <com.nhs.customkeyboard.prefs.CustomExtraKeysPreference android:icon="@drawable/ic_special_key"/>
+          </PreferenceCategory>
+          <com.nhs.customkeyboard.prefs.ExtraKeysPreference android:title="@string/pref_extra_keys_internal" android:icon="@drawable/ic_special_key"/>
+        </PreferenceScreen>
+        <ListPreference android:key="number_row" android:title="@string/pref_number_row_title" android:summary="%s" android:defaultValue="symbols" android:entries="@array/pref_show_number_row_entries" android:entryValues="@array/pref_show_number_row_values" android:icon="@drawable/ic_num_key"/>
+        <com.nhs.customkeyboard.prefs.IntSlideBarPreference android:key="number_row_height" android:icon="@drawable/ic_height" android:title="@string/pref_number_row_height_title" android:summary="%s%%" android:defaultValue="100" min="50" max="150"/>
+        <ListPreference android:key="show_numpad" android:title="@string/pref_show_numpad_title" android:summary="%s" android:defaultValue="1" android:entries="@array/pref_show_numpad_entries" android:entryValues="@array/pref_show_numpad_values" android:icon="@drawable/ic_numpad"/>
+        <ListPreference android:key="numpad_layout" android:title="@string/pref_numpad_layout" android:summary="%s" android:defaultValue="high_first" android:entries="@array/pref_numpad_layout_entries" android:entryValues="@array/pref_numpad_layout_values" android:icon="@drawable/ic_num_order"/>
+        <ListPreference android:key="split_layout" android:title="@string/pref_split_layout" android:summary="%s" android:defaultValue="wide" android:entries="@array/pref_split_layout_entries" android:entryValues="@array/pref_split_layout_values" android:icon="@drawable/ic_split_key"/>
+      </PreferenceCategory>
+    </PreferenceScreen>
+
+    <!-- 2. Preferences -->
+    <PreferenceScreen
+        android:key="screen_preferences"
+        android:title="@string/pref_screen_preferences_title"
+        android:icon="@drawable/ic_tune">
+      <PreferenceCategory android:title="@string/pref_category_behavior" android:layout="@layout/pref_category_settings">
+        <SwitchPreferenceCompat android:key="autocapitalisation" android:icon="@drawable/ic_capital" android:title="@string/pref_autocapitalisation_title" android:summary="@string/pref_autocapitalisation_summary" android:defaultValue="true"/>
+        <SwitchPreferenceCompat android:key="period_key_bottom_row" android:icon="@drawable/ic_special_key" android:title="@string/pref_period_key_bottom_row_title" android:summary="@string/pref_period_key_bottom_row_summary" android:defaultValue="true"/>
+        <ListPreference android:key="change_method_key_replacement" android:icon="@drawable/ic_keyboard" android:title="@string/pref_change_method_key_replacement_title" android:summary="%s" android:entries="@array/pref_change_method_key_replacement_entries" android:entryValues="@array/pref_change_method_key_replacement_values" android:defaultValue="prev"/>
+        <SwitchPreferenceCompat android:key="vibrate_custom" android:icon="@drawable/ic_vibration" android:title="@string/pref_vibrate_custom" android:defaultValue="false"/>
+        <com.nhs.customkeyboard.prefs.IntSlideBarPreference android:dependency="vibrate_custom" android:icon="@drawable/ic_intensity" android:key="vibrate_duration" android:title="@string/pref_vibrate_duration_title" android:summary="%sms" android:defaultValue="20" min="0" max="100"/>
+        <ListPreference android:key="number_entry_layout" android:icon="@drawable/ic_numpad" android:title="@string/pref_number_entry_title" android:summary="%s" android:defaultValue="pin" android:entries="@array/pref_number_entry_entries" android:entryValues="@array/pref_number_entry_values"/>
+        <ListPreference android:key="physical_keyboard_behavior" android:icon="@drawable/ic_physical" android:title="@string/pref_physical_keyboard_behavior" android:summary="%s" android:defaultValue="hide" android:entries="@array/pref_physical_keyboard_behavior_entries" android:entryValues="@array/pref_physical_keyboard_behavior_values"/>
+      </PreferenceCategory>
+    </PreferenceScreen>
+
+    <!-- 3. Theme -->
+    <PreferenceScreen
+        android:key="screen_theme"
+        android:title="@string/pref_screen_theme_title"
+        android:icon="@drawable/ic_palette">
+      <PreferenceCategory android:title="@string/pref_category_style" android:layout="@layout/pref_category_settings">
+        <ListPreference android:key="theme" android:icon="@drawable/ic_theme" android:title="@string/pref_theme" android:summary="%s" android:defaultValue="system" android:entries="@array/pref_theme_entries" android:entryValues="@array/pref_theme_values"/>
+        <com.nhs.customkeyboard.prefs.IntSlideBarPreference android:key="label_brightness" android:icon="@drawable/ic_brightness" android:title="@string/pref_label_brightness" android:summary="%s%%" android:defaultValue="100" min="50" max="100"/>
+        <com.nhs.customkeyboard.prefs.IntSlideBarPreference android:key="keyboard_opacity" android:icon="@drawable/ic_opacity" android:title="@string/pref_keyboard_opacity" android:summary="%s%%" android:defaultValue="100" min="0" max="100"/>
+        <com.nhs.customkeyboard.prefs.IntSlideBarPreference android:key="key_opacity" android:icon="@drawable/ic_opacity" android:title="@string/pref_key_opacity" android:summary="%s%%" android:defaultValue="100" min="0" max="100"/>
+        <com.nhs.customkeyboard.prefs.IntSlideBarPreference android:key="key_activated_opacity" android:icon="@drawable/ic_opacity" android:title="@string/pref_key_activated_opacity" android:summary="%s%%" android:defaultValue="100" min="0" max="100"/>
+        <PreferenceScreen android:key="margin_bottom_screen" android:icon="@drawable/ic_margin" android:title="@string/pref_margin_bottom_title">
+          <PreferenceCategory android:title="@string/pref_margin_bottom_title" android:layout="@layout/pref_category_settings">
+            <com.nhs.customkeyboard.prefs.IntSlideBarPreference android:key="margin_bottom_portrait" android:icon="@drawable/ic_margin" android:title="@string/pref_portrait" android:summary="%sdp" android:defaultValue="7" min="0" max="250"/>
+            <com.nhs.customkeyboard.prefs.IntSlideBarPreference android:key="margin_bottom_landscape" android:icon="@drawable/ic_margin" android:title="@string/pref_landscape" android:summary="%sdp" android:defaultValue="3" min="0" max="120"/>
+            <com.nhs.customkeyboard.prefs.IntSlideBarPreference android:key="margin_bottom_portrait_unfolded" android:icon="@drawable/ic_margin" android:title="@string/pref_portrait_unfolded" android:summary="%sdp" android:defaultValue="7" min="0" max="250"/>
+            <com.nhs.customkeyboard.prefs.IntSlideBarPreference android:key="margin_bottom_landscape_unfolded" android:icon="@drawable/ic_margin" android:title="@string/pref_landscape_unfolded" android:summary="%sdp" android:defaultValue="3" min="0" max="250"/>
+          </PreferenceCategory>
+        </PreferenceScreen>
+        <PreferenceScreen android:key="keyboard_height_screen" android:icon="@drawable/ic_height" android:title="@string/pref_keyboard_height_title">
+          <PreferenceCategory android:title="@string/pref_keyboard_height_title" android:layout="@layout/pref_category_settings">
+            <com.nhs.customkeyboard.prefs.IntSlideBarPreference android:key="keyboard_height" android:icon="@drawable/ic_height" android:title="@string/pref_portrait" android:summary="%s%%" android:defaultValue="35" min="10" max="100"/>
+            <com.nhs.customkeyboard.prefs.IntSlideBarPreference android:key="keyboard_height_landscape" android:icon="@drawable/ic_height" android:title="@string/pref_landscape" android:summary="%s%%" android:defaultValue="50" min="20" max="65"/>
+            <com.nhs.customkeyboard.prefs.IntSlideBarPreference android:key="keyboard_height_unfolded" android:icon="@drawable/ic_height" android:title="@string/pref_portrait_unfolded" android:summary="%s%%" android:defaultValue="35" min="10" max="50"/>
+            <com.nhs.customkeyboard.prefs.IntSlideBarPreference android:key="keyboard_height_landscape_unfolded" android:icon="@drawable/ic_height" android:title="@string/pref_landscape_unfolded" android:summary="%s%%" android:defaultValue="50" min="20" max="65"/>
+            <com.nhs.customkeyboard.prefs.IntSlideBarPreference android:key="number_row_height" android:icon="@drawable/ic_height" android:title="@string/pref_number_row_height_title" android:summary="%s%%" android:defaultValue="100" min="50" max="150"/>
+            <com.nhs.customkeyboard.prefs.IntSlideBarPreference android:key="suggestion_bar_height" android:icon="@drawable/ic_height" android:title="@string/pref_suggestion_bar_height_title" android:summary="%s%%" android:defaultValue="100" min="50" max="150"/>
+            <com.nhs.customkeyboard.prefs.IntSlideBarPreference android:key="suggestion_text_size" android:icon="@drawable/ic_lable_size" android:title="@string/pref_suggestion_text_size_title" android:summary="%spx" android:defaultValue="15" min="8" max="28"/>
+          </PreferenceCategory>
+        </PreferenceScreen>
+        <PreferenceScreen android:key="horizontal_margin_screen" android:icon="@drawable/ic_margin" android:title="@string/pref_horizontal_margin_title">
+          <PreferenceCategory android:title="@string/pref_horizontal_margin_title" android:layout="@layout/pref_category_settings">
+            <com.nhs.customkeyboard.prefs.IntSlideBarPreference android:key="horizontal_margin_portrait" android:icon="@drawable/ic_margin" android:title="@string/pref_portrait" android:summary="%sdp" android:defaultValue="3" min="0" max="30"/>
+            <com.nhs.customkeyboard.prefs.IntSlideBarPreference android:key="horizontal_margin_landscape" android:icon="@drawable/ic_margin" android:title="@string/pref_landscape" android:summary="%sdp" android:defaultValue="28" min="0" max="200"/>
+            <com.nhs.customkeyboard.prefs.IntSlideBarPreference android:key="horizontal_margin_portrait_unfolded" android:icon="@drawable/ic_margin" android:title="@string/pref_portrait_unfolded" android:summary="%sdp" android:defaultValue="3" min="0" max="30"/>
+            <com.nhs.customkeyboard.prefs.IntSlideBarPreference android:key="horizontal_margin_landscape_unfolded" android:icon="@drawable/ic_margin" android:title="@string/pref_landscape_unfolded" android:summary="%sdp" android:defaultValue="28" min="0" max="200"/>
+          </PreferenceCategory>
+        </PreferenceScreen>
+        <com.nhs.customkeyboard.prefs.SlideBarPreference android:key="character_size" android:icon="@drawable/ic_lable_size" android:title="@string/pref_character_size_title" android:summary="@string/pref_character_size_summary" android:defaultValue="1.15" min="0.75" max="1.5"/>
+        <com.nhs.customkeyboard.prefs.SlideBarPreference android:key="key_vertical_margin" android:icon="@drawable/ic_vertical_spacing" android:title="@string/pref_key_vertical_space" android:summary="%s%%" android:defaultValue="1.5" min="0" max="5"/>
+        <com.nhs.customkeyboard.prefs.SlideBarPreference android:key="key_horizontal_margin" android:icon="@drawable/ic_horizontal_spacing" android:title="@string/pref_key_horizontal_space" android:summary="%s%%" android:defaultValue="2" min="0" max="5"/>
+        <SwitchPreferenceCompat android:key="border_config" android:icon="@drawable/ic_border" android:title="@string/pref_border_config_title" android:defaultValue="false"/>
+        <com.nhs.customkeyboard.prefs.IntSlideBarPreference android:key="custom_border_radius" android:icon="@drawable/ic_radius" android:title="@string/pref_corners_radius_title" android:summary="%s%%" android:defaultValue="0" min="0" max="100" android:dependency="border_config"/>
+        <com.nhs.customkeyboard.prefs.SlideBarPreference android:key="custom_border_line_width" android:icon="@drawable/ic_border_width" android:title="@string/pref_border_width_title" android:summary="%sdp" android:defaultValue="0" min="0" max="5" android:dependency="border_config"/>
+      </PreferenceCategory>
+      <PreferenceCategory android:title="@string/pref_category_gif" android:layout="@layout/pref_category_settings">
+        <EditTextPreference
+            android:key="giphy_api_key"
+            android:icon="@drawable/ic_gif"
+            android:title="@string/pref_giphy_api_key_title"
+            android:summary="@string/pref_giphy_api_key_summary"
+            android:dialogTitle="@string/pref_giphy_api_key_title"
+            android:dialogMessage="@string/pref_giphy_api_key_dialog_message"/>
+      </PreferenceCategory>
+    </PreferenceScreen>
+  </PreferenceCategory>
+
+  <!-- Group 2: Corrections & suggestions, Glide typing -->
+  <PreferenceCategory android:key="cat_group_input" android:layout="@layout/pref_category_space">
+    <!-- 4. Corrections & suggestions -->
+    <PreferenceScreen
+        android:key="screen_suggestions"
+        android:title="@string/pref_screen_suggestions_title"
+        android:icon="@drawable/ic_spellcheck">
+      <PreferenceCategory android:title="@string/pref_category_suggestions" android:layout="@layout/pref_category_settings">
+        <SwitchPreferenceCompat android:key="suggestions" android:icon="@drawable/ic_suggestions" android:title="@string/pref_suggestions_title" android:summary="@string/pref_suggestions_summary" android:defaultValue="true"/>
+        <com.nhs.customkeyboard.prefs.IntSlideBarPreference android:key="suggestion_bar_height" android:icon="@drawable/ic_height" android:title="@string/pref_suggestion_bar_height_title" android:summary="%s%%" android:defaultValue="100" min="50" max="150"/>
+        <com.nhs.customkeyboard.prefs.IntSlideBarPreference android:key="suggestion_text_size" android:icon="@drawable/ic_lable_size" android:title="@string/pref_suggestion_text_size_title" android:summary="%spx" android:defaultValue="15" min="8" max="28"/>
+        <SwitchPreferenceCompat android:key="show_toolbar" android:icon="@drawable/ic_grid_menu" android:title="@string/pref_show_toolbar_title" android:summary="@string/pref_show_toolbar_summary" android:defaultValue="true"/>
+        <PreferenceScreen
+            android:key="suggestion_tools_screen"
+            android:icon="@drawable/ic_suggestion_tools"
+            android:title="@string/pref_suggestion_tools_title"
+            android:summary="@string/pref_suggestion_tools_summary">
+          <PreferenceCategory android:title="@string/pref_suggestion_tools_title" android:layout="@layout/pref_category_settings">
+            <com.nhs.customkeyboard.prefs.SuggestionToolsPreference
+                android:key="suggestion_tools_pref"/>
+          </PreferenceCategory>
+        </PreferenceScreen>
+        <SwitchPreferenceCompat android:key="show_voice_typing" android:icon="@drawable/ic_mic" android:title="@string/pref_show_voice_typing_title" android:summary="@string/pref_show_voice_typing_summary" android:defaultValue="true"/>
+        <SwitchPreferenceCompat android:key="show_dictionary_switch" android:icon="@drawable/ic_globe" android:title="@string/pref_show_dictionary_switch_title" android:summary="@string/pref_show_dictionary_switch_summary" android:defaultValue="false"/>
+        <SwitchPreferenceCompat android:key="space_bar_auto_complete" android:icon="@drawable/ic_auto_complete" android:title="@string/pref_space_bar_auto_complete_title" android:summary="@string/pref_space_bar_auto_complete_summary" android:defaultValue="false"/>
+      </PreferenceCategory>
+    </PreferenceScreen>
+
+    <!-- 5. Glide typing -->
+    <PreferenceScreen
+        android:key="screen_typing"
+        android:title="@string/pref_screen_typing_title"
+        android:icon="@drawable/ic_gesture">
+      <PreferenceCategory android:title="@string/pref_category_typing" android:layout="@layout/pref_category_settings">
+        <ListPreference android:key="swipe_dist" android:icon="@drawable/ic_swipe" android:title="@string/pref_swipe_dist_title" android:summary="@string/pref_swipe_dist_summary" android:defaultValue="15" android:entries="@array/pref_swipe_dist_entries" android:entryValues="@array/pref_swipe_dist_values"/>
+        <ListPreference android:key="circle_sensitivity" android:icon="@drawable/ic_circle_sensitivity" android:title="@string/pref_circle_sensitivity_title" android:summary="%s" android:defaultValue="2" android:entries="@array/pref_circle_sensitivity_entries" android:entryValues="@array/pref_circle_sensitivity_values"/>
+        <ListPreference android:key="slider_sensitivity" android:icon="@drawable/ic_slider_sensitivity" android:title="@string/pref_slider_sensitivity_title" android:summary="%s" android:defaultValue="30" android:entries="@array/pref_slider_sensitivity_entries" android:entryValues="@array/pref_slider_sensitivity_values"/>
+        <com.nhs.customkeyboard.prefs.IntSlideBarPreference android:key="longpress_timeout" android:icon="@drawable/ic_long_press_timeout" android:title="@string/pref_long_timeout_title" android:summary="%sms" android:defaultValue="200" min="50" max="2000"/>
+        <SwitchPreferenceCompat android:key="longpress_custom_char_enabled" android:icon="@drawable/ic_time" android:title="@string/pref_longpress_custom_char_title" android:summary="@string/pref_longpress_custom_char_summary" android:defaultValue="true"/>
+        <SwitchPreferenceCompat android:key="keyrepeat_enabled" android:icon="@drawable/ic_key_repeat" android:title="@string/pref_keyrepeat_enabled" android:defaultValue="true"/>
+        <com.nhs.customkeyboard.prefs.IntSlideBarPreference android:key="longpress_interval" android:icon="@drawable/ic_time" android:dependency="keyrepeat_enabled" android:title="@string/pref_long_interval_title" android:summary="%sms" android:defaultValue="25" min="5" max="100"/>
+        <SwitchPreferenceCompat android:key="lock_double_tap" android:icon="@drawable/ic_shift" android:title="@string/pref_lock_double_tap_title" android:summary="@string/pref_lock_double_tap_summary" android:defaultValue="false"/>
+      </PreferenceCategory>
+    </PreferenceScreen>
+  </PreferenceCategory>
+
+  <!-- Group 3: Clipboard, Dictionary -->
+  <PreferenceCategory android:key="cat_group_tools" android:layout="@layout/pref_category_space">
+    <!-- 6. Clipboard -->
+    <PreferenceScreen
+        android:key="screen_clipboard"
+        android:title="@string/pref_screen_clipboard_title"
+        android:icon="@drawable/ic_clipboard_outline">
+      <PreferenceCategory android:title="@string/pref_category_clipboard" android:layout="@layout/pref_category_settings">
+        <ListPreference android:key="clipboard_history_duration" android:icon="@drawable/ic_clipboard" android:title="@string/pref_clipboard_history_duration" android:summary="%s" android:defaultValue="5" android:entries="@array/pref_clipboard_duration_entries" android:entryValues="@array/pref_clipboard_duration_values"/>
+      </PreferenceCategory>
+    </PreferenceScreen>
+
+    <!-- 7. Dictionary -->
+    <Preference
+        android:key="screen_dictionary"
+        android:title="@string/pref_screen_dictionary_title"
+        android:icon="@drawable/ic_menu_book" />
+  </PreferenceCategory>
+
+  <!-- Group 4: Tasker & Automation, About -->
+  <PreferenceCategory android:key="cat_group_about" android:layout="@layout/pref_category_space">
+    <!-- 8. Tasker & Automation -->
+    <PreferenceScreen
+        android:key="screen_tasker"
+        android:title="@string/pref_screen_tasker_title"
+        android:icon="@drawable/ic_tasker_bolt">
+      <PreferenceCategory android:title="@string/pref_category_tasker" android:layout="@layout/pref_category_settings">
+        <com.nhs.customkeyboard.prefs.TaskerAutomationBuilderLinkPreference
+            android:icon="@drawable/ic_tasker"
+            android:title="@string/pref_tasker_builder_title"
+            android:summary="@string/pref_tasker_builder_summary"
+            android:widgetLayout="@layout/pref_widget_chevron"/>
+        <com.nhs.customkeyboard.prefs.TaskerAutomationPreference
+            android:key="tasker_automation"
+            android:icon="@drawable/ic_tasker"
+            android:title="@string/pref_tasker_automation_title"
+            android:widgetLayout="@layout/pref_widget_chevron"/>
+        <com.nhs.customkeyboard.prefs.TaskerAutomationGuideLinkPreference
+            android:icon="@drawable/ic_info"
+            android:title="@string/pref_tasker_guide_title"
+            android:summary="@string/pref_tasker_guide_summary"
+            android:widgetLayout="@layout/pref_widget_chevron"/>
+      </PreferenceCategory>
+    </PreferenceScreen>
+
+    <!-- 9. About -->
+    <PreferenceScreen
+        android:key="screen_about"
+        android:title="@string/pref_screen_about_title"
+        android:icon="@drawable/ic_info_outline">
+      <com.nhs.customkeyboard.prefs.AboutHeaderPreference
+          android:key="about_header" />
+      <PreferenceCategory android:title="@string/pref_category_about" android:layout="@layout/pref_category_settings">
+        <com.nhs.customkeyboard.prefs.CheckUpdatePreference
+            android:key="check_update"
+            android:icon="@drawable/ic_download"
+            android:title="@string/pref_check_update_title"
+            android:widgetLayout="@layout/pref_widget_chevron"/>
+      </PreferenceCategory>
+    </PreferenceScreen>
+  </PreferenceCategory>
+
+</PreferenceScreen>

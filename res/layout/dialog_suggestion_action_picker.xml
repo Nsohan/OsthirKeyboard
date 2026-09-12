@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@drawable/bg_dialog_rounded"
+    android:paddingStart="16dp"
+    android:paddingEnd="16dp"
+    android:paddingTop="20dp"
+    android:paddingBottom="16dp">
+
+  <!-- Header Title -->
+  <TextView
+      android:id="@+id/tv_picker_title"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:textColor="?attr/colorLabel"
+      android:textSize="19sp"
+      android:textStyle="bold"
+      android:gravity="center_horizontal"
+      android:layout_marginBottom="4dp"/>
+
+  <!-- Subtitle note -->
+  <TextView
+      android:id="@+id/tv_picker_tip"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:text="Choose an action to perform when this tool is held down"
+      android:textColor="?android:attr/textColorSecondary"
+      android:textSize="13sp"
+      android:gravity="center_horizontal"
+      android:layout_marginBottom="12dp"/>
+
+  <!-- Divider -->
+  <View
+      android:layout_width="match_parent"
+      android:layout_height="1dp"
+      android:background="#3A3E3A"
+      android:layout_marginBottom="6dp"/>
+
+  <!-- Action Items List -->
+  <androidx.recyclerview.widget.RecyclerView
+      android:id="@+id/rv_actions"
+      android:layout_width="match_parent"
+      android:layout_height="360dp"
+      android:scrollbars="vertical"
+      android:overScrollMode="never"/>
+
+  <!-- Divider -->
+  <View
+      android:layout_width="match_parent"
+      android:layout_height="1dp"
+      android:background="#3A3E3A"
+      android:layout_marginTop="8dp"
+      android:layout_marginBottom="8dp"/>
+
+  <!-- Cancel Button -->
+  <com.google.android.material.button.MaterialButton
+      android:id="@+id/btn_cancel"
+      style="@style/Widget.MaterialComponents.Button.TextButton"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:layout_gravity="end"
+      android:text="@android:string/cancel"
+      android:textSize="14sp"
+      android:textAllCaps="false"/>
+
+</LinearLayout>

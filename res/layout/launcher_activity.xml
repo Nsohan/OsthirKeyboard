@@ -1,0 +1,249 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/settings_background"
+    android:fitsSystemWindows="true">
+
+  <!-- Top App Bar / Toolbar -->
+  <com.google.android.material.appbar.MaterialToolbar
+      android:id="@+id/launcher_toolbar"
+      android:layout_width="match_parent"
+      android:layout_height="?attr/actionBarSize"
+      android:background="@color/settings_background"
+      app:title="@string/app_name"
+      app:titleTextColor="@color/settings_on_surface"
+      app:contentInsetStart="20dp"
+      android:elevation="0dp" />
+
+  <androidx.core.widget.NestedScrollView
+      android:layout_width="match_parent"
+      android:layout_height="match_parent"
+      android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingHorizontal="16dp"
+        android:paddingTop="8dp"
+        android:paddingBottom="32dp">
+
+      <!-- Setup & Action Card -->
+      <LinearLayout
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:orientation="vertical"
+          android:background="@drawable/bg_settings_card"
+          android:padding="20dp">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/launcher_description"
+            android:textColor="@color/settings_on_surface"
+            android:textSize="15sp"
+            android:lineSpacingExtra="4dp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_enable_keyboard"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="48dp"
+            android:layout_marginTop="20dp"
+            android:text="@string/launcher_button_imesettings"
+            android:onClick="launch_imesettings"
+            android:textColor="@color/settings_on_primary"
+            app:backgroundTint="@color/settings_primary"
+            app:cornerRadius="12dp"
+            android:textStyle="bold"
+            android:letterSpacing="0.03" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_select_keyboard"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="48dp"
+            android:layout_marginTop="10dp"
+            android:text="@string/launcher_button_imepicker"
+            android:onClick="launch_imepicker"
+            android:textColor="@color/settings_primary"
+            app:strokeColor="@color/settings_primary"
+            app:strokeWidth="1.5dp"
+            app:cornerRadius="12dp"
+            android:textStyle="bold"
+            android:letterSpacing="0.03" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_install_dictionaries"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="48dp"
+            android:layout_marginTop="10dp"
+            android:text="@string/launcher_button_dictionaries"
+            android:onClick="launch_dictionaries_activity"
+            android:textColor="@color/settings_primary"
+            app:strokeColor="@color/settings_primary"
+            app:strokeWidth="1.5dp"
+            app:cornerRadius="12dp"
+            android:textStyle="bold"
+            android:letterSpacing="0.03" />
+
+      </LinearLayout>
+
+      <!-- Gestures Tutorial Card -->
+      <LinearLayout
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:layout_marginTop="16dp"
+          android:orientation="vertical"
+          android:background="@drawable/bg_settings_card"
+          android:paddingVertical="12dp"
+          android:paddingHorizontal="16dp">
+
+        <!-- Animation 1: Swipe -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:paddingVertical="8dp">
+
+          <ImageView
+              android:id="@+id/launcher_anim_swipe"
+              style="@style/anim"
+              android:background="@drawable/doc_key_u"
+              android:src="@drawable/doc_anim_swipe" />
+
+          <TextView
+              style="@style/anim_text"
+              android:text="@string/launcher_anim_7" />
+        </LinearLayout>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginHorizontal="12dp"
+            android:background="@color/settings_divider" />
+
+        <!-- Animation 2: Circle -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:paddingVertical="8dp">
+
+          <ImageView
+              android:id="@+id/launcher_anim_circle"
+              style="@style/anim"
+              android:background="@drawable/doc_key_g"
+              android:src="@drawable/doc_anim_circle" />
+
+          <TextView
+              style="@style/anim_text"
+              android:text="@string/launcher_anim_g" />
+        </LinearLayout>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginHorizontal="12dp"
+            android:background="@color/settings_divider" />
+
+        <!-- Animation 3: Round Trip -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:paddingVertical="8dp">
+
+          <ImageView
+              android:id="@+id/launcher_anim_round_trip"
+              style="@style/anim"
+              android:background="@drawable/doc_key_g"
+              android:src="@drawable/doc_anim_round_trip" />
+
+          <TextView
+              style="@style/anim_text"
+              android:text="@string/launcher_anim_dash" />
+        </LinearLayout>
+
+      </LinearLayout>
+
+      <!-- Interactive Test Card -->
+      <LinearLayout
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:layout_marginTop="16dp"
+          android:orientation="vertical"
+          android:background="@drawable/bg_settings_card"
+          android:padding="20dp">
+
+        <TextView
+            android:id="@+id/launcher_tryhere_text"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/launcher_tryhere"
+            android:textColor="@color/settings_on_surface"
+            android:textSize="15sp"
+            android:fontFamily="sans-serif-medium" />
+
+        <EditText
+            android:id="@+id/launcher_tryhere_area"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="50dp"
+            android:layout_marginTop="12dp"
+            android:inputType="text"
+            android:hint="@string/launcher_tryhere_hint"
+            android:textColor="@color/settings_on_surface"
+            android:textColorHint="@color/settings_on_surface_variant"
+            android:background="@drawable/bg_settings_input_box"
+            android:paddingHorizontal="16dp"
+            android:paddingVertical="12dp"
+            android:textSize="15sp"
+            android:importantForAutofill="no" />
+
+      </LinearLayout>
+
+      <!-- About / Source Code Footer -->
+      <LinearLayout
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:layout_marginTop="20dp"
+          android:orientation="vertical"
+          android:gravity="center_horizontal"
+          android:paddingHorizontal="12dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/launcher_sourcecode"
+            android:textColor="@color/settings_on_surface_variant"
+            android:textSize="13sp"
+            android:textAlignment="center" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="@string/launcher_repo_url"
+            android:textColorLink="@color/settings_primary"
+            android:textColor="@color/settings_primary"
+            android:textSize="13sp"
+            android:textAlignment="center"
+            android:autoLink="web"
+            android:linksClickable="true" />
+
+      </LinearLayout>
+
+    </LinearLayout>
+  </androidx.core.widget.NestedScrollView>
+
+</LinearLayout>

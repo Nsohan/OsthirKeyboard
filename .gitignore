@@ -1,0 +1,63 @@
+# Built application files
+*.apk
+*.ap_
+*.aab
+*.dex
+
+# Java / Kotlin class files
+*.class
+
+# Log files
+*.log
+
+# Android Studio / IntelliJ IDEA
+*.iml
+.idea/
+.idea_modules/
+*.ipr
+*.iws
+
+# Android / Gradle build files
+build/
+/*/build/
+.gradle/
+/local.properties
+/captures
+/release
+/_build
+
+# Keystore and signing files
+*.keystore
+*.keystore.asc
+*.jks
+/*-keystore.conf
+
+# Visual Studio Code
+.vscode/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.output
+.venv/
+env/
+venv/
+ENV/
+.pytest_cache/
+.mypy_cache/
+
+# OS-generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+
+# Backup and temp files
+*~
+*.swp
+*.swo

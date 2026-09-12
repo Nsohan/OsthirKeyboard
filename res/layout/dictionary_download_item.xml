@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:layout_marginStart="16dp"
+    android:layout_marginEnd="16dp"
+    android:background="@drawable/bg_settings_card_middle">
+
+  <LinearLayout
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:minHeight="56dp"
+      android:gravity="center_vertical"
+      android:orientation="horizontal"
+      android:paddingStart="16dp"
+      android:paddingEnd="12dp"
+      android:paddingTop="12dp"
+      android:paddingBottom="12dp">
+
+    <TextView
+        android:id="@+id/dictionary_download_locale"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:textSize="16sp"
+        android:fontFamily="sans-serif"
+        android:textColor="@color/settings_on_surface"
+        android:singleLine="true"
+        android:ellipsize="end"/>
+
+    <TextView
+        android:id="@+id/dictionary_download_size"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp"
+        android:textSize="13sp"
+        android:fontFamily="sans-serif"
+        android:textColor="@color/settings_on_surface_variant"/>
+
+    <ImageView
+        android:id="@+id/dictionary_download_button"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:padding="8dp"
+        android:background="?android:attr/selectableItemBackgroundBorderless"
+        android:src="@drawable/ic_download"
+        android:contentDescription="@null"
+        app:tint="@color/settings_primary"/>
+
+  </LinearLayout>
+
+  <View
+      android:id="@+id/card_divider"
+      android:layout_width="match_parent"
+      android:layout_height="1dp"
+      android:layout_marginStart="16dp"
+      android:background="@color/settings_divider"/>
+
+</LinearLayout>

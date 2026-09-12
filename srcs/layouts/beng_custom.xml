@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<keyboard name="বাংলা (Custom)" script="bengali" dictionary="bn">
+  <!-- Row 1 (QWERTY Row - Width: 11.0) -->
+  <row>
+    <key c="ৌ" n="ঔ" lp="ঔ" />
+    <key c="ৈ" n="ঐ" lp="ঐ" se="৳" />
+    <key c="া" n="আ" lp="আ" />
+    <key c="ী" n="ঈ" lp="ঈ" />
+    <key c="ূ" n="ঊ" lp="ঊ" />
+    <key c="ব" n="ভ" lp="ভ" sw="&lt;" se="&gt;" />
+    <key c="হ" n="ঙ" lp="ঙ" se="!" />
+    <key c="গ" n="ঘ" lp="ঘ" sw="-" se="_" />
+    <key c="দ" n="ধ" lp="ধ" sw="[" se="]" />
+    <key c="জ" n="ঝ" lp="ঝ" sw="{" se="}" />
+    <key c="ড" n="ঢ" lp="ঢ" sw="/" se="\\" />
+  </row>
+
+  <!-- Row 2 (Home Row - Width: 11.0) -->
+  <row>
+    <key c="ো" n="ও" lp="ও" />
+    <key c="ে" n="এ" lp="এ" />
+    <key c="্" n="অ" lp="অ" sw="্র" se="zwj" />
+    <key c="ি" n="ই" lp="ই" />
+    <key c="ু" n="উ" lp="উ" />
+    <key c="প" n="ফ" lp="ফ" sw="+" se="=" />
+    <key c="র" n="ড়" lp="ড়" sw="ঢ়" se="র্" />
+    <key c="ক" n="খ" lp="খ" />
+    <key c="ত" n="থ" lp="থ" sw="(" se=")" />
+    <key c="চ" n="ছ" lp="ছ" sw="&quot;" se="'" />
+    <key c="ট" n="ঠ" lp="ঠ" sw=":" se=";" />
+  </row>
+
+  <!-- Row 3 (Bottom Row - Width: 11.0) -->
+  <row>
+    <key role="action" key0="shift" />
+    <key c="ং" n="ঁ" lp="ঁ" se="~" />
+    <key c="ম" n="ণ" lp="ণ" />
+    <key c="ন" n="শ" lp="শ" />
+    <key c="ৱ" n="ৎ" lp="ৎ" />
+    <key c="ল" n="ঃ" lp="ঃ" />
+    <key c="স" n="ষ" lp="ষ" se="\?" />
+    <key c="য" n="য়" lp="য়" se="্য" />
+    <key c="।" n="ঞ" lp="ঞ" sw="়" se="॥" />
+    <key c="," n="ঋ" lp="ঋ" sw="ৃ" se="." />
+    <key role="action" key0="backspace" key2="delete" />
+  </row>
+</keyboard>

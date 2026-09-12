@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Card row for the 3 action buttons at the bottom of the Layouts card
+  (Add an alternate layout / Add new Keymap JSON / Keymap Builder).
+  Uses exact card margins and icon alignment to match standard preference rows.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:layout_marginStart="16dp"
+    android:layout_marginEnd="16dp"
+    android:layout_marginTop="0dp"
+    android:layout_marginBottom="0dp"
+    android:background="@drawable/bg_settings_card_middle">
+
+  <LinearLayout
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:minHeight="56dp"
+      android:gravity="center_vertical"
+      android:orientation="horizontal"
+      android:paddingStart="16dp"
+      android:paddingEnd="16dp"
+      android:paddingTop="14dp"
+      android:paddingBottom="14dp">
+
+    <ImageView
+        android:id="@android:id/icon"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:layout_marginEnd="16dp"
+        android:importantForAccessibility="no"/>
+
+    <TextView
+        android:id="@android:id/title"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:textAppearance="?android:attr/textAppearanceListItem"
+        android:textSize="16sp"
+        android:fontFamily="sans-serif-medium"
+        android:textStyle="bold"
+        android:singleLine="true"
+        android:ellipsize="marquee"/>
+
+  </LinearLayout>
+
+  <View
+      android:id="@+id/card_divider"
+      android:layout_width="match_parent"
+      android:layout_height="1dp"
+      android:layout_marginStart="56dp"
+      android:background="@color/settings_divider"/>
+
+</LinearLayout>

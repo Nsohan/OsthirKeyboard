@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.nhs.customkeyboard.KeyboardResizeOverlay xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/resize_overlay_panel"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:clickable="true"
+    android:focusable="true">
+
+  <!-- Dimmed scrim over entire keyboard -->
+  <View
+      android:layout_width="match_parent"
+      android:layout_height="match_parent"
+      android:background="#55000000"/>
+
+  <!-- Resizable bounding box that wraps the keyboard keys -->
+  <FrameLayout
+      android:id="@+id/resize_bounding_box"
+      android:layout_width="match_parent"
+      android:layout_height="match_parent"
+      android:layout_marginStart="2dp"
+      android:layout_marginEnd="2dp"
+      android:layout_marginTop="2dp"
+      android:layout_marginBottom="0dp"
+      android:background="@drawable/bg_resize_border">
+
+    <!-- Top drag handle with enlarged touch target -->
+    <FrameLayout
+        android:id="@+id/resize_handle_top"
+        android:layout_width="140dp"
+        android:layout_height="40dp"
+        android:layout_gravity="top|center_horizontal"
+        android:clickable="true"
+        android:focusable="true">
+
+      <View
+          android:layout_width="48dp"
+          android:layout_height="4dp"
+          android:layout_gravity="top|center_horizontal"
+          android:layout_marginTop="3dp"
+          android:background="@drawable/bg_resize_handle"/>
+    </FrameLayout>
+
+    <!-- Bottom drag handle with enlarged touch target -->
+    <FrameLayout
+        android:id="@+id/resize_handle_bottom"
+        android:layout_width="140dp"
+        android:layout_height="40dp"
+        android:layout_gravity="bottom|center_horizontal"
+        android:clickable="true"
+        android:focusable="true">
+
+      <View
+          android:layout_width="48dp"
+          android:layout_height="4dp"
+          android:layout_gravity="bottom|center_horizontal"
+          android:layout_marginBottom="3dp"
+          android:background="@drawable/bg_resize_handle"/>
+    </FrameLayout>
+
+    <!-- Center Floating Action Bar (Reset, Move, Done) -->
+    <LinearLayout
+        android:id="@+id/resize_controls_container"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+      <!-- Reset Button -->
+      <LinearLayout
+          android:id="@+id/resize_btn_reset"
+          android:layout_width="wrap_content"
+          android:layout_height="42dp"
+          android:background="@drawable/bg_resize_button"
+          android:orientation="horizontal"
+          android:gravity="center_vertical"
+          android:paddingStart="16dp"
+          android:paddingEnd="18dp"
+          android:clickable="true"
+          android:focusable="true">
+
+        <ImageView
+            android:layout_width="18dp"
+            android:layout_height="18dp"
+            android:src="@drawable/ic_reset"
+            android:tint="#FFDBCF"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:text="@string/resize_reset"
+            android:textColor="#FFDBCF"
+            android:textSize="14sp"
+            android:textStyle="bold"/>
+      </LinearLayout>
+
+      <!-- Center 4-way Drag Move Button -->
+      <FrameLayout
+          android:id="@+id/resize_btn_move"
+          android:layout_width="44dp"
+          android:layout_height="44dp"
+          android:layout_marginStart="14dp"
+          android:layout_marginEnd="14dp"
+          android:background="@drawable/bg_resize_move_circle"
+          android:clickable="true"
+          android:focusable="true">
+
+        <ImageView
+            android:layout_width="22dp"
+            android:layout_height="22dp"
+            android:layout_gravity="center"
+            android:src="@drawable/ic_drag_move"
+            android:tint="#FFDBCF"/>
+      </FrameLayout>
+
+      <!-- Done Button -->
+      <LinearLayout
+          android:id="@+id/resize_btn_done"
+          android:layout_width="wrap_content"
+          android:layout_height="42dp"
+          android:background="@drawable/bg_resize_button"
+          android:orientation="horizontal"
+          android:gravity="center_vertical"
+          android:paddingStart="16dp"
+          android:paddingEnd="18dp"
+          android:clickable="true"
+          android:focusable="true">
+
+        <ImageView
+            android:layout_width="18dp"
+            android:layout_height="18dp"
+            android:src="@drawable/ic_check"
+            android:tint="#FFDBCF"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:text="@string/resize_done"
+            android:textColor="#FFDBCF"
+            android:textSize="14sp"
+            android:textStyle="bold"/>
+      </LinearLayout>
+    </LinearLayout>
+
+  </FrameLayout>
+</com.nhs.customkeyboard.KeyboardResizeOverlay>

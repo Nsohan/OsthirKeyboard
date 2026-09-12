@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <color name="settings_primary">#A8C7FA</color>
+  <color name="settings_primary_dark">#000000</color>
+  <color name="settings_accent">#A8C7FA</color>
+  <color name="settings_secondary">#7FCFFF</color>
+  <color name="settings_tertiary">#FFB787</color>
+
+  <color name="settings_background">#000000</color>
+  <color name="settings_surface">#1E1F22</color>
+  <color name="settings_card_bg">#1E1F22</color>
+  <color name="settings_divider">#2C2E33</color>
+  <color name="settings_icon_tint">#C4C7C5</color>
+  <color name="settings_on_surface">#E3E3E3</color>
+  <color name="settings_on_surface_variant">#9AA0A6</color>
+  <color name="settings_error">#FFB4AB</color>
+  <color name="settings_on_primary">#042B59</color>
+</resources>

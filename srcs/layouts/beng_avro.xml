@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<keyboard name="বাংলা (Avro)" script="avro" dictionary="bn" numpad_script="bengali">
+  <!-- Row 1 -->
+  <row>
+    <key c="q" nw="ঔ" ne="ৌ" />
+    <key c="w" nw="ঐ" ne="ৈ" sw="৳" se="ৱ" />
+    <key c="e" nw="এ" ne="ে" />
+    <key c="r" nw="র" ne="ড়" sw="ঢ়" se="র্" />
+    <key c="t" nw="ত" ne="থ" sw="ট" se="ঠ" />
+    <key c="y" nw="য়" ne="্য" sw="ঋ" se="ৃ" />
+    <key c="u" nw="উ" ne="ু" sw="ঊ" se="ূ" />
+    <key c="i" nw="ই" ne="ি" sw="ঈ" se="ী" />
+    <key c="o" nw="অ" ne="ো" sw="ও" />
+    <key c="p" nw="প" />
+  </row>
+
+  <!-- Row 2 -->
+  <row>
+    <key shift="0.5" c="a" nw="আ" ne="া" />
+    <key c="s" nw="স" ne="শ" sw="ষ" />
+    <key c="d" nw="দ" ne="ধ" sw="ড" se="ঢ" />
+    <key c="f" nw="ফ" ne="্" se="্র" />
+    <key c="g" nw="গ" ne="ঘ" sw="ঙ" se="জ্ঞ" />
+    <key c="h" nw="হ" ne="ঃ" />
+    <key c="j" nw="জ" ne="ঝ" sw="ঞ" />
+    <key c="k" nw="ক" ne="খ" />
+    <key c="l" nw="ল" />
+  </row>
+
+  <!-- Row 3 -->
+  <row>
+    <key role="action" width="1.5" c="shift" ne="loc capslock" />
+    <key c="z" nw="য" ne="ৎ" />
+    <key c="x" nw="ক্ষ" ne="ঁ" sw="়" />
+    <key c="c" nw="চ" ne="ছ" sw="," />
+    <key c="v" nw="ভ" sw="." />
+    <key c="b" nw="ব" sw="\?" />
+    <key c="n" nw="ন" ne="ণ" sw="ং" />
+    <key c="m" nw="ম" ne="!" sw="।" se="॥" />
+    <key role="action" width="1.5" c="backspace" ne="delete" />
+  </row>
+</keyboard>

@@ -1,0 +1,327 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.nhs.customkeyboard.TextEditManagerView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/text_edit_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="?attr/colorKeyboard">
+
+  <!-- Header Bar -->
+  <RelativeLayout
+      android:id="@+id/text_edit_header_bar"
+      android:layout_width="match_parent"
+      android:layout_height="48dp"
+      android:paddingStart="8dp"
+      android:paddingEnd="12dp"
+      android:gravity="center_vertical">
+
+    <ImageButton
+        android:id="@+id/text_edit_btn_back"
+        android:layout_width="36dp"
+        android:layout_height="36dp"
+        android:layout_alignParentStart="true"
+        android:layout_centerVertical="true"
+        android:background="@drawable/bg_circle_close"
+        android:src="@drawable/ic_arrow_back"
+        android:padding="7dp"
+        android:scaleType="fitCenter"
+        android:tint="?attr/colorLabel"
+        android:contentDescription="Back"/>
+
+    <TextView
+        android:id="@+id/text_edit_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_toEndOf="@id/text_edit_btn_back"
+        android:layout_centerVertical="true"
+        android:layout_marginStart="12dp"
+        android:text="@string/text_edit_title"
+        android:textColor="?attr/colorLabel"
+        android:textSize="18sp"
+        android:fontFamily="sans-serif-medium"/>
+  </RelativeLayout>
+
+  <!-- Main 4-column Grid Area -->
+  <LinearLayout
+      android:id="@+id/text_edit_content_container"
+      android:layout_width="match_parent"
+      android:layout_height="0dp"
+      android:layout_weight="1"
+      android:orientation="vertical"
+      android:paddingStart="6dp"
+      android:paddingEnd="6dp"
+      android:paddingBottom="6dp">
+
+    <!-- Top Section (Rows 1, 2, 3) -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="3"
+        android:orientation="horizontal">
+
+      <!-- Column 1: Giant Left Arrow -->
+      <FrameLayout
+          android:id="@+id/text_edit_btn_left"
+          android:layout_width="0dp"
+          android:layout_height="match_parent"
+          android:layout_weight="1"
+          android:layout_margin="3dp"
+          android:background="@drawable/bg_text_edit_nav_key"
+          android:clickable="true"
+          android:focusable="true">
+
+        <ImageView
+            android:layout_width="28dp"
+            android:layout_height="28dp"
+            android:layout_gravity="center"
+            android:src="@drawable/ic_dpad_left"
+            android:tint="?attr/colorLabel"/>
+      </FrameLayout>
+
+      <!-- Column 2: Up, Select, Down -->
+      <LinearLayout
+          android:layout_width="0dp"
+          android:layout_height="match_parent"
+          android:layout_weight="1"
+          android:orientation="vertical">
+
+        <!-- Up -->
+        <FrameLayout
+            android:id="@+id/text_edit_btn_up"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:layout_margin="3dp"
+            android:background="@drawable/bg_text_edit_nav_key"
+            android:clickable="true"
+            android:focusable="true">
+
+          <ImageView
+              android:layout_width="28dp"
+              android:layout_height="28dp"
+              android:layout_gravity="center"
+              android:src="@drawable/ic_dpad_up"
+              android:tint="?attr/colorLabel"/>
+        </FrameLayout>
+
+        <!-- Select Toggle -->
+        <FrameLayout
+            android:id="@+id/text_edit_btn_select"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:layout_margin="3dp"
+            android:background="@drawable/bg_text_edit_nav_key"
+            android:clickable="true"
+            android:focusable="true">
+
+          <TextView
+              android:id="@+id/text_edit_tv_select"
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:layout_gravity="center"
+              android:text="@string/text_edit_select"
+              android:textColor="?attr/colorLabel"
+              android:textSize="14sp"
+              android:fontFamily="sans-serif-medium"/>
+        </FrameLayout>
+
+        <!-- Down -->
+        <FrameLayout
+            android:id="@+id/text_edit_btn_down"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:layout_margin="3dp"
+            android:background="@drawable/bg_text_edit_nav_key"
+            android:clickable="true"
+            android:focusable="true">
+
+          <ImageView
+              android:layout_width="28dp"
+              android:layout_height="28dp"
+              android:layout_gravity="center"
+              android:src="@drawable/ic_dpad_down"
+              android:tint="?attr/colorLabel"/>
+        </FrameLayout>
+      </LinearLayout>
+
+      <!-- Column 3: Giant Right Arrow -->
+      <FrameLayout
+          android:id="@+id/text_edit_btn_right"
+          android:layout_width="0dp"
+          android:layout_height="match_parent"
+          android:layout_weight="1"
+          android:layout_margin="3dp"
+          android:background="@drawable/bg_text_edit_nav_key"
+          android:clickable="true"
+          android:focusable="true">
+
+        <ImageView
+            android:layout_width="28dp"
+            android:layout_height="28dp"
+            android:layout_gravity="center"
+            android:src="@drawable/ic_dpad_right"
+            android:tint="?attr/colorLabel"/>
+      </FrameLayout>
+
+      <!-- Column 4: Actions (Select all, Copy, Paste) -->
+      <LinearLayout
+          android:layout_width="0dp"
+          android:layout_height="match_parent"
+          android:layout_weight="1.1"
+          android:orientation="vertical">
+
+        <!-- Select all -->
+        <FrameLayout
+            android:id="@+id/text_edit_btn_select_all"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:layout_margin="3dp"
+            android:background="@drawable/bg_text_edit_action_key"
+            android:clickable="true"
+            android:focusable="true">
+
+          <TextView
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:layout_gravity="center"
+              android:text="@string/text_edit_select_all"
+              android:textColor="#FFDBCF"
+              android:textSize="13sp"
+              android:fontFamily="sans-serif-medium"/>
+        </FrameLayout>
+
+        <!-- Copy -->
+        <FrameLayout
+            android:id="@+id/text_edit_btn_copy"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:layout_margin="3dp"
+            android:background="@drawable/bg_text_edit_action_key"
+            android:clickable="true"
+            android:focusable="true">
+
+          <TextView
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:layout_gravity="center"
+              android:text="@string/text_edit_copy"
+              android:textColor="#FFDBCF"
+              android:textSize="13sp"
+              android:fontFamily="sans-serif-medium"/>
+        </FrameLayout>
+
+        <!-- Cut -->
+        <FrameLayout
+            android:id="@+id/text_edit_btn_cut"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:layout_margin="3dp"
+            android:background="@drawable/bg_text_edit_action_key"
+            android:clickable="true"
+            android:focusable="true">
+
+          <TextView
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:layout_gravity="center"
+              android:text="@string/text_edit_cut"
+              android:textColor="#FFDBCF"
+              android:textSize="13sp"
+              android:fontFamily="sans-serif-medium"/>
+        </FrameLayout>
+
+        <!-- Paste -->
+        <FrameLayout
+            android:id="@+id/text_edit_btn_paste"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:layout_margin="3dp"
+            android:background="@drawable/bg_text_edit_action_key"
+            android:clickable="true"
+            android:focusable="true">
+
+          <TextView
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:layout_gravity="center"
+              android:text="@string/text_edit_paste"
+              android:textColor="#FFDBCF"
+              android:textSize="13sp"
+              android:fontFamily="sans-serif-medium"/>
+        </FrameLayout>
+      </LinearLayout>
+    </LinearLayout>
+
+    <!-- Bottom Section: Jump to Start, Jump to End, Backspace -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:orientation="horizontal">
+
+      <!-- Jump to Start -->
+      <FrameLayout
+          android:id="@+id/text_edit_btn_start"
+          android:layout_width="0dp"
+          android:layout_height="match_parent"
+          android:layout_weight="1.5"
+          android:layout_margin="3dp"
+          android:background="@drawable/bg_text_edit_nav_key"
+          android:clickable="true"
+          android:focusable="true">
+
+        <ImageView
+            android:layout_width="26dp"
+            android:layout_height="26dp"
+            android:layout_gravity="center"
+            android:src="@drawable/ic_jump_to_start"
+            android:tint="?attr/colorLabel"/>
+      </FrameLayout>
+
+      <!-- Jump to End -->
+      <FrameLayout
+          android:id="@+id/text_edit_btn_end"
+          android:layout_width="0dp"
+          android:layout_height="match_parent"
+          android:layout_weight="1.5"
+          android:layout_margin="3dp"
+          android:background="@drawable/bg_text_edit_nav_key"
+          android:clickable="true"
+          android:focusable="true">
+
+        <ImageView
+            android:layout_width="26dp"
+            android:layout_height="26dp"
+            android:layout_gravity="center"
+            android:src="@drawable/ic_jump_to_end"
+            android:tint="?attr/colorLabel"/>
+      </FrameLayout>
+
+      <!-- Backspace -->
+      <FrameLayout
+          android:id="@+id/text_edit_btn_backspace"
+          android:layout_width="0dp"
+          android:layout_height="match_parent"
+          android:layout_weight="1.1"
+          android:layout_margin="3dp"
+          android:background="@drawable/bg_text_edit_action_key"
+          android:clickable="true"
+          android:focusable="true">
+
+        <ImageView
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_gravity="center"
+            android:src="@drawable/ic_tool_backspace"
+            android:tint="#FFDBCF"/>
+      </FrameLayout>
+    </LinearLayout>
+
+  </LinearLayout>
+</com.nhs.customkeyboard.TextEditManagerView>

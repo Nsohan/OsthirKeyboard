@@ -1,0 +1,385 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:gravity="top|center_horizontal"
+    android:paddingStart="2dp"
+    android:paddingEnd="2dp">
+
+  <!-- Row 1: Slot 0 & Slot 1 -->
+  <LinearLayout
+      android:id="@+id/menu_row_0"
+      android:layout_width="match_parent"
+      android:layout_height="48dp"
+      android:orientation="horizontal"
+      android:layout_marginBottom="8dp"
+      android:gravity="center_vertical">
+
+    <!-- Slot 0 -->
+    <LinearLayout
+        android:id="@+id/menu_slot_0"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:layout_marginEnd="5dp"
+        android:background="@drawable/bg_menu_pill"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingStart="14dp"
+        android:paddingEnd="12dp"
+        android:clickable="true"
+        android:focusable="true">
+
+      <ImageView
+          android:id="@+id/slot_0_icon"
+          android:layout_width="20dp"
+          android:layout_height="20dp"
+          android:src="@drawable/ic_palette"
+          android:tint="?attr/colorLabel"/>
+
+      <TextView
+          android:id="@+id/slot_0_text"
+          android:layout_width="0dp"
+          android:layout_height="wrap_content"
+          android:layout_weight="1"
+          android:layout_marginStart="10dp"
+          android:layout_marginEnd="6dp"
+          android:textColor="?attr/colorLabel"
+          android:textSize="13.5sp"
+          android:singleLine="true"
+          android:ellipsize="end"/>
+
+      <ImageView
+          android:id="@+id/slot_0_indicator"
+          android:layout_width="16dp"
+          android:layout_height="16dp"
+          android:src="@drawable/ic_chevron_right"
+          android:tint="?attr/colorSubLabel"/>
+    </LinearLayout>
+
+    <!-- Slot 1 -->
+    <LinearLayout
+        android:id="@+id/menu_slot_1"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:layout_marginStart="5dp"
+        android:background="@drawable/bg_menu_pill"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingStart="14dp"
+        android:paddingEnd="12dp"
+        android:clickable="true"
+        android:focusable="true">
+
+      <ImageView
+          android:id="@+id/slot_1_icon"
+          android:layout_width="20dp"
+          android:layout_height="20dp"
+          android:src="@drawable/ic_sticker"
+          android:tint="?attr/colorLabel"/>
+
+      <TextView
+          android:id="@+id/slot_1_text"
+          android:layout_width="0dp"
+          android:layout_height="wrap_content"
+          android:layout_weight="1"
+          android:layout_marginStart="10dp"
+          android:layout_marginEnd="6dp"
+          android:textColor="?attr/colorLabel"
+          android:textSize="13.5sp"
+          android:singleLine="true"
+          android:ellipsize="end"/>
+
+      <ImageView
+          android:id="@+id/slot_1_indicator"
+          android:layout_width="16dp"
+          android:layout_height="16dp"
+          android:src="@drawable/ic_chevron_right"
+          android:tint="?attr/colorSubLabel"/>
+    </LinearLayout>
+  </LinearLayout>
+
+  <!-- Row 2: Slot 2 & Slot 3 -->
+  <LinearLayout
+      android:id="@+id/menu_row_1"
+      android:layout_width="match_parent"
+      android:layout_height="48dp"
+      android:orientation="horizontal"
+      android:layout_marginBottom="8dp"
+      android:gravity="center_vertical">
+
+    <!-- Slot 2 -->
+    <LinearLayout
+        android:id="@+id/menu_slot_2"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:layout_marginEnd="5dp"
+        android:background="@drawable/bg_menu_pill"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingStart="14dp"
+        android:paddingEnd="12dp"
+        android:clickable="true"
+        android:focusable="true">
+
+      <ImageView
+          android:id="@+id/slot_2_icon"
+          android:layout_width="20dp"
+          android:layout_height="20dp"
+          android:src="@drawable/ic_gif"
+          android:tint="?attr/colorLabel"/>
+
+      <TextView
+          android:id="@+id/slot_2_text"
+          android:layout_width="0dp"
+          android:layout_height="wrap_content"
+          android:layout_weight="1"
+          android:layout_marginStart="10dp"
+          android:layout_marginEnd="6dp"
+          android:textColor="?attr/colorLabel"
+          android:textSize="13.5sp"
+          android:singleLine="true"
+          android:ellipsize="end"/>
+
+      <ImageView
+          android:id="@+id/slot_2_indicator"
+          android:layout_width="16dp"
+          android:layout_height="16dp"
+          android:src="@drawable/ic_chevron_right"
+          android:tint="?attr/colorSubLabel"/>
+    </LinearLayout>
+
+    <!-- Slot 3 -->
+    <LinearLayout
+        android:id="@+id/menu_slot_3"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:layout_marginStart="5dp"
+        android:background="@drawable/bg_menu_pill"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingStart="14dp"
+        android:paddingEnd="12dp"
+        android:clickable="true"
+        android:focusable="true">
+
+      <ImageView
+          android:id="@+id/slot_3_icon"
+          android:layout_width="20dp"
+          android:layout_height="20dp"
+          android:src="@drawable/ic_emoji_menu"
+          android:tint="?attr/colorLabel"/>
+
+      <TextView
+          android:id="@+id/slot_3_text"
+          android:layout_width="0dp"
+          android:layout_height="wrap_content"
+          android:layout_weight="1"
+          android:layout_marginStart="10dp"
+          android:layout_marginEnd="6dp"
+          android:textColor="?attr/colorLabel"
+          android:textSize="13.5sp"
+          android:singleLine="true"
+          android:ellipsize="end"/>
+
+      <ImageView
+          android:id="@+id/slot_3_indicator"
+          android:layout_width="16dp"
+          android:layout_height="16dp"
+          android:src="@drawable/ic_chevron_right"
+          android:tint="?attr/colorSubLabel"/>
+    </LinearLayout>
+  </LinearLayout>
+
+  <!-- Row 3: Slot 4 & Slot 5 -->
+  <LinearLayout
+      android:id="@+id/menu_row_2"
+      android:layout_width="match_parent"
+      android:layout_height="48dp"
+      android:orientation="horizontal"
+      android:layout_marginBottom="8dp"
+      android:gravity="center_vertical">
+
+    <!-- Slot 4 -->
+    <LinearLayout
+        android:id="@+id/menu_slot_4"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:layout_marginEnd="5dp"
+        android:background="@drawable/bg_menu_pill"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingStart="14dp"
+        android:paddingEnd="12dp"
+        android:clickable="true"
+        android:focusable="true">
+
+      <ImageView
+          android:id="@+id/slot_4_icon"
+          android:layout_width="20dp"
+          android:layout_height="20dp"
+          android:src="@drawable/ic_one_handed"
+          android:tint="?attr/colorLabel"/>
+
+      <TextView
+          android:id="@+id/slot_4_text"
+          android:layout_width="0dp"
+          android:layout_height="wrap_content"
+          android:layout_weight="1"
+          android:layout_marginStart="10dp"
+          android:layout_marginEnd="6dp"
+          android:textColor="?attr/colorLabel"
+          android:textSize="13.5sp"
+          android:singleLine="true"
+          android:ellipsize="end"/>
+
+      <ImageView
+          android:id="@+id/slot_4_indicator"
+          android:layout_width="16dp"
+          android:layout_height="16dp"
+          android:src="@drawable/ic_chevron_right"
+          android:tint="?attr/colorSubLabel"/>
+    </LinearLayout>
+
+    <!-- Slot 5 -->
+    <LinearLayout
+        android:id="@+id/menu_slot_5"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:layout_marginStart="5dp"
+        android:background="@drawable/bg_menu_pill"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingStart="14dp"
+        android:paddingEnd="12dp"
+        android:clickable="true"
+        android:focusable="true">
+
+      <ImageView
+          android:id="@+id/slot_5_icon"
+          android:layout_width="20dp"
+          android:layout_height="20dp"
+          android:src="@drawable/ic_text_edit"
+          android:tint="?attr/colorLabel"/>
+
+      <TextView
+          android:id="@+id/slot_5_text"
+          android:layout_width="0dp"
+          android:layout_height="wrap_content"
+          android:layout_weight="1"
+          android:layout_marginStart="10dp"
+          android:layout_marginEnd="6dp"
+          android:textColor="?attr/colorLabel"
+          android:textSize="13.5sp"
+          android:singleLine="true"
+          android:ellipsize="end"/>
+
+      <ImageView
+          android:id="@+id/slot_5_indicator"
+          android:layout_width="16dp"
+          android:layout_height="16dp"
+          android:src="@drawable/ic_chevron_right"
+          android:tint="?attr/colorSubLabel"/>
+    </LinearLayout>
+  </LinearLayout>
+
+  <!-- Row 4: Slot 6 & Slot 7 -->
+  <LinearLayout
+      android:id="@+id/menu_row_3"
+      android:layout_width="match_parent"
+      android:layout_height="48dp"
+      android:orientation="horizontal"
+      android:layout_marginBottom="8dp"
+      android:gravity="center_vertical">
+
+    <!-- Slot 6 -->
+    <LinearLayout
+        android:id="@+id/menu_slot_6"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:layout_marginEnd="5dp"
+        android:background="@drawable/bg_menu_pill"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingStart="14dp"
+        android:paddingEnd="12dp"
+        android:clickable="true"
+        android:focusable="true">
+
+      <ImageView
+          android:id="@+id/slot_6_icon"
+          android:layout_width="20dp"
+          android:layout_height="20dp"
+          android:src="@drawable/ic_gboard_clipboard"
+          android:tint="?attr/colorLabel"/>
+
+      <TextView
+          android:id="@+id/slot_6_text"
+          android:layout_width="0dp"
+          android:layout_height="wrap_content"
+          android:layout_weight="1"
+          android:layout_marginStart="10dp"
+          android:layout_marginEnd="6dp"
+          android:textColor="?attr/colorLabel"
+          android:textSize="13.5sp"
+          android:singleLine="true"
+          android:ellipsize="end"/>
+
+      <ImageView
+          android:id="@+id/slot_6_indicator"
+          android:layout_width="16dp"
+          android:layout_height="16dp"
+          android:src="@drawable/ic_chevron_right"
+          android:tint="?attr/colorSubLabel"/>
+    </LinearLayout>
+
+    <!-- Slot 7 -->
+    <LinearLayout
+        android:id="@+id/menu_slot_7"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:layout_marginStart="5dp"
+        android:background="@drawable/bg_menu_pill"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingStart="14dp"
+        android:paddingEnd="12dp"
+        android:clickable="true"
+        android:focusable="true">
+
+      <ImageView
+          android:id="@+id/slot_7_icon"
+          android:layout_width="20dp"
+          android:layout_height="20dp"
+          android:src="@drawable/ic_settings_gear"
+          android:tint="?attr/colorLabel"/>
+
+      <TextView
+          android:id="@+id/slot_7_text"
+          android:layout_width="0dp"
+          android:layout_height="wrap_content"
+          android:layout_weight="1"
+          android:layout_marginStart="10dp"
+          android:layout_marginEnd="6dp"
+          android:textColor="?attr/colorLabel"
+          android:textSize="13.5sp"
+          android:singleLine="true"
+          android:ellipsize="end"/>
+
+      <ImageView
+          android:id="@+id/slot_7_indicator"
+          android:layout_width="16dp"
+          android:layout_height="16dp"
+          android:src="@drawable/ic_chevron_right"
+          android:tint="?attr/colorSubLabel"/>
+    </LinearLayout>
+  </LinearLayout>
+</LinearLayout>

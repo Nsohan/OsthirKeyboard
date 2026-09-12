@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:hardwareAccelerated="false"
+    android:orientation="vertical"
+    android:background="?attr/colorKeyboard">
+
+  <include
+      layout="@layout/translation_bar"
+      android:id="@+id/translation_bar_view"
+      android:visibility="gone"/>
+
+  <include
+      layout="@layout/voice_typing_bar"
+      android:id="@+id/voice_typing_bar_view"
+      android:visibility="gone"/>
+
+  <include
+      layout="@layout/gif_search_bar"
+      android:id="@+id/gif_search_bar_view"
+      android:visibility="gone"/>
+
+  <com.nhs.customkeyboard.suggestions.CandidatesView
+      android:id="@+id/candidates_view"
+      style="@style/candidates_view">
+
+    <ImageButton
+        android:id="@+id/tools_menu_button"
+        style="@style/toolbar_icon_btn"
+        android:src="@drawable/ic_grid_menu"/>
+
+    <HorizontalScrollView
+        android:id="@+id/tools_action_scroll"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:scrollbars="none"
+        android:fillViewport="true"
+        android:visibility="visible">
+
+      <LinearLayout
+          android:id="@+id/tools_action_bar"
+          android:layout_width="wrap_content"
+          android:layout_height="match_parent"
+          android:orientation="horizontal"
+          android:gravity="center_vertical|start"/>
+    </HorizontalScrollView>
+
+    <TextView
+        android:id="@+id/candidates_emoji"
+        style="@style/candidates_emoji"/>
+
+    <HorizontalScrollView
+        android:id="@+id/candidates_scroll"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:scrollbars="none"
+        android:fillViewport="true"
+        android:visibility="gone">
+      <LinearLayout
+          android:id="@+id/candidates_container"
+          android:layout_width="wrap_content"
+          android:layout_height="match_parent"
+          android:orientation="horizontal"
+          android:gravity="center_vertical"/>
+    </HorizontalScrollView>
+
+    <View
+        android:id="@+id/tools_spacer"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:visibility="gone"/>
+
+    <ImageButton
+        android:id="@+id/voice_typing_button"
+        style="@style/voice_typing_btn"
+        android:src="@drawable/ic_mic"
+        android:contentDescription="@string/key_descr_voice_typing"/>
+
+    <Button
+        android:id="@+id/dictionary_switch"
+        style="@style/change_dictionary"/>
+  </com.nhs.customkeyboard.suggestions.CandidatesView>
+
+  <FrameLayout
+      android:id="@+id/keyboard_body_frame"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content">
+
+    <com.nhs.customkeyboard.Keyboard2View
+        android:id="@+id/keyboard_view"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"/>
+
+    <include
+        layout="@layout/keyboard_menu_grid_panel"
+        android:id="@+id/menu_grid_panel"
+        android:visibility="gone"/>
+
+    <include
+        layout="@layout/keyboard_resize_overlay"
+        android:id="@+id/resize_overlay_panel"
+        android:visibility="gone"/>
+  </FrameLayout>
+</LinearLayout>

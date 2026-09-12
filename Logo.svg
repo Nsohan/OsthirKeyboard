@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="512" height="512">
+  <defs>
+    <linearGradient id="primary-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#14B8A6" />
+      <stop offset="100%" stop-color="#0F3838" />
+    </linearGradient>
+    <linearGradient id="bg-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#14B8A6" stop-opacity="0.4" />
+      <stop offset="100%" stop-color="#0F3838" stop-opacity="0.1" />
+    </linearGradient>
+    <clipPath id="squircle-clip">
+      <path d="M 50,4 C 78,4 96,22 96,50 C 96,78 78,96 50,96 C 22,96 4,78 4,50 C 4,22 22,4 50,4 Z" />
+    </clipPath>
+  </defs>
+  <!-- Background -->
+  <rect width="100" height="100" fill="#0F172A" rx="22" />
+  <rect width="100" height="100" fill="url(#bg-grad)" rx="22" opacity="0.35" />
+  
+  <!-- Concept Glyph: NHCK CLUSTER (WASD MATRIX) -->
+  <!-- Designed for NHCK (Keyboards & Automation Suite) -->
+  <g id="logo-content" transform="scale(1)">
+    <!-- Main Icon Vector Elements -->
+    
+    <!-- NHCK / WASD Cluster 4-Key Vector -->
+    <path d="M 50 39 L 50 44 M 23 44 L 23 41 L 77 41 L 77 44" fill="none" stroke="#14B8A6" stroke-width="1.2" stroke-opacity="0.5" />
+    <g>
+      <!-- Top Key (N) -->
+      <rect x="38" y="15" width="24" height="24" rx="5" fill="#0F3838" />
+      <path d="M 41 36 L 41 19.5 Q 41 18 42.5 18 L 59 18 L 56 21 L 44 21 L 44 36 Z" fill="#14B8A6" />
+      <rect x="43.5" y="20.5" width="13" height="13" rx="3" fill="#FFFFFF" />
+      <text x="50" y="29.8" text-anchor="middle" fill="#0F3838" font-size="10" font-weight="900" font-family="sans-serif">N</text>
+
+      <!-- Left Key (H) -->
+      <rect x="11" y="44" width="24" height="24" rx="5" fill="#0F3838" />
+      <path d="M 14 65 L 14 48.5 Q 14 47 15.5 47 L 32 47 L 29 50 L 17 50 L 17 65 Z" fill="#14B8A6" />
+      <rect x="16.5" y="49.5" width="13" height="13" rx="3" fill="#FFFFFF" />
+      <text x="23" y="58.8" text-anchor="middle" fill="#0F3838" font-size="10" font-weight="900" font-family="sans-serif">H</text>
+
+      <!-- Center Key (C) -->
+      <rect x="38" y="44" width="24" height="24" rx="5" fill="#0F3838" />
+      <path d="M 41 65 L 41 48.5 Q 41 47 42.5 47 L 59 47 L 56 50 L 44 50 L 44 65 Z" fill="#14B8A6" />
+      <rect x="43.5" y="49.5" width="13" height="13" rx="3" fill="#FFFFFF" />
+      <text x="50" y="58.8" text-anchor="middle" fill="#0F3838" font-size="10" font-weight="900" font-family="sans-serif">C</text>
+
+      <!-- Right Key (K) -->
+      <rect x="65" y="44" width="24" height="24" rx="5" fill="#0F3838" />
+      <path d="M 68 65 L 68 48.5 Q 68 47 69.5 47 L 86 47 L 83 50 L 71 50 L 71 65 Z" fill="#14B8A6" />
+      <rect x="70.5" y="49.5" width="13" height="13" rx="3" fill="#FFFFFF" />
+      <text x="77" y="58.8" text-anchor="middle" fill="#0F3838" font-size="10" font-weight="900" font-family="sans-serif">K</text>
+    </g>
+    
+  </g>
+</svg>

@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@drawable/bg_dialog_rounded"
+    android:paddingStart="20dp"
+    android:paddingEnd="20dp"
+    android:paddingTop="22dp"
+    android:paddingBottom="16dp">
+
+  <!-- Header Title (e.g. Translate from / Translate to) -->
+  <TextView
+      android:id="@+id/tv_picker_title"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:text="Translate to"
+      android:textColor="?attr/colorLabel"
+      android:textSize="20sp"
+      android:gravity="center"
+      android:textStyle="normal"
+      android:layout_marginBottom="16dp"/>
+
+  <!-- Highlighted Selected Item Pill -->
+  <LinearLayout
+      android:id="@+id/layout_selected_lang"
+      android:layout_width="match_parent"
+      android:layout_height="52dp"
+      android:background="@drawable/bg_lang_selected_pill"
+      android:orientation="horizontal"
+      android:gravity="center_vertical"
+      android:paddingStart="18dp"
+      android:paddingEnd="18dp">
+
+    <ImageView
+        android:id="@+id/iv_check"
+        android:layout_width="22dp"
+        android:layout_height="22dp"
+        android:src="@drawable/ic_check"
+        android:tint="#FFFFFF"
+        android:layout_marginEnd="12dp"/>
+
+    <TextView
+        android:id="@+id/tv_selected_lang_name"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:text="Bangla"
+        android:textColor="#FFFFFF"
+        android:textSize="17sp"
+        android:singleLine="true"/>
+  </LinearLayout>
+
+  <!-- Divider -->
+  <View
+      android:layout_width="match_parent"
+      android:layout_height="1dp"
+      android:layout_marginTop="16dp"
+      android:layout_marginBottom="8dp"
+      android:background="#3A3E3A"/>
+
+  <!-- Scrollable List of Other Languages -->
+  <ListView
+      android:id="@+id/lv_languages"
+      android:layout_width="match_parent"
+      android:layout_height="280dp"
+      android:divider="@null"
+      android:scrollbars="vertical"/>
+</LinearLayout>
