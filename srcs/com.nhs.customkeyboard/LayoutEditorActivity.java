@@ -15,6 +15,7 @@ import android.graphics.RectF;
 import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import android.os.Handler;
 import android.os.Looper;
@@ -303,6 +304,21 @@ public class LayoutEditorActivity extends Activity
           _syncing = false;
         }
         schedule_deck_update(text);
+        Layout l = _input_editor.getLayout();
+        if (l != null && _input_editor.getText() != null) {
+          int curOffset = _input_editor.getSelectionStart();
+          if (curOffset >= 0 && curOffset <= _input_editor.getText().length()) {
+            int curLine = l.getLineForOffset(curOffset);
+            if (curLine >= 0 && curLine < l.getLineCount()) {
+              int start = l.getLineStart(curLine);
+              int end = l.getLineEnd(curLine);
+              CharSequence s = _input_editor.getText();
+              while (end > start && (s.charAt(end - 1) == '\n' || s.charAt(end - 1) == '\r'))
+                end--;
+              update_quick_chips_highlight(s.subSequence(start, end).toString());
+            }
+          }
+        }
       }
     });
 
@@ -359,11 +375,15 @@ public class LayoutEditorActivity extends Activity
     final Button button;
     final String attrName;
     final String insertText;
+    final String defaultLabel;
+    final String labelPrefix;
     final String desc;
-    QuickChip(Button b, String attr, String insertText, String desc) {
+    QuickChip(Button b, String attr, String insertText, String defaultLabel, String labelPrefix, String desc) {
       this.button = b;
       this.attrName = attr;
       this.insertText = insertText;
+      this.defaultLabel = defaultLabel;
+      this.labelPrefix = labelPrefix;
       this.desc = desc;
     }
   }
@@ -414,6 +434,14 @@ public class LayoutEditorActivity extends Activity
         attr = insertText.trim();
       }
 
+      String prefix = null;
+      int quoteIdx = label.indexOf("\"\"");
+      if (quoteIdx >= 0) {
+        prefix = label.substring(0, quoteIdx + 1);
+      }
+      final String finalAttr = attr;
+      final String finalPrefix = prefix;
+
       Button b = new Button(this);
       b.setText(label);
       b.setTextSize(11.5f);
@@ -443,21 +471,61 @@ public class LayoutEditorActivity extends Activity
       b.setOnClickListener(new View.OnClickListener() {
         @Override
         public void onClick(View v) {
+          Editable editable = _input_editor.getText();
+          if (editable == null) return;
+          Layout l = _input_editor.getLayout();
+          int curOffset = _input_editor.getSelectionStart();
+          int curLine = (l != null && curOffset >= 0) ? l.getLineForOffset(curOffset) : -1;
+
+          if (finalAttr != null && !finalAttr.isEmpty() && !finalAttr.startsWith("<") && !finalAttr.startsWith("/") && l != null && curLine >= 0) {
+            int lineStart = l.getLineStart(curLine);
+            int lineEnd = l.getLineEnd(curLine);
+            String lineStr = editable.subSequence(lineStart, lineEnd).toString();
+            if (lineStr.contains("<key")) {
+              Pattern p = Pattern.compile("(?:\\s|^)" + Pattern.quote(finalAttr) + "\\s*=\\s*([\"'])(.*?)\\1");
+              Matcher m = p.matcher(lineStr);
+              if (m.find()) {
+                int valStart = lineStart + m.start(2);
+                int valEnd = lineStart + m.end(2);
+                _input_editor.requestFocus();
+                _input_editor.setSelection(valStart, valEnd);
+                InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+                if (imm != null)
+                  imm.showSoftInput(_input_editor, InputMethodManager.SHOW_IMPLICIT);
+                return;
+              } else {
+                int closeIdx = lineStr.lastIndexOf("/>");
+                if (closeIdx < 0) closeIdx = lineStr.lastIndexOf(">");
+                if (closeIdx >= 0) {
+                  int insertPos = lineStart + closeIdx;
+                  String insertStr = " " + finalAttr + "=\"\"";
+                  editable.insert(insertPos, insertStr);
+                  int quotePos = insertPos + insertStr.indexOf("\"\"") + 1;
+                  _input_editor.requestFocus();
+                  _input_editor.setSelection(quotePos);
+                  highlight_key_for_line(curLine);
+                  InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+                  if (imm != null)
+                    imm.showSoftInput(_input_editor, InputMethodManager.SHOW_IMPLICIT);
+                  return;
+                }
+              }
+            }
+          }
+
           int start = _input_editor.getSelectionStart();
           int end = _input_editor.getSelectionEnd();
-          Editable editable = _input_editor.getText();
           if (start >= 0 && end >= 0) {
             editable.replace(Math.min(start, end), Math.max(start, end), insertText);
-            int quoteIdx = insertText.indexOf("\"\"");
-            if (quoteIdx >= 0)
-              _input_editor.setSelection(Math.min(start, end) + quoteIdx + 1);
+            int qIdx = insertText.indexOf("\"\"");
+            if (qIdx >= 0)
+              _input_editor.setSelection(Math.min(start, end) + qIdx + 1);
             else
               _input_editor.setSelection(Math.min(start, end) + insertText.length());
 
-            Layout l = _input_editor.getLayout();
             if (l != null) {
-              int curLine = l.getLineForOffset(_input_editor.getSelectionStart());
-              highlight_key_for_line(curLine);
+              int line = l.getLineForOffset(_input_editor.getSelectionStart());
+              highlight_key_for_line(line);
             }
           }
         }
@@ -476,7 +544,7 @@ public class LayoutEditorActivity extends Activity
       });
 
       chipsBar.addView(b);
-      _quickChips.add(new QuickChip(b, attr, insertText, desc));
+      _quickChips.add(new QuickChip(b, finalAttr, insertText, label, finalPrefix, desc));
     }
   }
 
@@ -491,6 +559,8 @@ public class LayoutEditorActivity extends Activity
     for (QuickChip chip : _quickChips)
     {
       boolean isActive = false;
+      String val = null;
+
       if (lineText != null && chip.attrName != null && !chip.attrName.isEmpty())
       {
         if (chip.attrName.startsWith("<") || chip.attrName.startsWith("/"))
@@ -499,9 +569,24 @@ public class LayoutEditorActivity extends Activity
         }
         else
         {
-          Pattern pattern = Pattern.compile("(?:\\s|^)" + Pattern.quote(chip.attrName) + "\\s*=");
-          isActive = pattern.matcher(lineText).find();
+          Pattern pattern = Pattern.compile("(?:\\s|^)" + Pattern.quote(chip.attrName) + "\\s*=\\s*([\"'])(.*?)\\1");
+          Matcher m = pattern.matcher(lineText);
+          if (m.find())
+          {
+            isActive = true;
+            val = m.group(2);
+          }
         }
+      }
+
+      if (isActive && val != null && chip.labelPrefix != null)
+      {
+        String displayVal = (val.length() > 10) ? (val.substring(0, 8) + "…") : val;
+        chip.button.setText(chip.labelPrefix + displayVal + "\"");
+      }
+      else
+      {
+        chip.button.setText(chip.defaultLabel);
       }
 
       GradientDrawable gd = new GradientDrawable();
