@@ -490,7 +490,7 @@
               <ImageView
                   android:id="@+id/anim_circle_view"
                   style="@style/anim"
-                  android:background="@drawable/doc_key_g"
+                  android:background="@drawable/doc_key_u"
                   android:src="@drawable/doc_anim_circle" />
 
               <TextView
