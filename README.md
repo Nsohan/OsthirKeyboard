@@ -21,19 +21,19 @@ Just download the `.apk`, allow installs from unknown sources, and enable it as 
 <div align="center">
 <table>
 <tr>
-<td><img src="https://raw.githubusercontent.com/nhs/NHSCustomKeyboard/main/Screenshots/Screenshot_1.jpeg" width="220"/></td>
-<td><img src="https://raw.githubusercontent.com/nhs/NHSCustomKeyboard/main/Screenshots/Screenshot_2.jpeg" width="220"/></td>
-<td><img src="https://raw.githubusercontent.com/nhs/NHSCustomKeyboard/main/Screenshots/Screenshot_3.jpeg" width="220"/></td>
+<td><img src="Screenshots/Screenshot_1.jpeg" width="220"/></td>
+<td><img src="Screenshots/Screenshot_2.jpeg" width="220"/></td>
+<td><img src="Screenshots/Screenshot_3.jpeg" width="220"/></td>
 </tr>
 <tr>
-<td><img src="https://raw.githubusercontent.com/nhs/NHSCustomKeyboard/main/Screenshots/Screenshot_4.jpeg" width="220"/></td>
-<td><img src="https://raw.githubusercontent.com/nhs/NHSCustomKeyboard/main/Screenshots/Screenshot_5.jpeg" width="220"/></td>
-<td><img src="https://raw.githubusercontent.com/nhs/NHSCustomKeyboard/main/Screenshots/Screenshot_6.jpeg" width="220"/></td>
+<td><img src="Screenshots/Screenshot_4.jpeg" width="220"/></td>
+<td><img src="Screenshots/Screenshot_5.jpeg" width="220"/></td>
+<td><img src="Screenshots/Screenshot_6.jpeg" width="220"/></td>
 </tr>
 <tr>
-<td><img src="https://raw.githubusercontent.com/nhs/NHSCustomKeyboard/main/Screenshots/Screenshot_7.jpeg" width="220"/></td>
-<td><img src="https://raw.githubusercontent.com/nhs/NHSCustomKeyboard/main/Screenshots/Screenshot_8.jpeg" width="220"/></td>
-<td><img src="https://raw.githubusercontent.com/nhs/NHSCustomKeyboard/main/Screenshots/Screenshot_9.jpeg" width="220"/></td>
+<td><img src="Screenshots/Screenshot_7.jpeg" width="220"/></td>
+<td><img src="Screenshots/Screenshot_8.jpeg" width="220"/></td>
+<td><img src="Screenshots/Screenshot_9.jpeg" width="220"/></td>
 </tr>
 </table>
 </div>
