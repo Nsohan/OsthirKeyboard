@@ -598,8 +598,11 @@ public class CustomLayoutEditDialog
     public LayoutEntryEditText(Context ctx)
     {
       super(ctx);
-      _ln_paint = new Paint(getPaint());
-      _ln_paint.setTextSize(_ln_paint.getTextSize() * 0.8f);
+      if (_ln_paint == null)
+      {
+        _ln_paint = new Paint(getPaint());
+        _ln_paint.setTextSize(_ln_paint.getTextSize() * 0.8f);
+      }
       _touchSlop = ViewConfiguration.get(ctx).getScaledTouchSlop();
       setHorizontallyScrolling(true);
       setHorizontalScrollBarEnabled(true);
@@ -620,6 +623,13 @@ public class CustomLayoutEditDialog
 
     private void checkAndUpdateGutterWidth()
     {
+      if (_ln_paint == null)
+      {
+        Paint p = getPaint();
+        if (p == null) return;
+        _ln_paint = new Paint(p);
+        _ln_paint.setTextSize(_ln_paint.getTextSize() * 0.8f);
+      }
       int line_count = Math.max(1, getLineCount());
       int digits = Math.max(2, (int) Math.log10(line_count) + 1);
       if (digits != _prev_digits)
