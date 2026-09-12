@@ -176,6 +176,13 @@ public class SettingsActivity extends AppCompatActivity
         startActivity(new Intent(requireContext(), com.nhs.customkeyboard.dict.DictionariesActivity.class));
         return true;
       }
+      if ("screen_guide".equals(preference.getKey()))
+      {
+        Intent intent = new Intent(requireContext(), LauncherActivity.class);
+        intent.putExtra(LauncherActivity.EXTRA_FORCE_GUIDE_MODE, true);
+        startActivity(intent);
+        return true;
+      }
       return super.onPreferenceTreeClick(preference);
     }
 

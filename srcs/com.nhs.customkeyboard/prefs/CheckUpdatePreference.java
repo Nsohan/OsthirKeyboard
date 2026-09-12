@@ -17,7 +17,7 @@ import com.nhs.customkeyboard.UpdateInstaller;
 
 /** Settings row (placed in its own "About" category, at the very
  bottom of the settings screen) that checks
- https://github.com/nhs/NHSCustomKeyboard for a newer release
+ https://github.com/Nsohan/OsthirKeyboard for a newer release
  than the one currently installed. The summary always shows the
  currently installed version; tapping the row re-checks and, if a
  newer release exists, shows a dialog with its release notes and a

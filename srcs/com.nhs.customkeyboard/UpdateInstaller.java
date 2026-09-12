@@ -30,7 +30,7 @@ import java.io.File;
  user install. */
 public final class UpdateInstaller
 {
-    private static final String DOWNLOADED_APK_FILENAME = "NHSCustomKeyboard.apk";
+    private static final String DOWNLOADED_APK_FILENAME = "OsthirKeyboard.apk";
 
     /** Starts the download-then-install flow for [release]. Safe to
      call from a UI click handler; shows its own dialogs/toasts for

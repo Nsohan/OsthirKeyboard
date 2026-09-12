@@ -18,22 +18,22 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 /** Checks GitHub's "latest release" API for
- https://github.com/nhs/NHSCustomKeyboard and reports back
+ https://github.com/Nsohan/OsthirKeyboard and reports back
  whether a newer version than the one currently installed is
  available - used by [CheckUpdatePreference]. The APK asset in each
- release is always named exactly "NHSCustomKeyboard.apk" (the version
+ release is always named exactly "OsthirKeyboard.apk" (the version
  lives in the release tag, not the filename), so [fetch_latest_release]
  looks for that name specifically, falling back to the first ".apk"
  asset it finds if a release is ever published without one exactly
  matching (rather than reporting "no update" just because of that). */
 public final class UpdateChecker
 {
-    private static final String REPO_OWNER = "nhs";
-    private static final String REPO_NAME = "NHSCustomKeyboard";
+    private static final String REPO_OWNER = "Nsohan";
+    private static final String REPO_NAME = "OsthirKeyboard";
     private static final String LATEST_RELEASE_API_URL =
             "https://api.github.com/repos/" + REPO_OWNER + "/" + REPO_NAME + "/releases/latest";
     /** Filename every release's APK asset is published under. */
-    public static final String EXPECTED_APK_ASSET_NAME = "NHSCustomKeyboard.apk";
+    public static final String EXPECTED_APK_ASSET_NAME = "OsthirKeyboard.apk";
 
     private static final ExecutorService EXECUTOR = Executors.newSingleThreadExecutor();
 
@@ -121,7 +121,7 @@ public final class UpdateChecker
             conn = (HttpURLConnection)new URL(LATEST_RELEASE_API_URL).openConnection();
             conn.setRequestProperty("Accept", "application/vnd.github+json");
             // GitHub's API rejects requests with no User-Agent.
-            conn.setRequestProperty("User-Agent", "NHSCustomKeyboard-UpdateChecker");
+            conn.setRequestProperty("User-Agent", "OsthirKeyboard-UpdateChecker");
             conn.setConnectTimeout(15000);
             conn.setReadTimeout(15000);
             int code = conn.getResponseCode();

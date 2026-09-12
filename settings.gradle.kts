@@ -17,4 +17,4 @@ dependencyResolutionManagement {
   }
 }
 
-rootProject.name = "NHSCustomKeyboard"
+rootProject.name = "OsthirKeyboard"

@@ -164,6 +164,13 @@
         android:key="screen_dictionary"
         android:title="@string/pref_screen_dictionary_title"
         android:icon="@drawable/ic_menu_book" />
+
+    <!-- 8. Gestures Guide & Playground -->
+    <Preference
+        android:key="screen_guide"
+        android:title="@string/pref_screen_guide_title"
+        android:summary="@string/pref_screen_guide_summary"
+        android:icon="@drawable/ic_gesture" />
   </PreferenceCategory>
 
   <!-- Group 4: Tasker & Automation, About -->
@@ -199,12 +206,56 @@
         android:icon="@drawable/ic_info_outline">
       <com.nhs.customkeyboard.prefs.AboutHeaderPreference
           android:key="about_header" />
-      <PreferenceCategory android:title="@string/pref_category_about" android:layout="@layout/pref_category_settings">
+
+      <PreferenceCategory android:title="@string/pref_category_updates" android:layout="@layout/pref_category_settings">
         <com.nhs.customkeyboard.prefs.CheckUpdatePreference
             android:key="check_update"
             android:icon="@drawable/ic_download"
             android:title="@string/pref_check_update_title"
             android:widgetLayout="@layout/pref_widget_chevron"/>
+        <Preference
+            android:key="about_changelog"
+            android:icon="@drawable/ic_clock_recent"
+            android:title="@string/pref_about_changelog_title"
+            android:summary="@string/pref_about_changelog_summary"
+            android:widgetLayout="@layout/pref_widget_chevron">
+          <intent
+              android:action="android.intent.action.VIEW"
+              android:data="https://github.com/Nsohan/OsthirKeyboard/releases" />
+        </Preference>
+      </PreferenceCategory>
+
+      <PreferenceCategory android:title="@string/pref_category_about_project" android:layout="@layout/pref_category_settings">
+        <Preference
+            android:key="about_github"
+            android:icon="@drawable/ic_github"
+            android:title="@string/pref_about_github_title"
+            android:summary="@string/pref_about_github_summary"
+            android:widgetLayout="@layout/pref_widget_chevron">
+          <intent
+              android:action="android.intent.action.VIEW"
+              android:data="https://github.com/Nsohan/OsthirKeyboard" />
+        </Preference>
+        <Preference
+            android:key="about_issues"
+            android:icon="@drawable/ic_bug_report"
+            android:title="@string/pref_about_issues_title"
+            android:summary="@string/pref_about_issues_summary"
+            android:widgetLayout="@layout/pref_widget_chevron">
+          <intent
+              android:action="android.intent.action.VIEW"
+              android:data="https://github.com/Nsohan/OsthirKeyboard/issues" />
+        </Preference>
+        <Preference
+            android:key="about_privacy"
+            android:icon="@drawable/ic_shield_check"
+            android:title="@string/pref_about_privacy_title"
+            android:summary="@string/pref_about_privacy_summary" />
+        <Preference
+            android:key="about_license"
+            android:icon="@drawable/ic_description"
+            android:title="@string/pref_about_license_title"
+            android:summary="@string/pref_about_license_summary" />
       </PreferenceCategory>
     </PreferenceScreen>
   </PreferenceCategory>
