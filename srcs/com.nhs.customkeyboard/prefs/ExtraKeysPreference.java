@@ -132,13 +132,11 @@ public class ExtraKeysPreference extends PreferenceCategory
     switch (name)
     {
       case "voice_typing":
-      case "change_method":
       case "switch_clipboard":
-      case "compose":
-      case "tab":
-      case "esc":
-      case "f11_placeholder":
-      case "f12_placeholder":
+      case "copy":
+      case "paste":
+      case "cut":
+      case "selectAll":
         return true;
       default:
         return false;
