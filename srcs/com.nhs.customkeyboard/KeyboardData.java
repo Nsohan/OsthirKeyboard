@@ -397,6 +397,7 @@ public final class KeyboardData
     public final String[] keyLabels;
     public final KeyValue[] keyOutputs;
     public final Role role;
+    public int sourceLineNumber = -1;
 
     public static final int F_LOC = 1;
     public static final int ALL_FLAGS = F_LOC;
@@ -502,6 +503,8 @@ public final class KeyboardData
 
     public static Key parse(XmlPullParser parser) throws Exception
     {
+      int parserLine = parser.getLineNumber();
+      int startLine = parserLine > 0 ? parserLine - 1 : -1;
       KeyValue[] ks = new KeyValue[9];
       KeyValue[] outs = new KeyValue[9];
       int keysflags = 0;
@@ -563,7 +566,9 @@ public final class KeyboardData
       Role role = (role_str == null) ? Role.Normal : Role.parse(role_str);
       while (parser.next() != XmlPullParser.END_TAG)
         continue;
-      return new Key(ks, outs, anticircle, longPressKey, keysflags, width, shift, indication, keyLabels, role);
+      Key parsedKey = new Key(ks, outs, anticircle, longPressKey, keysflags, width, shift, indication, keyLabels, role);
+      parsedKey.sourceLineNumber = startLine;
+      return parsedKey;
     }
 
     public boolean keyHasFlag(int index, int flag)
@@ -573,8 +578,10 @@ public final class KeyboardData
 
     public Key scaleWidth(float s)
     {
-      return new Key(keys, keyOutputs, anticircle, longPressKey, keysflags,
+      Key k = new Key(keys, keyOutputs, anticircle, longPressKey, keysflags,
               width * s, shift, indication, keyLabels, role);
+      k.sourceLineNumber = this.sourceLineNumber;
+      return k;
     }
 
     public void getKeys(Map<KeyValue, KeyPos> dst, int row, int col)
@@ -624,7 +631,9 @@ public final class KeyboardData
       for (int j = 0; j < keyOutputs.length; j++) outs[j] = keyOutputs[j];
       ks[i] = kv;
       int flags = (keysflags & ~(ALL_FLAGS << i));
-      return new Key(ks, outs, anticircle, longPressKey, flags, width, shift, indication, keyLabels, role);
+      Key k = new Key(ks, outs, anticircle, longPressKey, flags, width, shift, indication, keyLabels, role);
+      k.sourceLineNumber = this.sourceLineNumber;
+      return k;
     }
 
     public Key withWidth(float w)
@@ -639,7 +648,9 @@ public final class KeyboardData
 
     public Key withWidthAndShift(float w, float s)
     {
-      return new Key(keys, keyOutputs, anticircle, longPressKey, keysflags, w, s, indication, keyLabels, role);
+      Key k = new Key(keys, keyOutputs, anticircle, longPressKey, keysflags, w, s, indication, keyLabels, role);
+      k.sourceLineNumber = this.sourceLineNumber;
+      return k;
     }
 
     public boolean hasValue(KeyValue kv)
@@ -686,7 +697,9 @@ public final class KeyboardData
       KeyValue[] outs = new KeyValue[k.keyOutputs.length];
       for (int i = 0; i < outs.length; i++)
         outs[i] = k.keyOutputs[i];
-      return new Key(ks, outs, k.anticircle, k.longPressKey, k.keysflags, k.width, k.shift, k.indication, k.keyLabels, k.role);
+      Key k_new = new Key(ks, outs, k.anticircle, k.longPressKey, k.keysflags, k.width, k.shift, k.indication, k.keyLabels, k.role);
+      k_new.sourceLineNumber = k.sourceLineNumber;
+      return k_new;
     }
   }
 

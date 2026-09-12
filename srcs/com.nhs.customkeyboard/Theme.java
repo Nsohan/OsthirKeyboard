@@ -102,10 +102,10 @@ public class Theme
 
   public static final class Computed
   {
-    public final float vertical_margin;
-    public final float horizontal_margin;
-    public final float margin_top;
-    public final float margin_left;
+    public float vertical_margin;
+    public float horizontal_margin;
+    public float margin_top;
+    public float margin_left;
     public final float row_height;
     public final Paint indication_paint;
 

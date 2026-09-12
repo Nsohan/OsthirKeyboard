@@ -336,7 +336,7 @@ public class LayoutsPreference extends ListGroupPreference<LayoutsPreference.Lay
                     callback.select(new SystemLayout());
                     break;
                   case "custom":
-                    select_custom(callback, read_initial_custom_layout());
+                    open_layout_editor(-1, read_initial_custom_layout(), "Custom layout", false);
                     break;
                   default:
                     callback.select(new NamedLayout(name));
@@ -347,35 +347,128 @@ public class LayoutsPreference extends ListGroupPreference<LayoutsPreference.Lay
             .show();
   }
 
+  public static String read_builtin_layout_xml(Context ctx, String name)
+  {
+    if (name == null || name.isEmpty() || name.equals("system"))
+      name = "latn_qwerty_us";
+
+    try
+    {
+      return Utils.read_all_utf8(ctx.getAssets().open("layouts/" + name + ".xml"));
+    }
+    catch (Exception e)
+    {
+      try
+      {
+        return Utils.read_all_utf8(ctx.getResources().openRawResource(R.raw.latn_qwerty_us));
+      }
+      catch (Exception e2)
+      {
+        return "";
+      }
+    }
+  }
+
+  public static String read_layout_xml(Context ctx, Layout layout)
+  {
+    if (layout instanceof CustomLayout)
+    {
+      return ((CustomLayout)layout).xml;
+    }
+    else if (layout instanceof NamedLayout)
+    {
+      return read_builtin_layout_xml(ctx, ((NamedLayout)layout).name);
+    }
+    else if (layout instanceof SystemLayout)
+    {
+      return read_builtin_layout_xml(ctx, "latn_qwerty_us");
+    }
+    return "";
+  }
+
+  void open_layout_editor(int index, String initial_xml, String name, boolean allow_remove)
+  {
+    Intent intent = new Intent(getContext(), LayoutEditorActivity.class);
+    intent.putExtra(LayoutEditorActivity.EXTRA_INITIAL_XML, initial_xml);
+    intent.putExtra(LayoutEditorActivity.EXTRA_LAYOUT_INDEX, index);
+    intent.putExtra(LayoutEditorActivity.EXTRA_LAYOUT_NAME, name);
+    intent.putExtra(LayoutEditorActivity.EXTRA_ALLOW_REMOVE, allow_remove);
+    getContext().startActivity(intent);
+  }
+
+  public static void save_custom_layout_at_index(Context ctx, int index, String xml)
+  {
+    SharedPreferences prefs = androidx.preference.PreferenceManager.getDefaultSharedPreferences(ctx);
+    String raw = prefs.getString(KEY, null);
+    List<Layout> values = (raw != null) ? load_from_string(raw, SERIALIZER) : new ArrayList<>(DEFAULT);
+    if (values == null) values = new ArrayList<>(DEFAULT);
+
+    if (index >= 0 && index < values.size())
+    {
+      values.set(index, CustomLayout.parse(xml));
+      prefs.edit().putString(KEY, save_to_string(values, SERIALIZER)).apply();
+    }
+  }
+
+  public static void add_custom_layout_to_preferences(Context ctx, String xml)
+  {
+    SharedPreferences prefs = androidx.preference.PreferenceManager.getDefaultSharedPreferences(ctx);
+    String raw = prefs.getString(KEY, null);
+    List<Layout> values = (raw != null) ? load_from_string(raw, SERIALIZER) : new ArrayList<>(DEFAULT);
+    if (values == null) values = new ArrayList<>(DEFAULT);
+
+    int insert_at = 0;
+    for (Layout existing : values)
+    {
+      if (existing instanceof KeymapEntry)
+        break;
+      insert_at++;
+    }
+    values.add(insert_at, CustomLayout.parse(xml));
+    prefs.edit().putString(KEY, save_to_string(values, SERIALIZER)).apply();
+  }
+
+  public static void remove_layout_at_index(Context ctx, int index)
+  {
+    SharedPreferences prefs = androidx.preference.PreferenceManager.getDefaultSharedPreferences(ctx);
+    String raw = prefs.getString(KEY, null);
+    if (raw == null) return;
+    List<Layout> values = load_from_string(raw, SERIALIZER);
+    if (values != null && index >= 0 && index < values.size())
+    {
+      values.remove(index);
+      prefs.edit().putString(KEY, save_to_string(values, SERIALIZER)).apply();
+    }
+  }
+
+  @Override
+  boolean has_icon_click_handler(Layout value, int index)
+  {
+    return true;
+  }
+
+  @Override
+  void on_icon_click(final SelectionCallback<Layout> callback, Layout value, int index)
+  {
+    if (value instanceof KeymapEntry)
+    {
+      String name = ((KeymapEntry)value).name;
+      KeymapManager.StoredKeymap stored = KeymapManager.find(getContext(), name);
+      String initial = (stored != null) ? stored.json : read_initial_keymap();
+      select_keymap(callback, initial, name);
+    }
+    else
+    {
+      String initial_xml = read_layout_xml(getContext(), value);
+      String name = label_of_layout(value);
+      boolean allow_remove = should_allow_remove_item(value) || (value instanceof CustomLayout && _values.size() > 1);
+      open_layout_editor(index, initial_xml, name, allow_remove);
+    }
+  }
+
   void select_custom(final SelectionCallback callback, String initial_text)
   {
-    boolean allow_remove = callback.allow_remove() && _values.size() > 1;
-    CustomLayoutEditDialog.show(getContext(), initial_text, allow_remove,
-            R.string.pref_custom_layout_title, R.string.pref_layouts_remove_custom,
-            true, null,
-            new CustomLayoutEditDialog.Callback()
-            {
-              public void select(String text)
-              {
-                if (text == null)
-                  callback.select(null);
-                else
-                  callback.select(CustomLayout.parse(text));
-              }
-
-              public String validate(String text)
-              {
-                try
-                {
-                  KeyboardData.load_string_exn(text);
-                  return null;
-                }
-                catch (Exception e)
-                {
-                  return e.getMessage();
-                }
-              }
-            });
+    open_layout_editor(-1, initial_text, "Custom layout", false);
   }
 
   @Override
@@ -383,7 +476,10 @@ public class LayoutsPreference extends ListGroupPreference<LayoutsPreference.Lay
   {
     if (prev_layout != null && prev_layout instanceof CustomLayout)
     {
-      select_custom(callback, ((CustomLayout)prev_layout).xml);
+      int idx = _values.indexOf(prev_layout);
+      String name = label_of_layout(prev_layout);
+      boolean allow_remove = _values.size() > 1;
+      open_layout_editor(idx, ((CustomLayout)prev_layout).xml, name, allow_remove);
     }
     else if (prev_layout != null && prev_layout instanceof KeymapEntry)
     {
@@ -400,15 +496,7 @@ public class LayoutsPreference extends ListGroupPreference<LayoutsPreference.Lay
 
   String read_initial_custom_layout()
   {
-    try
-    {
-      Resources res = getContext().getResources();
-      return Utils.read_all_utf8(res.openRawResource(R.raw.latn_qwerty_us));
-    }
-    catch (Exception _e)
-    {
-      return "";
-    }
+    return read_builtin_layout_xml(getContext(), "latn_qwerty_us");
   }
 
   String read_initial_keymap()

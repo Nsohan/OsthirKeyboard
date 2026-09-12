@@ -42,6 +42,13 @@
         android:configChanges="orientation|screenSize|screenLayout|keyboardHidden" />
 
     <activity
+        android:name=".LayoutEditorActivity"
+        android:label="Layout Editor"
+        android:theme="@style/settingsTheme"
+        android:windowSoftInputMode="adjustResize"
+        android:configChanges="orientation|screenSize|screenLayout|keyboardHidden" />
+
+    <activity
         android:name=".TaskerAutomationGuideActivity"
         android:label="@string/tasker_guide_activity_title"
         android:theme="@style/settingsTheme" />

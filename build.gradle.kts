@@ -34,7 +34,7 @@ android {
       manifest.srcFile("AndroidManifest.xml")
       java.srcDirs("srcs/com.nhs.customkeyboard", "vendor/cdict/java/nhs.cdict")
       res.srcDirs("res", "build/generated-resources")
-      assets.srcDirs("assets")
+      assets.srcDirs("assets", "build/generated-assets")
     }
 
     named("test") {
@@ -198,8 +198,14 @@ val copyLayoutDefinitions by tasks.registering(Copy::class) {
   into("build/generated-resources/xml")
 }
 
+val copyLayoutAssets by tasks.registering(Copy::class) {
+  from("srcs/layouts")
+  include("*.xml")
+  into("build/generated-assets/layouts")
+}
+
 tasks.named("preBuild") {
-  dependsOn(initDebugKeystore, copyRawQwertyUS, copyLayoutDefinitions)
+  dependsOn(initDebugKeystore, copyRawQwertyUS, copyLayoutDefinitions, copyLayoutAssets)
   // 'mustRunAfter' defines ordering between tasks (which is required by
   // Gradle) but doesn't create a dependency. These rules update files that are
   // checked in the repository that don't need to be updated during regular

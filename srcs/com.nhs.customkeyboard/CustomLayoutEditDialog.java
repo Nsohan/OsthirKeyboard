@@ -22,6 +22,9 @@ import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.Spinner;
 import android.widget.TextView;
+import android.view.MotionEvent;
+import android.view.ViewParent;
+import androidx.core.widget.NestedScrollView;
 
 import android.content.res.Configuration;
 import android.graphics.drawable.GradientDrawable;
@@ -485,13 +488,66 @@ public class CustomLayoutEditDialog
     return (int)(value * ctx.getResources().getDisplayMetrics().density);
   }
 
-  private static class MaxHeightScrollView extends ScrollView
+  public static class MaxHeightScrollView extends NestedScrollView
   {
     private int _max_height = Integer.MAX_VALUE;
+    private float _lastY = 0f;
 
-    public MaxHeightScrollView(Context ctx) { super(ctx); }
+    public MaxHeightScrollView(Context ctx)
+    {
+      super(ctx);
+      setNestedScrollingEnabled(true);
+    }
 
     public void set_max_height(int max_height_px) { _max_height = max_height_px; }
+
+    @Override
+    public boolean dispatchTouchEvent(MotionEvent ev)
+    {
+      ViewParent parent = getParent();
+      switch (ev.getActionMasked())
+      {
+        case MotionEvent.ACTION_DOWN:
+          _lastY = ev.getY();
+          if (parent != null)
+            parent.requestDisallowInterceptTouchEvent(true);
+          break;
+
+        case MotionEvent.ACTION_MOVE:
+          float currentY = ev.getY();
+          float deltaY = currentY - _lastY;
+          _lastY = currentY;
+
+          if (parent != null)
+          {
+            // deltaY < 0: dragging finger UP (scrolling DOWN towards bottom of code)
+            // deltaY > 0: dragging finger DOWN (scrolling UP towards top of code)
+            if (deltaY < 0 && !canScrollVertically(1))
+            {
+              // Reached bottom of code, allow main page to scroll down
+              parent.requestDisallowInterceptTouchEvent(false);
+            }
+            else if (deltaY > 0 && !canScrollVertically(-1))
+            {
+              // Reached top/head of code, allow main page to scroll up
+              parent.requestDisallowInterceptTouchEvent(false);
+            }
+            else
+            {
+              // Still room to scroll within code in this direction
+              parent.requestDisallowInterceptTouchEvent(true);
+            }
+          }
+          break;
+
+        case MotionEvent.ACTION_UP:
+        case MotionEvent.ACTION_CANCEL:
+          if (parent != null)
+            parent.requestDisallowInterceptTouchEvent(false);
+          break;
+      }
+      return super.dispatchTouchEvent(ev);
+    }
 
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec)
@@ -508,7 +564,7 @@ public class CustomLayoutEditDialog
     }
   }
 
-  static class LayoutEntryEditText extends EditText
+  public static class LayoutEntryEditText extends EditText
   {
     Paint _ln_paint;
     OnChangeListener _on_change_listener = null;
@@ -537,6 +593,41 @@ public class CustomLayoutEditDialog
       _on_change_throttler = new Handler(ctx.getMainLooper());
     }
 
+    public interface OnLineSelectListener {
+      void onLineSelected(int lineIndex);
+    }
+    private OnLineSelectListener _line_select_listener = null;
+    public void setOnLineSelectListener(OnLineSelectListener l) { _line_select_listener = l; }
+
+    private int _highlightedLine = -1;
+    private Paint _highlightLineBgPaint;
+    private Paint _highlightLineBarPaint;
+
+    public void setHighlightedLine(int lineIndex)
+    {
+      if (_highlightedLine != lineIndex)
+      {
+        _highlightedLine = lineIndex;
+        invalidate();
+      }
+    }
+
+    public int getHighlightedLine()
+    {
+      return _highlightedLine;
+    }
+
+    @Override
+    protected void onSelectionChanged(int selStart, int selEnd)
+    {
+      super.onSelectionChanged(selStart, selEnd);
+      if (_line_select_listener != null && getLayout() != null)
+      {
+        int line = getLayout().getLineForOffset(selStart);
+        _line_select_listener.onLineSelected(line);
+      }
+    }
+
     public void set_on_text_change(OnChangeListener l) { _on_change_listener = l; }
 
     Rect _clip_bounds = new Rect();
@@ -547,22 +638,55 @@ public class CustomLayoutEditDialog
     {
       float digit_width = _ln_paint.measureText("0");
       int line_count = getLineCount();
-      int padding = (int)(((int)Math.log10(line_count) + 1 + 1) * digit_width);
-      if (padding != _prev_padding) {
-        setPadding(padding, 0, 0, 0);
-        _prev_padding = padding;
+      int digits = Math.max(2, (int) Math.log10(Math.max(1, line_count)) + 1);
+      int gutter_width = (int) ((digits + 1.2f) * digit_width + dp(getContext(), 10));
+      if (gutter_width != _prev_padding) {
+        setPadding(gutter_width, dp(getContext(), 4), dp(getContext(), 8), dp(getContext(), 4));
+        _prev_padding = gutter_width;
       }
+
+      Layout layout = getLayout();
+      if (layout != null && _highlightedLine >= 0 && _highlightedLine < line_count)
+      {
+        if (_highlightLineBgPaint == null)
+        {
+          _highlightLineBgPaint = new Paint();
+          _highlightLineBgPaint.setStyle(Paint.Style.FILL);
+          _highlightLineBarPaint = new Paint();
+          _highlightLineBarPaint.setStyle(Paint.Style.FILL);
+        }
+        boolean isDark = is_dark_theme(getContext());
+        _highlightLineBgPaint.setColor(isDark ? Color.argb(60, 56, 189, 248) : Color.argb(40, 52, 120, 246));
+        _highlightLineBarPaint.setColor(isDark ? Color.rgb(56, 189, 248) : Color.rgb(52, 120, 246));
+
+        int top = layout.getLineTop(_highlightedLine);
+        int bottom = layout.getLineBottom(_highlightedLine);
+        canvas.drawRect(0, top, getWidth(), bottom, _highlightLineBgPaint);
+        canvas.drawRect(0, top, dp(getContext(), 4), bottom, _highlightLineBarPaint);
+      }
+
       super.onDraw(canvas);
       final boolean isDark = is_dark_theme(getContext());
       _ln_paint.setColor(isDark ? Color.rgb(100, 116, 139) : Color.rgb(152, 162, 171));
       canvas.getClipBounds(_clip_bounds);
-      Layout layout = getLayout();
-      int offset = (int)(digit_width / 2.f);
+      if (layout == null) return;
+      int offset = dp(getContext(), 6);
       int line = layout.getLineForVertical(_clip_bounds.top);
       while (line < line_count)
       {
         int baseline = getLineBounds(line, null);
-        canvas.drawText(String.valueOf(line), offset, baseline, _ln_paint);
+        if (line == _highlightedLine)
+        {
+          _ln_paint.setColor(isDark ? Color.rgb(56, 189, 248) : Color.rgb(52, 120, 246));
+          _ln_paint.setFakeBoldText(true);
+          canvas.drawText(String.valueOf(line), offset, baseline, _ln_paint);
+          _ln_paint.setFakeBoldText(false);
+          _ln_paint.setColor(isDark ? Color.rgb(100, 116, 139) : Color.rgb(152, 162, 171));
+        }
+        else
+        {
+          canvas.drawText(String.valueOf(line), offset, baseline, _ln_paint);
+        }
         line++;
         if (baseline >= _clip_bounds.bottom)
           break;

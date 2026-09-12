@@ -83,6 +83,17 @@ public abstract class ListGroupPreference<E> extends PreferenceGroup
       item is being added. */
   abstract void select(SelectionCallback<E> callback, E old_value);
 
+  /** Whether the left icon on an item row handles its own click action. */
+  boolean has_icon_click_handler(E value, int index)
+  {
+    return false;
+  }
+
+  /** Called when the left icon on an item row is clicked. */
+  void on_icon_click(SelectionCallback<E> callback, E value, int index)
+  {
+  }
+
   /** A separate class is used as the same serializer must be used in the
       static context. See [Serializer] below. */
   abstract Serializer<E> get_serializer();
@@ -251,6 +262,33 @@ public abstract class ListGroupPreference<E> extends PreferenceGroup
             remove_item(_index);
           }
         });
+      View icon_view = holder.findViewById(android.R.id.icon);
+      if (icon_view != null && has_icon_click_handler(_value, _index))
+      {
+        icon_view.setFocusable(true);
+        icon_view.setClickable(true);
+        android.util.TypedValue outValue = new android.util.TypedValue();
+        getContext().getTheme().resolveAttribute(android.R.attr.selectableItemBackgroundBorderless, outValue, true);
+        if (outValue.resourceId != 0)
+          icon_view.setBackgroundResource(outValue.resourceId);
+        icon_view.setOnClickListener(new View.OnClickListener() {
+          @Override
+          public void onClick(View _v)
+          {
+            on_icon_click(new SelectionCallback<E>() {
+              public void select(E value)
+              {
+                if (value == null)
+                  remove_item(_index);
+                else
+                  change_item(_index, value);
+              }
+
+              public boolean allow_remove() { return true; }
+            }, _value, _index);
+          }
+        });
+      }
       holder.itemView.setOnClickListener(new View.OnClickListener() {
         @Override
         public void onClick(View _v)

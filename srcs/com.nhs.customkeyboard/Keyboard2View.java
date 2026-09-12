@@ -16,13 +16,21 @@ import android.view.View;
 import android.view.Window;
 import android.view.WindowInsets;
 import android.view.WindowManager;
-import android.view.WindowMetrics;
+import android.content.res.Configuration;
+import android.graphics.Color;
+import android.util.TypedValue;
+import android.view.ViewConfiguration;
 import java.util.Arrays;
 import java.util.List;
 
 public class Keyboard2View extends View
         implements View.OnTouchListener, Pointers.IPointerEventHandler
 {
+  public interface OnKeyClickListener
+  {
+    void onKeyClick(KeyboardData.Key key);
+  }
+
   private KeyboardData _keyboard;
 
   /** The key holding the shift key is used to set shift state from
@@ -54,6 +62,58 @@ public class Keyboard2View extends View
   private Theme.Computed _tc;
 
   private static RectF _tmpRect = new RectF();
+  private boolean _previewMode = false;
+  private Paint _previewBorderPaint = null;
+  private Paint _previewFallbackBgPaint = null;
+  private Paint _previewHighlightPaint = null;
+  private Paint _previewHighlightBorderPaint = null;
+  private OnKeyClickListener _keyClickListener = null;
+  private KeyboardData.Key _highlightedKey = null;
+  private float _previewDownX = 0f;
+  private float _previewDownY = 0f;
+  private boolean _previewIsVerticalScroll = false;
+  private int _touchSlop = 0;
+
+  public void setPreviewMode(boolean preview)
+  {
+    _previewMode = preview;
+    requestLayout();
+    invalidate();
+  }
+
+  public void setOnKeyClickListener(OnKeyClickListener listener)
+  {
+    _keyClickListener = listener;
+  }
+
+  public void setHighlightedKey(KeyboardData.Key key)
+  {
+    if (_highlightedKey != key)
+    {
+      _highlightedKey = key;
+      invalidate();
+    }
+  }
+
+  public KeyboardData.Key getHighlightedKey()
+  {
+    return _highlightedKey;
+  }
+
+  public KeyboardData getKeyboard()
+  {
+    return _keyboard;
+  }
+
+  public KeyboardData.Key findKeyByLine(int line)
+  {
+    if (_keyboard == null || _keyboard.rows == null || line < 0) return null;
+    for (KeyboardData.Row r : _keyboard.rows)
+      for (KeyboardData.Key k : r.keys)
+        if (k.sourceLineNumber == line)
+          return k;
+    return null;
+  }
 
   enum Vertical
   {
@@ -62,12 +122,18 @@ public class Keyboard2View extends View
     BOTTOM
   }
 
+  public Keyboard2View(Context context)
+  {
+    this(context, null);
+  }
+
   public Keyboard2View(Context context, AttributeSet attrs)
   {
     super(context, attrs);
     _theme = new Theme(getContext(), attrs);
     _config = Config.globalConfig();
     _pointers = new Pointers(this, _config);
+    _touchSlop = ViewConfiguration.get(context).getScaledTouchSlop();
     refresh_navigation_bar(context);
     setOnTouchListener(this);
     int layout_id = (attrs == null) ? 0 :
@@ -93,24 +159,31 @@ public class Keyboard2View extends View
       return;
     // The intermediate Window is a [Dialog].
     Window w = getParentWindow(context);
-    w.setNavigationBarColor(_theme.colorNavBar);
-    if (VERSION.SDK_INT < 26)
-      return;
-    int uiFlags = getSystemUiVisibility();
-    if (_theme.isLightNavBar)
-      uiFlags |= View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR;
-    else
-      uiFlags &= ~View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR;
-    setSystemUiVisibility(uiFlags);
+    if (w != null)
+    {
+      w.setNavigationBarColor(_theme.colorNavBar);
+      if (VERSION.SDK_INT >= 26)
+      {
+        int uiFlags = getSystemUiVisibility();
+        if (_theme.isLightNavBar)
+          uiFlags |= View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR;
+        else
+          uiFlags &= ~View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR;
+        setSystemUiVisibility(uiFlags);
+      }
+    }
   }
 
   public void setKeyboard(KeyboardData kw)
   {
+    int prevLine = (_highlightedKey != null) ? _highlightedKey.sourceLineNumber : -1;
     _keyboard = kw;
     _shift_key = _keyboard.findKeyWithValue(KeyValue.SHIFT);
     _compose_key = _keyboard.findKeyWithValue(KeyValue.COMPOSE);
     KeyModifier.set_modmap(_keyboard.modmap);
     reset();
+    if (prevLine >= 0)
+      _highlightedKey = findKeyByLine(prevLine);
   }
 
   public void reset()
@@ -157,7 +230,8 @@ public class Keyboard2View extends View
   public void onPointerDown(KeyValue k, boolean isSwipe)
   {
     updateFlags();
-    _config.handler.key_down(k, isSwipe);
+    if (_config != null && _config.handler != null)
+      _config.handler.key_down(k, isSwipe);
     invalidate();
     vibrate();
   }
@@ -166,14 +240,16 @@ public class Keyboard2View extends View
   {
     // [key_up] must be called before [updateFlags]. The latter might disable
     // flags.
-    _config.handler.key_up(k, mods);
+    if (_config != null && _config.handler != null)
+      _config.handler.key_up(k, mods);
     updateFlags();
     invalidate();
   }
 
   public void onPointerHold(KeyValue k, Pointers.Modifiers mods)
   {
-    _config.handler.key_up(k, mods);
+    if (_config != null && _config.handler != null)
+      _config.handler.key_up(k, mods);
     updateFlags();
   }
 
@@ -188,12 +264,68 @@ public class Keyboard2View extends View
   private void updateFlags()
   {
     _mods = _pointers.getModifiers();
-    _config.handler.mods_changed(_mods);
+    if (_config != null && _config.handler != null)
+      _config.handler.mods_changed(_mods);
   }
 
   @Override
   public boolean onTouch(View v, MotionEvent event)
   {
+    if (_previewMode)
+    {
+      switch (event.getActionMasked())
+      {
+        case MotionEvent.ACTION_DOWN:
+        {
+          _previewDownX = event.getX();
+          _previewDownY = event.getY();
+          _previewIsVerticalScroll = false;
+          KeyboardData.Key key = getKeyAtPosition(_previewDownX, _previewDownY);
+          if (key != null)
+          {
+            setHighlightedKey(key);
+            if (_keyClickListener != null)
+              _keyClickListener.onKeyClick(key);
+            if (getParent() != null)
+              getParent().requestDisallowInterceptTouchEvent(true);
+          }
+          return true;
+        }
+        case MotionEvent.ACTION_MOVE:
+        {
+          if (_previewIsVerticalScroll)
+            return false;
+          float tx = event.getX();
+          float ty = event.getY();
+          float dx = tx - _previewDownX;
+          float dy = ty - _previewDownY;
+          if (Math.abs(dy) > _touchSlop && Math.abs(dy) > Math.abs(dx) * 1.3f)
+          {
+            _previewIsVerticalScroll = true;
+            if (getParent() != null)
+              getParent().requestDisallowInterceptTouchEvent(false);
+            return false;
+          }
+          KeyboardData.Key key = getKeyAtPosition(tx, ty);
+          if (key != null && key != _highlightedKey)
+          {
+            setHighlightedKey(key);
+            if (_keyClickListener != null)
+              _keyClickListener.onKeyClick(key);
+          }
+          return true;
+        }
+        case MotionEvent.ACTION_UP:
+        case MotionEvent.ACTION_CANCEL:
+        {
+          if (getParent() != null)
+            getParent().requestDisallowInterceptTouchEvent(false);
+          return true;
+        }
+      }
+      return true;
+    }
+
     int p;
     switch (event.getActionMasked())
     {
@@ -264,13 +396,30 @@ public class Keyboard2View extends View
   @Override
   public void onMeasure(int wSpec, int hSpec)
   {
-    DisplayMetrics dm = getContext().getResources().getDisplayMetrics();
-    int width = dm.widthPixels;
+    if (_keyboard == null)
+    {
+      setMeasuredDimension(0, 0);
+      return;
+    }
+    int width = MeasureSpec.getSize(wSpec);
+    if (width <= 0)
+    {
+      DisplayMetrics dm = getContext().getResources().getDisplayMetrics();
+      width = dm.widthPixels;
+    }
     _marginLeft = Math.max(_config.horizontal_margin, _insets_left);
     _marginRight = Math.max(_config.horizontal_margin, _insets_right);
     _marginBottom = _config.margin_bottom + _insets_bottom;
     _keyWidth = (width - _marginLeft - _marginRight) / _keyboard.keysWidth;
     _tc = new Theme.Computed(_theme, _config, _keyWidth, _keyboard);
+
+    if (_previewMode)
+    {
+      _tc.horizontal_margin = Math.max(dp(3.5f), _tc.horizontal_margin);
+      _tc.vertical_margin = Math.max(dp(4f), _tc.vertical_margin);
+      _tc.margin_left = _tc.horizontal_margin / 2;
+      _tc.margin_top = _config.marginTop + _tc.vertical_margin / 2;
+    }
     // Compute the size of labels based on the width or the height of keys. The
     // margin around keys is taken into account. Keys normal aspect ratio is
     // assumed to be 3/2 for a 10 columns layout. It's generally more, the
@@ -367,6 +516,8 @@ public class Keyboard2View extends View
   @Override
   protected void onDraw(Canvas canvas)
   {
+    if (_keyboard == null || _tc == null)
+      return;
     float y = _tc.margin_top;
     for (KeyboardData.Row row : _keyboard.rows)
     {
@@ -378,6 +529,8 @@ public class Keyboard2View extends View
         x += k.shift * _keyWidth;
         float keyW = _keyWidth * k.width - _tc.horizontal_margin;
         boolean isKeyDown = _pointers.isKeyDown(k);
+        boolean isHighlighted = (_previewMode && _highlightedKey != null &&
+            (k == _highlightedKey || (k.sourceLineNumber >= 0 && k.sourceLineNumber == _highlightedKey.sourceLineNumber)));
         Theme.Computed.Key tc_key;
         if (isKeyDown)
           tc_key = _tc.key_activated;
@@ -392,7 +545,7 @@ public class Keyboard2View extends View
             default:
             case Normal: tc_key = _tc.key; break;
           }
-        drawKeyFrame(canvas, x, y, keyW, keyH, tc_key);
+        drawKeyFrame(canvas, x, y, keyW, keyH, tc_key, isHighlighted);
         if (k.keys[0] != null)
           drawLabel(canvas, k, k.keys[0], keyW / 2f + x, y, keyH, isKeyDown, tc_key);
         for (int i = 1; i < 9; i++)
@@ -419,13 +572,51 @@ public class Keyboard2View extends View
 
   /** Draw borders and background of the key. */
   void drawKeyFrame(Canvas canvas, float x, float y, float keyW, float keyH,
-                    Theme.Computed.Key tc)
+                    Theme.Computed.Key tc, boolean isHighlighted)
   {
-    float r = tc.border_radius;
+    float r = tc.border_radius > 0 ? tc.border_radius : (_previewMode ? dp(6) : 0);
     float w = tc.border_width;
-    float padding = w / 2.f;
+    float padding = (w > 0 ? w : (_previewMode ? dp(0.5f) : 0)) / 2.f;
     _tmpRect.set(x + padding, y + padding, x + keyW - padding, y + keyH - padding);
-    canvas.drawRoundRect(_tmpRect, r, r, tc.bg_paint);
+
+    if (_previewMode)
+    {
+      if (_previewFallbackBgPaint == null)
+      {
+        _previewFallbackBgPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        _previewFallbackBgPaint.setStyle(Paint.Style.FILL);
+        boolean isDark = (getContext().getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES;
+        _previewFallbackBgPaint.setColor(isDark ? Color.argb(45, 255, 255, 255) : Color.argb(20, 0, 0, 0));
+      }
+      if (tc.bg_paint.getColor() == 0 || Color.alpha(tc.bg_paint.getColor()) < 15)
+        canvas.drawRoundRect(_tmpRect, r, r, _previewFallbackBgPaint);
+      else
+        canvas.drawRoundRect(_tmpRect, r, r, tc.bg_paint);
+    }
+    else
+    {
+      canvas.drawRoundRect(_tmpRect, r, r, tc.bg_paint);
+    }
+
+    if (isHighlighted)
+    {
+      if (_previewHighlightPaint == null)
+      {
+        _previewHighlightPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        _previewHighlightPaint.setStyle(Paint.Style.FILL);
+        _previewHighlightPaint.setColor(Color.argb(85, 56, 189, 248));
+      }
+      if (_previewHighlightBorderPaint == null)
+      {
+        _previewHighlightBorderPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        _previewHighlightBorderPaint.setStyle(Paint.Style.STROKE);
+        _previewHighlightBorderPaint.setStrokeWidth(dp(2.2f));
+        _previewHighlightBorderPaint.setColor(Color.rgb(56, 189, 248));
+      }
+      canvas.drawRoundRect(_tmpRect, r, r, _previewHighlightPaint);
+      canvas.drawRoundRect(_tmpRect, r, r, _previewHighlightBorderPaint);
+    }
+
     if (w > 0.f)
     {
       float overlap = r - r * 0.85f + w; // sin(45°)
@@ -434,6 +625,23 @@ public class Keyboard2View extends View
       drawBorder(canvas, x, y, x + keyW, y + overlap, tc.border_top_paint, tc);
       drawBorder(canvas, x, y + keyH - overlap, x + keyW, y + keyH, tc.border_bottom_paint, tc);
     }
+    else if (_previewMode && !isHighlighted)
+    {
+      if (_previewBorderPaint == null)
+      {
+        _previewBorderPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        _previewBorderPaint.setStyle(Paint.Style.STROKE);
+        _previewBorderPaint.setStrokeWidth(dp(1));
+        boolean isDark = (getContext().getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES;
+        _previewBorderPaint.setColor(isDark ? Color.argb(70, 255, 255, 255) : Color.argb(55, 0, 0, 0));
+      }
+      canvas.drawRoundRect(_tmpRect, r, r, _previewBorderPaint);
+    }
+  }
+
+  private float dp(float val)
+  {
+    return TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, val, getResources().getDisplayMetrics());
   }
 
   /** Clip to draw a border at a time. This allows to call [drawRoundRect]
