@@ -23,7 +23,9 @@ import android.widget.ScrollView;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.view.MotionEvent;
+import android.view.ViewConfiguration;
 import android.view.ViewParent;
+import androidx.core.content.ContextCompat;
 import androidx.core.widget.NestedScrollView;
 
 import android.content.res.Configuration;
@@ -488,6 +490,11 @@ public class CustomLayoutEditDialog
     return (int)(value * ctx.getResources().getDisplayMetrics().density);
   }
 
+  private static int dp(Context ctx, float value)
+  {
+    return (int)(value * ctx.getResources().getDisplayMetrics().density);
+  }
+
   public static class MaxHeightScrollView extends NestedScrollView
   {
     private int _max_height = Integer.MAX_VALUE;
@@ -567,6 +574,8 @@ public class CustomLayoutEditDialog
   public static class LayoutEntryEditText extends EditText
   {
     Paint _ln_paint;
+    Paint _gutterBgPaint;
+    Paint _gutterDividerPaint;
     OnChangeListener _on_change_listener = null;
     Handler _on_change_throttler;
     Runnable _on_change_delayed = new Runnable()
@@ -579,18 +588,54 @@ public class CustomLayoutEditDialog
       }
     };
 
+    private int _gutter_width = 0;
+    private int _prev_digits = -1;
+    private Integer _gutterBgColor = null;
+    private float _downX = 0f;
+    private float _downY = 0f;
+    private int _touchSlop;
+
     public LayoutEntryEditText(Context ctx)
     {
       super(ctx);
       _ln_paint = new Paint(getPaint());
       _ln_paint.setTextSize(_ln_paint.getTextSize() * 0.8f);
+      _touchSlop = ViewConfiguration.get(ctx).getScaledTouchSlop();
       setHorizontallyScrolling(true);
+      setHorizontalScrollBarEnabled(true);
       setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_MULTI_LINE | InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS);
       setGravity(Gravity.TOP | Gravity.START);
       setMinLines(3);
       setMaxLines(Integer.MAX_VALUE);
       style_input_box(this);
       _on_change_throttler = new Handler(ctx.getMainLooper());
+      checkAndUpdateGutterWidth();
+    }
+
+    public void setGutterBackgroundColor(int color)
+    {
+      _gutterBgColor = color;
+      invalidate();
+    }
+
+    private void checkAndUpdateGutterWidth()
+    {
+      int line_count = Math.max(1, getLineCount());
+      int digits = Math.max(2, (int) Math.log10(line_count) + 1);
+      if (digits != _prev_digits)
+      {
+        _prev_digits = digits;
+        float digit_width = _ln_paint.measureText("0");
+        _gutter_width = (int) (digits * digit_width + dp(getContext(), 14));
+        setPadding(_gutter_width + dp(getContext(), 6), dp(getContext(), 4), dp(getContext(), 16), dp(getContext(), 4));
+      }
+    }
+
+    @Override
+    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec)
+    {
+      checkAndUpdateGutterWidth();
+      super.onMeasure(widthMeasureSpec, heightMeasureSpec);
     }
 
     public interface OnLineSelectListener {
@@ -630,72 +675,178 @@ public class CustomLayoutEditDialog
 
     public void set_on_text_change(OnChangeListener l) { _on_change_listener = l; }
 
+    @Override
+    public boolean onTouchEvent(MotionEvent event)
+    {
+      switch (event.getActionMasked())
+      {
+        case MotionEvent.ACTION_DOWN:
+          _downX = event.getX();
+          _downY = event.getY();
+          break;
+        case MotionEvent.ACTION_UP:
+          float dx = Math.abs(event.getX() - _downX);
+          float dy = Math.abs(event.getY() - _downY);
+          if (dx < _touchSlop && dy < _touchSlop && event.getX() <= _gutter_width + dp(getContext(), 4))
+          {
+            Layout layout = getLayout();
+            if (layout != null)
+            {
+              float y = event.getY() + getScrollY();
+              int line = layout.getLineForVertical((int) y);
+              if (line >= 0 && line < getLineCount())
+              {
+                setHighlightedLine(line);
+                int start = layout.getLineStart(line);
+                int end = layout.getLineEnd(line);
+                CharSequence txt = getText();
+                if (txt != null)
+                {
+                  while (end > start && (txt.charAt(end - 1) == '\n' || txt.charAt(end - 1) == '\r'))
+                    end--;
+                }
+                setSelection(start, end);
+                if (_line_select_listener != null)
+                  _line_select_listener.onLineSelected(line);
+                return true;
+              }
+            }
+          }
+          break;
+      }
+      return super.onTouchEvent(event);
+    }
+
     Rect _clip_bounds = new Rect();
-    int _prev_padding = Integer.MIN_VALUE;
 
     @Override
     protected void onDraw(Canvas canvas)
     {
-      float digit_width = _ln_paint.measureText("0");
-      int line_count = getLineCount();
-      int digits = Math.max(2, (int) Math.log10(Math.max(1, line_count)) + 1);
-      int gutter_width = (int) ((digits + 1.2f) * digit_width + dp(getContext(), 10));
-      if (gutter_width != _prev_padding) {
-        setPadding(gutter_width, dp(getContext(), 4), dp(getContext(), 8), dp(getContext(), 4));
-        _prev_padding = gutter_width;
+      final Context ctx = getContext();
+      final boolean isDark = is_dark_theme(ctx);
+      final int sx = Math.max(0, getScrollX());
+      final int line_count = getLineCount();
+      final Layout layout = getLayout();
+
+      if (_gutterBgPaint == null)
+      {
+        _gutterBgPaint = new Paint();
+        _gutterBgPaint.setStyle(Paint.Style.FILL);
+        _gutterDividerPaint = new Paint();
+        _gutterDividerPaint.setStyle(Paint.Style.STROKE);
+        _gutterDividerPaint.setStrokeWidth(dp(ctx, 1));
       }
 
-      Layout layout = getLayout();
+      int bgColor;
+      if (_gutterBgColor != null)
+      {
+        bgColor = _gutterBgColor;
+      }
+      else
+      {
+        try
+        {
+          bgColor = ContextCompat.getColor(ctx, R.color.settings_background);
+        }
+        catch (Exception e)
+        {
+          bgColor = isDark ? Color.rgb(0, 0, 0) : Color.rgb(246, 248, 252);
+        }
+      }
+
+      int dividerColor;
+      try
+      {
+        dividerColor = ContextCompat.getColor(ctx, R.color.settings_divider);
+      }
+      catch (Exception e)
+      {
+        dividerColor = isDark ? Color.rgb(44, 46, 51) : Color.rgb(225, 227, 232);
+      }
+
+      _gutterBgPaint.setColor(bgColor);
+      _gutterDividerPaint.setColor(dividerColor);
+
+      // 1. Draw active line background highlight (BEFORE super.onDraw so text is on top)
       if (layout != null && _highlightedLine >= 0 && _highlightedLine < line_count)
       {
         if (_highlightLineBgPaint == null)
         {
           _highlightLineBgPaint = new Paint();
           _highlightLineBgPaint.setStyle(Paint.Style.FILL);
-          _highlightLineBarPaint = new Paint();
-          _highlightLineBarPaint.setStyle(Paint.Style.FILL);
         }
-        boolean isDark = is_dark_theme(getContext());
         _highlightLineBgPaint.setColor(isDark ? Color.argb(60, 56, 189, 248) : Color.argb(40, 52, 120, 246));
-        _highlightLineBarPaint.setColor(isDark ? Color.rgb(56, 189, 248) : Color.rgb(52, 120, 246));
 
         int top = layout.getLineTop(_highlightedLine);
         int bottom = layout.getLineBottom(_highlightedLine);
-        canvas.drawRect(0, top, getWidth(), bottom, _highlightLineBgPaint);
-        canvas.drawRect(0, top, dp(getContext(), 4), bottom, _highlightLineBarPaint);
+        int lineRight = (int) layout.getLineRight(_highlightedLine);
+        int right = Math.max(sx + getWidth(), lineRight + dp(ctx, 32));
+        canvas.drawRect(sx + _gutter_width, top, right, bottom, _highlightLineBgPaint);
       }
 
+      // 2. Draw the EditText text, cursor, and text selection
       super.onDraw(canvas);
-      final boolean isDark = is_dark_theme(getContext());
-      _ln_paint.setColor(isDark ? Color.rgb(100, 116, 139) : Color.rgb(152, 162, 171));
+
+      // 3. Draw the pinned gutter OVER any scrolled text
       canvas.getClipBounds(_clip_bounds);
       if (layout == null) return;
-      int offset = dp(getContext(), 6);
-      int line = layout.getLineForVertical(_clip_bounds.top);
-      while (line < line_count)
+
+      int clipTop = _clip_bounds.isEmpty() ? 0 : _clip_bounds.top;
+      int clipBottom = _clip_bounds.isEmpty() ? getHeight() : _clip_bounds.bottom;
+
+      // 3a. Solid gutter background (pinned to sx)
+      canvas.drawRect(sx, clipTop, sx + _gutter_width, clipBottom, _gutterBgPaint);
+
+      // 3b. Vertical divider line (pinned to sx + _gutter_width)
+      float divX = sx + _gutter_width;
+      canvas.drawLine(divX, clipTop, divX, clipBottom, _gutterDividerPaint);
+
+      // 3c. Active line indicator bar on the left edge of the gutter
+      if (_highlightedLine >= 0 && _highlightedLine < line_count)
+      {
+        if (_highlightLineBarPaint == null)
+        {
+          _highlightLineBarPaint = new Paint();
+          _highlightLineBarPaint.setStyle(Paint.Style.FILL);
+        }
+        _highlightLineBarPaint.setColor(isDark ? Color.rgb(56, 189, 248) : Color.rgb(52, 120, 246));
+        int hlTop = layout.getLineTop(_highlightedLine);
+        int hlBottom = layout.getLineBottom(_highlightedLine);
+        canvas.drawRect(sx, hlTop, sx + dp(ctx, 3.5f), hlBottom, _highlightLineBarPaint);
+      }
+
+      // 3d. Line numbers (right-aligned in the pinned gutter)
+      int startLine = layout.getLineForVertical(clipTop);
+      int endLine = layout.getLineForVertical(clipBottom);
+      float rightMargin = dp(ctx, 6);
+
+      for (int line = startLine; line <= Math.min(endLine, line_count - 1); line++)
       {
         int baseline = getLineBounds(line, null);
+        String lineStr = String.valueOf(line);
+        float numWidth = _ln_paint.measureText(lineStr);
+        float textX = sx + _gutter_width - rightMargin - numWidth;
+
         if (line == _highlightedLine)
         {
           _ln_paint.setColor(isDark ? Color.rgb(56, 189, 248) : Color.rgb(52, 120, 246));
           _ln_paint.setFakeBoldText(true);
-          canvas.drawText(String.valueOf(line), offset, baseline, _ln_paint);
+          canvas.drawText(lineStr, textX, baseline, _ln_paint);
           _ln_paint.setFakeBoldText(false);
-          _ln_paint.setColor(isDark ? Color.rgb(100, 116, 139) : Color.rgb(152, 162, 171));
         }
         else
         {
-          canvas.drawText(String.valueOf(line), offset, baseline, _ln_paint);
+          _ln_paint.setColor(isDark ? Color.rgb(100, 116, 139) : Color.rgb(152, 162, 171));
+          canvas.drawText(lineStr, textX, baseline, _ln_paint);
         }
-        line++;
-        if (baseline >= _clip_bounds.bottom)
-          break;
       }
     }
 
     @Override
     protected void onTextChanged(CharSequence text, int _s, int _lb, int _la)
     {
+      super.onTextChanged(text, _s, _lb, _la);
+      checkAndUpdateGutterWidth();
       if (_on_change_throttler != null)
       {
         _on_change_throttler.removeCallbacks(_on_change_delayed);

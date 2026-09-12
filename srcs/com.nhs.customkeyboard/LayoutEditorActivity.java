@@ -142,6 +142,7 @@ public class LayoutEditorActivity extends Activity
     _input_editor = new CustomLayoutEditDialog.LayoutEntryEditText(this);
     _input_editor.setText(initial_xml);
     _input_editor.setBackgroundColor(Color.TRANSPARENT);
+    _input_editor.setGutterBackgroundColor(ContextCompat.getColor(this, R.color.settings_background));
 
     int textColor = ContextCompat.getColor(this, R.color.settings_on_surface);
     _input_editor.setTextColor(textColor);
