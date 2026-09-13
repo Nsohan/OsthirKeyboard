@@ -15,6 +15,9 @@ if (-not $env:JAVA_HOME -or -not (Test-Path "$env:JAVA_HOME\bin\java.exe")) {
     if (Test-Path "$jdkPath\bin\java.exe") {
         $env:JAVA_HOME = $jdkPath
         $env:Path = "$jdkPath\bin;$env:Path"
+    } elseif (Test-Path "C:\Program Files\Android\Android Studio\jbr\bin\java.exe") {
+        $env:JAVA_HOME = "C:\Program Files\Android\Android Studio\jbr"
+        $env:Path = "C:\Program Files\Android\Android Studio\jbr\bin;$env:Path"
     }
 }
 
