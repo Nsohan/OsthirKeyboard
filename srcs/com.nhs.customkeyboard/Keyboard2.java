@@ -35,11 +35,14 @@ import com.nhs.customkeyboard.dict.Dictionaries;
 import com.nhs.customkeyboard.dict.DictionariesActivity;
 import com.nhs.customkeyboard.dict.DictionarySwitcher;
 import com.nhs.customkeyboard.gif.GifManagerView;
+import com.nhs.customkeyboard.gif.GifPanelController;
 import com.nhs.customkeyboard.prefs.LayoutsPreference;
 import com.nhs.customkeyboard.suggestions.CandidatesView;
 import com.nhs.customkeyboard.suggestions.NextWordPredictor;
 import com.nhs.customkeyboard.suggestions.Suggestions;
 import com.nhs.customkeyboard.translate.TranslationBarView;
+import com.nhs.customkeyboard.translate.TranslationPanelController;
+import com.nhs.customkeyboard.voice.VoiceTypingController;
 import com.nhs.customkeyboard.avro.AvroEngine;
 import android.Manifest;
 import android.content.pm.PackageManager;
@@ -58,20 +61,9 @@ public class Keyboard2 extends InputMethodService
   private View _menu_grid_panel;
   private KeyboardResizeManager _resizeManager;
   private KeyboardMenuManager _menuManager;
-  private TranslationBarView _translation_bar_view;
-  private View _voice_typing_bar_view;
-  private View _gif_search_bar_view;
-  private TextView _tv_gif_search_query;
-  private View _btn_gif_search_clear;
-  private StringBuilder _gif_search_text = new StringBuilder();
-  private boolean _gif_search_active = false;
-  private TextView _tv_voice_status;
-  private TextView _tv_voice_lang_badge;
-  private ImageButton _btn_voice_back;
-  private ImageButton _btn_voice_mic;
-  private String _current_voice_lang = "en-US";
-  private boolean _is_voice_typing_active = false;
-  private SpeechRecognizer _speech_recognizer;
+  private TranslationPanelController _translationPanelController;
+  private VoiceTypingController _voiceTypingController;
+  private GifPanelController _gifPanelController;
   private Suggestions _suggestions;
   private KeyEventHandler _keyeventhandler;
   /** If not 'null', the layout to use instead of [_config.current_layout]. */
@@ -84,7 +76,6 @@ public class Keyboard2 extends InputMethodService
   private Dictionaries _dictionaries;
   private ViewGroup _emojiPane = null;
   private ViewGroup _clipboard_pane = null;
-  private ViewGroup _gif_pane = null;
   private ViewGroup _text_edit_pane = null;
   private Handler _handler;
 
@@ -207,76 +198,106 @@ public class Keyboard2 extends InputMethodService
     Receiver recvr = this.new Receiver();
     _suggestions = new Suggestions(recvr, _config);
     _keyeventhandler = new KeyEventHandler(recvr, _suggestions);
+    _translationPanelController = new TranslationPanelController();
+    _voiceTypingController = new VoiceTypingController(new VoiceTypingController.HostProvider()
+    {
+      @Override public Context getContext() { return Keyboard2.this; }
+      @Override public InputConnection getCurrentInputConnection() { return Keyboard2.this.getCurrentInputConnection(); }
+      @Override public KeyboardData getCurrentLayout() { return Keyboard2.this.current_layout(); }
+      @Override public Dictionaries getDictionaries() { return _dictionaries; }
+      @Override public Config getConfig() { return _config; }
+      @Override public TranslationBarView getTranslationBarView() { return _translationPanelController != null ? _translationPanelController.getView() : null; }
+      @Override public CandidatesView getCandidatesView() { return _candidates_view; }
+      @Override public void onVoiceStateChanged(boolean active) {
+        if (!active) {
+          if (_translationPanelController != null && _translationPanelController.isOpen()) {
+            if (_candidates_view != null) _candidates_view.setVisibility(View.VISIBLE);
+          } else {
+            refresh_candidates_view();
+          }
+        }
+      }
+    });
+    _gifPanelController = new GifPanelController(new GifPanelController.HostProvider()
+    {
+      @Override public Context getContext() { return Keyboard2.this; }
+      @Override public ViewGroup getKeyboardContainerView() { return _keyboard_container_view; }
+      @Override public CandidatesView getCandidatesView() { return _candidates_view; }
+      @Override public int getKeyboardHeight() { return get_keyboard_height(); }
+      @Override public void setInputView(View view) { Keyboard2.this.setInputView(view); }
+      @Override public Config getConfig() { return _config; }
+    });
+
     _keyeventhandler.setTranslationInterceptor(new KeyEventHandler.ITranslationInterceptor()
     {
       @Override
       public boolean isTranslationActive()
       {
-        if (_gif_search_active)
+        if (_gifPanelController != null && _gifPanelController.isGifSearchActive())
           return true;
-        return _translation_bar_view != null && _translation_bar_view.isOpen();
+        return _translationPanelController != null && _translationPanelController.isOpen();
       }
 
       @Override
       public void onCharTyped(char c)
       {
-        if (_gif_search_active)
+        if (_gifPanelController != null && _gifPanelController.isGifSearchActive())
         {
-          append_gif_search_char(c);
+          _gifPanelController.append_gif_search_char(c);
           return;
         }
-        if (_translation_bar_view != null)
-          _translation_bar_view.append_char(c);
+        if (_translationPanelController != null && _translationPanelController.getView() != null)
+          _translationPanelController.getView().append_char(c);
       }
 
       @Override
       public void onStringTyped(String s)
       {
-        if (_gif_search_active)
+        if (_gifPanelController != null && _gifPanelController.isGifSearchActive())
         {
-          append_gif_search_string(s);
+          _gifPanelController.append_gif_search_string(s);
           return;
         }
-        if (_translation_bar_view != null)
-          _translation_bar_view.append_string(s);
+        if (_translationPanelController != null && _translationPanelController.getView() != null)
+          _translationPanelController.getView().append_string(s);
       }
 
       @Override
       public void onBackspace()
       {
-        if (_gif_search_active)
+        if (_gifPanelController != null && _gifPanelController.isGifSearchActive())
         {
-          delete_gif_search_char();
+          _gifPanelController.delete_gif_search_char();
           return;
         }
-        if (_translation_bar_view != null)
-          _translation_bar_view.delete_char();
+        if (_translationPanelController != null && _translationPanelController.getView() != null)
+          _translationPanelController.getView().delete_char();
       }
 
       @Override
       public void onEnter()
       {
-        if (_gif_search_active)
+        if (_gifPanelController != null && _gifPanelController.isGifSearchActive())
         {
-          submit_gif_search();
+          _gifPanelController.submit_gif_search();
           return;
         }
-        if (_translation_bar_view != null)
-          _translation_bar_view.handle_enter();
+        if (_translationPanelController != null && _translationPanelController.getView() != null)
+          _translationPanelController.getView().handle_enter();
       }
 
       @Override
       public void onSuggestionEntered(String oldWord, String newWord)
       {
-        if (_gif_search_active)
+        if (_gifPanelController != null && _gifPanelController.isGifSearchActive())
         {
-          append_gif_search_string(newWord);
+          _gifPanelController.append_gif_search_string(newWord);
           return;
         }
-        if (_translation_bar_view != null)
+        if (_translationPanelController != null && _translationPanelController.getView() != null)
         {
           int oldLen = (oldWord != null) ? oldWord.length() : 0;
-          _translation_bar_view.replace_last_word(oldLen, newWord);
+          _translationPanelController.getView().replace_last_word(oldLen, newWord);
         }
       }
     });
@@ -296,7 +317,10 @@ public class Keyboard2 extends InputMethodService
   public void onDestroy() {
     if (sActiveInstance != null && sActiveInstance.get() == this)
       sActiveInstance = null;
-    stop_voice_typing();
+    if (_voiceTypingController != null)
+      _voiceTypingController.destroy();
+    if (_gifPanelController != null)
+      _gifPanelController.onDismiss();
     super.onDestroy();
 
     _foldStateTracker.close();
@@ -315,43 +339,43 @@ public class Keyboard2 extends InputMethodService
     _keyboard_layout_view = (Keyboard2View)_keyboard_container_view.findViewById(R.id.keyboard_view);
     _candidates_view = (CandidatesView)_keyboard_container_view.findViewById(R.id.candidates_view);
     _menu_grid_panel = _keyboard_container_view.findViewById(R.id.menu_grid_panel);
-    _translation_bar_view = (TranslationBarView)_keyboard_container_view.findViewById(R.id.translation_bar_view);
-    if (_translation_bar_view == null)
+
+    if (_translationPanelController != null)
     {
-      _translation_bar_view = (TranslationBarView)_keyboard_container_view.findViewById(R.id.translation_bar);
-    }
-    if (_translation_bar_view != null)
-    {
-      _translation_bar_view.setOnTranslationBarListener(new TranslationBarView.OnTranslationBarListener()
+      _translationPanelController.setup(_keyboard_container_view);
+      TranslationBarView tbView = _translationPanelController.getView();
+      if (tbView != null)
       {
-        @Override
-        public void onCloseTranslation()
+        tbView.setOnTranslationBarListener(new TranslationBarView.OnTranslationBarListener()
         {
-          if (_is_voice_typing_active)
+          @Override
+          public void onCloseTranslation()
           {
-            stop_voice_typing();
+            if (_voiceTypingController != null && _voiceTypingController.isVoiceTypingActive())
+            {
+              _voiceTypingController.stop_voice_typing();
+            }
+            refresh_candidates_view();
           }
-          refresh_candidates_view();
-        }
 
-        @Override
-        public InputConnection getInputConnection()
-        {
-          return getCurrentInputConnection();
-        }
-
-        @Override
-        public void onLanguagesChanged(String sourceLang, String targetLang)
-        {
-          if (_is_voice_typing_active)
+          @Override
+          public InputConnection getInputConnection()
           {
-            _current_voice_lang = map_lang_to_speech_locale(sourceLang);
-            update_voice_ui_for_language();
-            restart_voice_listening();
+            return getCurrentInputConnection();
           }
-        }
-      });
+
+          @Override
+          public void onLanguagesChanged(String sourceLang, String targetLang)
+          {
+            if (_voiceTypingController != null && _voiceTypingController.isVoiceTypingActive())
+            {
+              _voiceTypingController.update_voice_ui_for_language();
+            }
+          }
+        });
+      }
     }
+
     if (_candidates_view != null)
     {
       _candidates_view.setOnTranslateToggleListener(new CandidatesView.OnTranslateToggleListener()
@@ -359,23 +383,25 @@ public class Keyboard2 extends InputMethodService
         @Override
         public void onTranslateToggled()
         {
-          if (_translation_bar_view != null)
+          if (_translationPanelController != null)
           {
-            if (_translation_bar_view.isOpen())
+            if (_translationPanelController.isOpen())
             {
-              _translation_bar_view.close();
+              _translationPanelController.close();
             }
             else
             {
               set_menu_panel_visible(false);
-              _translation_bar_view.open();
+              _translationPanelController.open();
             }
           }
         }
       });
     }
-    setup_voice_typing_bar();
-    setup_gif_search_bar();
+    if (_voiceTypingController != null)
+      _voiceTypingController.setup(_keyboard_container_view);
+    if (_gifPanelController != null)
+      _gifPanelController.setup(_keyboard_container_view);
     setup_menu_grid_panel();
     _resizeManager = new KeyboardResizeManager(this);
     _resizeManager.setupViews(_keyboard_container_view, _keyboard_layout_view, _candidates_view);
@@ -482,16 +508,9 @@ public class Keyboard2 extends InputMethodService
 
   public void toggle_translate_bar()
   {
-    if (_translation_bar_view != null)
+    if (_translationPanelController != null)
     {
-      if (_translation_bar_view.isOpen())
-      {
-        _translation_bar_view.close();
-      }
-      else
-      {
-        _translation_bar_view.open();
-      }
+      _translationPanelController.toggle();
     }
   }
 
@@ -585,40 +604,6 @@ public class Keyboard2 extends InputMethodService
     return (int) (290 * dm.density);
   }
 
-  private void setup_gif_search_bar()
-  {
-    _gif_search_bar_view = _keyboard_container_view.findViewById(R.id.gif_search_bar_view);
-    if (_gif_search_bar_view == null)
-    {
-      _gif_search_bar_view = _keyboard_container_view.findViewById(R.id.gif_search_bar);
-    }
-    if (_gif_search_bar_view != null)
-    {
-      _tv_gif_search_query = _gif_search_bar_view.findViewById(R.id.tv_gif_search_query);
-      _btn_gif_search_clear = _gif_search_bar_view.findViewById(R.id.btn_gif_search_clear);
-
-      View btnBack = _gif_search_bar_view.findViewById(R.id.btn_gif_search_back);
-      if (btnBack != null)
-      {
-        btnBack.setOnClickListener(v -> close_gif_search(true));
-      }
-
-      View btnSubmit = _gif_search_bar_view.findViewById(R.id.btn_gif_search_submit);
-      if (btnSubmit != null)
-      {
-        btnSubmit.setOnClickListener(v -> submit_gif_search());
-      }
-
-      if (_btn_gif_search_clear != null)
-      {
-        _btn_gif_search_clear.setOnClickListener(v -> {
-          _gif_search_text.setLength(0);
-          update_gif_search_display();
-        });
-      }
-    }
-  }
-
   public void show_clipboard_pane()
   {
     set_menu_panel_visible(false);
@@ -651,96 +636,50 @@ public class Keyboard2 extends InputMethodService
 
   public void show_gif_pane()
   {
-    close_gif_search(false);
-    if (_gif_pane == null)
-      _gif_pane = (ViewGroup)inflate_view(R.layout.gif_pane);
-    if (_gif_pane instanceof GifManagerView)
-      {
-        GifManagerView gmv = (GifManagerView)_gif_pane;
-        gmv.setOnSearchClickListener(this::open_gif_search);
-        gmv.onShow(get_keyboard_height());
-      }
-    setInputView(_gif_pane);
+    set_menu_panel_visible(false);
+    if (_gifPanelController != null)
+      _gifPanelController.show_gif_pane();
   }
 
   public void open_gif_search(String initialQuery)
   {
-    _gif_search_active = true;
-    _gif_search_text.setLength(0);
-    if (initialQuery != null && !initialQuery.isEmpty())
-    {
-      _gif_search_text.append(initialQuery);
-    }
-    update_gif_search_display();
-    if (_gif_search_bar_view != null)
-    {
-      _gif_search_bar_view.setVisibility(View.VISIBLE);
-    }
-    if (_candidates_view != null)
-    {
-      _candidates_view.setVisibility(View.GONE);
-    }
-    setInputView(_keyboard_container_view);
+    if (_gifPanelController != null)
+      _gifPanelController.open_gif_search(initialQuery);
   }
 
   public void close_gif_search(boolean returnToGifPane)
   {
-    _gif_search_active = false;
-    if (_gif_search_bar_view != null)
-    {
-      _gif_search_bar_view.setVisibility(View.GONE);
-    }
-    if (_candidates_view != null)
-    {
-      _candidates_view.setVisibility(View.VISIBLE);
-    }
-    if (returnToGifPane)
-    {
-      show_gif_pane();
-    }
+    if (_gifPanelController != null)
+      _gifPanelController.close_gif_search(returnToGifPane);
   }
 
   public void submit_gif_search()
   {
-    String query = _gif_search_text.toString().trim();
-    close_gif_search(true);
-    if (_gif_pane instanceof GifManagerView && !query.isEmpty())
-    {
-      ((GifManagerView)_gif_pane).perform_search(query);
-    }
+    if (_gifPanelController != null)
+      _gifPanelController.submit_gif_search();
   }
 
   public void append_gif_search_char(char c)
   {
-    _gif_search_text.append(c);
-    update_gif_search_display();
+    if (_gifPanelController != null)
+      _gifPanelController.append_gif_search_char(c);
   }
 
   public void append_gif_search_string(String s)
   {
-    _gif_search_text.append(s);
-    update_gif_search_display();
+    if (_gifPanelController != null)
+      _gifPanelController.append_gif_search_string(s);
   }
 
   public void delete_gif_search_char()
   {
-    if (_gif_search_text.length() > 0)
-    {
-      _gif_search_text.deleteCharAt(_gif_search_text.length() - 1);
-      update_gif_search_display();
-    }
+    if (_gifPanelController != null)
+      _gifPanelController.delete_gif_search_char();
   }
 
-  private void update_gif_search_display()
+  public boolean is_gif_search_active()
   {
-    if (_tv_gif_search_query != null)
-    {
-      _tv_gif_search_query.setText(_gif_search_text.toString());
-    }
-    if (_btn_gif_search_clear != null)
-    {
-      _btn_gif_search_clear.setVisibility(_gif_search_text.length() > 0 ? View.VISIBLE : View.GONE);
-    }
+    return _gifPanelController != null && _gifPanelController.isGifSearchActive();
   }
 
   InputMethodManager get_imm()
@@ -809,7 +748,8 @@ public class Keyboard2 extends InputMethodService
       create_keyboard_view();
       _emojiPane = null;
       _clipboard_pane = null;
-      _gif_pane = null;
+      if (_gifPanelController != null)
+        _gifPanelController.resetPane();
       _text_edit_pane = null;
       setInputView(_keyboard_container_view);
     }
@@ -880,14 +820,14 @@ public class Keyboard2 extends InputMethodService
         close_text_edit();
         return true;
       }
-      if (_is_voice_typing_active)
+      if (_voiceTypingController != null && _voiceTypingController.isVoiceTypingActive())
       {
-        stop_voice_typing();
+        _voiceTypingController.stop_voice_typing();
         return true;
       }
-      if (_translation_bar_view != null && _translation_bar_view.isOpen())
+      if (_translationPanelController != null && _translationPanelController.isOpen())
       {
-        _translation_bar_view.close();
+        _translationPanelController.close();
         return true;
       }
       if (_menu_grid_panel != null && _menu_grid_panel.getVisibility() == View.VISIBLE)
@@ -1007,13 +947,17 @@ public class Keyboard2 extends InputMethodService
   public void onFinishInputView(boolean finishingInput)
   {
     super.onFinishInputView(finishingInput);
-    if (_is_voice_typing_active)
+    if (_voiceTypingController != null && _voiceTypingController.isVoiceTypingActive())
     {
-      stop_voice_typing();
+      _voiceTypingController.stop_voice_typing();
     }
-    if (_translation_bar_view != null && _translation_bar_view.isOpen())
+    if (_translationPanelController != null && _translationPanelController.isOpen())
     {
-      _translation_bar_view.close();
+      _translationPanelController.close();
+    }
+    if (_gifPanelController != null)
+    {
+      _gifPanelController.onDismiss();
     }
     set_menu_panel_visible(false);
     if (_text_edit_pane != null && _text_edit_pane.isShown())
@@ -1167,9 +1111,12 @@ public class Keyboard2 extends InputMethodService
           break;
 
         case ACTION:
-          if (_translation_bar_view != null && _translation_bar_view.isOpen())
+          if (_translationPanelController != null && _translationPanelController.isOpen())
           {
-            _translation_bar_view.handle_enter();
+            if (_translationPanelController.getView() != null)
+            {
+              _translationPanelController.getView().handle_enter();
+            }
           }
           InputConnection conn = getCurrentInputConnection();
           if (conn != null)
@@ -1284,405 +1231,31 @@ public class Keyboard2 extends InputMethodService
     }
   }
 
-  private void setup_voice_typing_bar()
-  {
-    if (_keyboard_container_view == null) return;
-    _voice_typing_bar_view = _keyboard_container_view.findViewById(R.id.voice_typing_bar_view);
-    if (_voice_typing_bar_view == null)
-    {
-      _voice_typing_bar_view = _keyboard_container_view.findViewById(R.id.voice_typing_bar);
-    }
-    if (_voice_typing_bar_view == null) return;
-
-    _btn_voice_back = _voice_typing_bar_view.findViewById(R.id.btn_voice_back);
-    _tv_voice_status = _voice_typing_bar_view.findViewById(R.id.tv_voice_status);
-    _tv_voice_lang_badge = _voice_typing_bar_view.findViewById(R.id.tv_voice_lang_badge);
-    _btn_voice_mic = _voice_typing_bar_view.findViewById(R.id.btn_voice_mic);
-
-    if (_btn_voice_back != null)
-    {
-      _btn_voice_back.setOnClickListener(v -> stop_voice_typing());
-    }
-    if (_tv_voice_lang_badge != null)
-    {
-      _tv_voice_lang_badge.setOnClickListener(v -> toggle_voice_language());
-    }
-    if (_btn_voice_mic != null)
-    {
-      _btn_voice_mic.setOnClickListener(v -> {
-        if (_is_voice_typing_active)
-        {
-          stop_voice_typing();
-        }
-        else
-        {
-          start_dynamic_voice_typing();
-        }
-      });
-    }
-  }
-
-  public boolean is_bangla_active(KeyboardData layout)
-  {
-    if (layout != null)
-    {
-      String name = layout.name != null ? layout.name.toLowerCase() : "";
-      String script = layout.script != null ? layout.script.toLowerCase() : "";
-      String keymap = layout.keymap != null ? layout.keymap.toLowerCase() : "";
-
-      if (name.contains("বাংলা") || name.contains("bengali") || name.contains("bangla")
-          || name.contains("probhat") || name.contains("provat") || name.contains("national")
-          || name.contains("জাতীয়") || name.contains("জাতীয়") || name.contains("bn")
-          || script.contains("beng") || script.contains("bangla") || script.contains("avro")
-          || keymap.contains("bangla") || keymap.contains("beng") || keymap.contains("avro")
-          || keymap.contains("probhat"))
-      {
-        return true;
-      }
-    }
-
-    if (_dictionaries != null && _config != null)
-    {
-      String dict = _dictionaries.get_selected(_config);
-      if (dict != null && (dict.toLowerCase().contains("bn") || dict.toLowerCase().contains("bangla") || dict.toLowerCase().contains("bengali")))
-      {
-        return true;
-      }
-    }
-
-    if (_config != null && _config.device_locales != null && _config.device_locales.default_ != null)
-    {
-      String lang = _config.device_locales.default_.lang_tag;
-      if (lang != null && (lang.toLowerCase().startsWith("bn") || lang.toLowerCase().contains("beng")))
-      {
-        return true;
-      }
-    }
-
-    return false;
-  }
-
-  public String map_lang_to_speech_locale(String langCode)
-  {
-    if (langCode == null || langCode.isEmpty() || "auto".equalsIgnoreCase(langCode))
-    {
-      KeyboardData layout = current_layout();
-      boolean isBangla = is_bangla_active(layout);
-      return isBangla ? "bn-BD" : "en-US";
-    }
-    String code = langCode.toLowerCase(java.util.Locale.US).trim();
-    if (code.equals("bn")) return "bn-BD";
-    if (code.equals("en")) return "en-US";
-    if (code.equals("hi")) return "hi-IN";
-    if (code.equals("es")) return "es-ES";
-    if (code.equals("fr")) return "fr-FR";
-    if (code.equals("de")) return "de-DE";
-    if (code.equals("ar")) return "ar-SA";
-    if (code.equals("zh") || code.equals("zh-cn")) return "zh-CN";
-    if (code.equals("zh-tw")) return "zh-TW";
-    if (code.equals("ja")) return "ja-JP";
-    if (code.equals("ru")) return "ru-RU";
-    if (code.equals("pt")) return "pt-BR";
-    if (code.equals("it")) return "it-IT";
-    if (code.equals("ko")) return "ko-KR";
-    if (code.equals("tr")) return "tr-TR";
-    if (code.equals("id")) return "id-ID";
-    if (code.equals("vi")) return "vi-VN";
-    if (code.equals("th")) return "th-TH";
-    if (code.equals("ur")) return "ur-PK";
-    if (code.contains("-")) return code;
-    return code;
-  }
-
   public void start_dynamic_voice_typing()
   {
-    if (VERSION.SDK_INT >= 23)
-    {
-      if (checkSelfPermission(Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED)
-      {
-        Intent permIntent = new Intent(this, VoicePermissionActivity.class);
-        permIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        startActivity(permIntent);
-        Toast.makeText(this, "Microphone permission required for voice typing", Toast.LENGTH_SHORT).show();
-        return;
-      }
-    }
-
-    if (!SpeechRecognizer.isRecognitionAvailable(this))
-    {
-      Toast.makeText(this, R.string.toast_no_voice_input, Toast.LENGTH_SHORT).show();
-      return;
-    }
-
-    boolean isTranslation = (_translation_bar_view != null && _translation_bar_view.isOpen());
-    if (isTranslation)
-    {
-      _current_voice_lang = map_lang_to_speech_locale(_translation_bar_view.getSourceLang());
-    }
-    else
-    {
-      KeyboardData layout = current_layout();
-      boolean isBangla = is_bangla_active(layout);
-      _current_voice_lang = isBangla ? "bn-BD" : "en-US";
-    }
-    _is_voice_typing_active = true;
-
-    set_menu_panel_visible(false);
-
-    if (_candidates_view != null)
-    {
-      int candHeight = _candidates_view.getHeight();
-      if (candHeight > 0 && _voice_typing_bar_view != null)
-      {
-        ViewGroup.LayoutParams lp = _voice_typing_bar_view.getLayoutParams();
-        if (lp != null)
-        {
-          lp.height = candHeight;
-          _voice_typing_bar_view.setLayoutParams(lp);
-        }
-      }
-      _candidates_view.setVisibility(View.GONE);
-    }
-
-    if (_voice_typing_bar_view != null)
-    {
-      _voice_typing_bar_view.setVisibility(View.VISIBLE);
-    }
-
-    update_voice_ui_for_language();
-    listen_speech();
-  }
-
-  private void update_voice_ui_for_language()
-  {
-    boolean isBangla = _current_voice_lang != null && _current_voice_lang.startsWith("bn");
-    if (_tv_voice_lang_badge != null)
-    {
-      String badge = "EN";
-      if (_current_voice_lang != null && _current_voice_lang.length() >= 2)
-      {
-        badge = _current_voice_lang.substring(0, 2).toUpperCase(java.util.Locale.US);
-      }
-      _tv_voice_lang_badge.setText(badge);
-    }
-    if (_tv_voice_status != null)
-    {
-      _tv_voice_status.setText(isBangla ? "এখনই বলুন" : "Speak now");
-    }
-  }
-
-  private void toggle_voice_language()
-  {
-    if (_translation_bar_view != null && _translation_bar_view.isOpen())
-    {
-      _translation_bar_view.swap_languages();
-      return;
-    }
-
-    if (_current_voice_lang.startsWith("bn"))
-    {
-      _current_voice_lang = "en-US";
-    }
-    else
-    {
-      _current_voice_lang = "bn-BD";
-    }
-    update_voice_ui_for_language();
-    restart_voice_listening();
-  }
-
-  private void listen_speech()
-  {
-    if (!_is_voice_typing_active) return;
-
-    try
-    {
-      if (_speech_recognizer != null)
-      {
-        try {
-          _speech_recognizer.cancel();
-          _speech_recognizer.destroy();
-        } catch (Exception ignored) {}
-        _speech_recognizer = null;
-      }
-
-      _speech_recognizer = SpeechRecognizer.createSpeechRecognizer(this);
-      Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
-      intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
-      intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, _current_voice_lang);
-      intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE, _current_voice_lang);
-      intent.putExtra("android.speech.extra.EXTRA_ADDITIONAL_LANGUAGES", new String[]{_current_voice_lang});
-      intent.putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true);
-      intent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 1);
-      intent.putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE, getPackageName());
-
-      _speech_recognizer.setRecognitionListener(new RecognitionListener()
-      {
-        @Override
-        public void onReadyForSpeech(Bundle params)
-        {
-          if (_tv_voice_status != null && _is_voice_typing_active)
-          {
-            _tv_voice_status.setText(_current_voice_lang.startsWith("bn") ? "এখনই বলুন" : "Speak now");
-          }
-        }
-
-        @Override
-        public void onBeginningOfSpeech()
-        {
-          if (_tv_voice_status != null && _is_voice_typing_active)
-          {
-            _tv_voice_status.setText(_current_voice_lang.startsWith("bn") ? "শুনছি..." : "Listening...");
-          }
-        }
-
-        @Override
-        public void onRmsChanged(float rmsdB)
-        {
-          if (_btn_voice_mic != null && _is_voice_typing_active && rmsdB > 2f)
-          {
-            float scale = 1.0f + Math.min(rmsdB / 20f, 0.25f);
-            _btn_voice_mic.setScaleX(scale);
-            _btn_voice_mic.setScaleY(scale);
-          }
-          else if (_btn_voice_mic != null)
-          {
-            _btn_voice_mic.setScaleX(1.0f);
-            _btn_voice_mic.setScaleY(1.0f);
-          }
-        }
-
-        @Override public void onBufferReceived(byte[] buffer) {}
-        @Override
-        public void onEndOfSpeech()
-        {
-          if (_btn_voice_mic != null)
-          {
-            _btn_voice_mic.setScaleX(1.0f);
-            _btn_voice_mic.setScaleY(1.0f);
-          }
-        }
-
-        @Override
-        public void onError(int error)
-        {
-          Log.d("VoiceTyping", "SpeechRecognizer error: " + error);
-          if (!_is_voice_typing_active) return;
-
-          if (error == SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS)
-          {
-            stop_voice_typing();
-            Intent permIntent = new Intent(Keyboard2.this, VoicePermissionActivity.class);
-            permIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            startActivity(permIntent);
-            Toast.makeText(Keyboard2.this, "Microphone permission required", Toast.LENGTH_SHORT).show();
-          }
-          else
-          {
-            stop_voice_typing();
-          }
-        }
-
-        @Override
-        public void onResults(Bundle results)
-        {
-          if (!_is_voice_typing_active) return;
-          ArrayList<String> matches = results.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
-          if (matches != null && !matches.isEmpty())
-          {
-            String text = matches.get(0);
-            if (text != null && !text.trim().isEmpty())
-            {
-              if (_translation_bar_view != null && _translation_bar_view.isOpen())
-              {
-                _translation_bar_view.append_string(text.trim());
-              }
-              else
-              {
-                InputConnection ic = getCurrentInputConnection();
-                if (ic != null)
-                {
-                  ic.commitText(text.trim() + " ", 1);
-                }
-              }
-            }
-          }
-          stop_voice_typing();
-        }
-
-        @Override
-        public void onPartialResults(Bundle partialResults)
-        {
-          if (!_is_voice_typing_active) return;
-          ArrayList<String> matches = partialResults.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
-          if (matches != null && !matches.isEmpty())
-          {
-            String text = matches.get(0);
-            if (_tv_voice_status != null && text != null && !text.isEmpty())
-            {
-              _tv_voice_status.setText(text);
-            }
-          }
-        }
-
-        @Override public void onEvent(int eventType, Bundle params) {}
-      });
-
-      _speech_recognizer.startListening(intent);
-    }
-    catch (Exception e)
-    {
-      Log.e("VoiceTyping", "SpeechRecognizer startListening failed", e);
-    }
-  }
-
-  private void restart_voice_listening()
-  {
-    listen_speech();
+    if (_voiceTypingController != null)
+      _voiceTypingController.start_dynamic_voice_typing();
   }
 
   public void stop_voice_typing()
   {
-    _is_voice_typing_active = false;
-    if (_btn_voice_mic != null)
-    {
-      _btn_voice_mic.setScaleX(1.0f);
-      _btn_voice_mic.setScaleY(1.0f);
-    }
-    if (_speech_recognizer != null)
-    {
-      try {
-        _speech_recognizer.stopListening();
-        _speech_recognizer.cancel();
-        _speech_recognizer.destroy();
-      } catch (Exception ignored) {}
-      _speech_recognizer = null;
-    }
-    if (_translation_bar_view == null || !_translation_bar_view.isOpen())
-    {
-      InputConnection ic = getCurrentInputConnection();
-      if (ic != null)
-      {
-        try {
-          ic.finishComposingText();
-        } catch (Exception ignored) {}
-      }
-    }
-    if (_voice_typing_bar_view != null)
-    {
-      _voice_typing_bar_view.setVisibility(View.GONE);
-    }
-    if (_translation_bar_view != null && _translation_bar_view.isOpen())
-    {
-      if (_candidates_view != null)
-      {
-        _candidates_view.setVisibility(View.VISIBLE);
-      }
-    }
-    else
-    {
-      refresh_candidates_view();
-    }
+    if (_voiceTypingController != null)
+      _voiceTypingController.stop_voice_typing();
+  }
+
+  public boolean is_voice_typing_active()
+  {
+    return _voiceTypingController != null && _voiceTypingController.isVoiceTypingActive();
+  }
+
+  public boolean is_bangla_active(KeyboardData layout)
+  {
+    return _voiceTypingController != null ? _voiceTypingController.is_bangla_active(layout) : false;
+  }
+
+  public String map_lang_to_speech_locale(String langCode)
+  {
+    return _voiceTypingController != null ? _voiceTypingController.map_lang_to_speech_locale(langCode) : "en-US";
   }
 
   private IBinder getConnectionToken()
