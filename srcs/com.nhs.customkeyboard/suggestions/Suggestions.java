@@ -233,8 +233,9 @@ public final class Suggestions
   {
     Cdict dict = _config.emoji_dictionary;
     // Disable emoji suggestion for short words
-    if (dict == null || word.length() < 3)
+    if (dict == null || word.length() < 2)
       return null;
+    // 1. Exact match (Works for 2+ char complete words like "চা", "বউ", "মা")
     Cdict.Result r = dict.find(word);
     if (r.found)
       return dict.word(r.index);
