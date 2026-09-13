@@ -293,6 +293,9 @@ public class VoiceTypingController {
   }
 
   public void stop_voice_typing() {
+    if (!_is_voice_typing_active) {
+      return;
+    }
     _is_voice_typing_active = false;
     if (_btn_voice_mic != null) {
       _btn_voice_mic.setScaleX(1.0f);

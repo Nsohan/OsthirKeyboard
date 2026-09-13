@@ -181,7 +181,7 @@ public final class KeyEventHandler
 
   private static boolean is_sentence_terminator(char c)
   {
-    return c == '.' || c == '\u0964' || c == '\u0965' || c == '?' || c == '!' || c == '\n';
+    return c == '.' || c == '\u0964' || c == '\u0965' || c == '?' || c == '!' || c == '\n' || c == '\r';
   }
 
   private static boolean has_sentence_terminator(String s)
@@ -253,8 +253,7 @@ public final class KeyEventHandler
         int kc = key.getKeyevent();
         if (kc == KeyEvent.KEYCODE_ENTER || kc == KeyEvent.KEYCODE_NUMPAD_ENTER)
         {
-          _last_word = null;
-          _suggestions.clear_predictions();
+          clear_predictions();
         }
         send_key_down_up_checking_expand(kc);
         break;
@@ -370,6 +369,31 @@ public final class KeyEventHandler
   public void currently_typed_word(String word)
   {
     _suggestions.currently_typed_word(word);
+  }
+
+  @Override
+  public void cursor_in_whitespace(String precedingWord)
+  {
+    if (precedingWord != null && !precedingWord.isEmpty())
+    {
+      _last_word = precedingWord;
+      _suggestions.on_space_pressed(precedingWord);
+    }
+    else
+    {
+      _last_word = null;
+      _suggestions.clear_predictions();
+    }
+  }
+
+  public void clear_predictions()
+  {
+    _last_word = null;
+    _suggestions.clear_predictions();
+    if (_typedword != null)
+    {
+      _typedword.clear();
+    }
   }
 
   public void dictionary_changed()

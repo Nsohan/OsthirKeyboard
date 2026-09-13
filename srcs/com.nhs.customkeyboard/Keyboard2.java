@@ -1111,6 +1111,7 @@ public class Keyboard2 extends InputMethodService
           break;
 
         case ACTION:
+          _keyeventhandler.clear_predictions();
           if (_translationPanelController != null && _translationPanelController.isOpen())
           {
             if (_translationPanelController.getView() != null)

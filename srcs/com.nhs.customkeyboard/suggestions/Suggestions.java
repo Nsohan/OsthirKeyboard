@@ -30,6 +30,8 @@ public final class Suggestions
   /** Number of suggestions at the beginning of the [suggestions] array that are not [null]. */
   public int count = 0;
   public String emoji_suggestion = null;
+  /** Tracks the word for which next-word predictions are currently active. */
+  private String _active_predicted_word = null;
   /** Number of suggestions in [suggestions]. */
   public static final int MAX_COUNT = 20;
 
@@ -64,9 +66,20 @@ public final class Suggestions
     if (!_enabled)
       return;
     if (word == null || word.isEmpty() || _config.current_dictionary == null)
+    {
+      // If next-word predictions are active for a word, do not wipe them out
+      // merely because the active typing buffer is empty (e.g. cursor is in whitespace after a word).
+      if (_active_predicted_word != null && count > 0)
+      {
+        return;
+      }
       clear();
+    }
     else
+    {
+      _active_predicted_word = null;
       query_suggestions(word);
+    }
     _callback.set_suggestions(this);
   }
 
@@ -76,6 +89,7 @@ public final class Suggestions
     for (int i = 0; i < MAX_COUNT; i++)
       suggestions[i] = null;
     emoji_suggestion = null;
+    _active_predicted_word = null;
   }
 
   public void clear_predictions()
@@ -85,7 +99,8 @@ public final class Suggestions
   }
 
   /**
-   * Triggered when spacebar is pressed after completing [lastWord].
+   * Triggered when spacebar is pressed after completing [lastWord], or when the cursor
+   * is positioned after whitespace following a word.
    * Predicts next likely words unless suppressed by a sentence boundary (. or ।).
    */
   public void on_space_pressed(String lastWord)
@@ -103,14 +118,22 @@ public final class Suggestions
     }
 
     String clean = lastWord.trim();
-    // Check sentence boundary punctuation (. or । or ? or !)
-    if (clean.endsWith(".") || clean.endsWith("\u0964") || clean.endsWith("?") || clean.endsWith("!"))
+    // Check sentence boundary punctuation (. or । or ॥ or ? or ! or newline)
+    if (clean.endsWith(".") || clean.endsWith("\u0964") || clean.endsWith("\u0965") ||
+        clean.endsWith("?") || clean.endsWith("!") || clean.contains("\n") || clean.contains("\r"))
     {
       clear_predictions();
       return;
     }
 
+    // Ignore redundant/subsequent space presses for the same word.
+    if (clean.equalsIgnoreCase(_active_predicted_word))
+    {
+      return;
+    }
+
     clear();
+    _active_predicted_word = clean;
     int i = 0;
 
     // Priority 1: User's personalized learned transitions
