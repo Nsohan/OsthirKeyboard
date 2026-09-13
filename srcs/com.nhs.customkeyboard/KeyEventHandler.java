@@ -658,9 +658,8 @@ public final class KeyEventHandler
       case SPACE_BAR:
         if (is_translation_active())
         {
-          if (_space_bar_auto_complete && _suggestions.count > 0
-                  && !_typedword.is_selection_not_empty()
-                  && _typedword.cursor_relative() == 0)
+          String cur = _typedword != null ? _typedword.get() : null;
+          if (should_auto_complete_on_space(cur))
           {
             suggestion_entered(_suggestions.suggestions[0] + " ");
           }
@@ -922,6 +921,24 @@ public final class KeyEventHandler
    backspace. */
   int last_replacement_word_len = 0;
 
+  private boolean should_auto_complete_on_space(String current)
+  {
+    if (!_space_bar_auto_complete || _suggestions.count <= 0)
+      return false;
+    if (_typedword.is_selection_not_empty() || _typedword.cursor_relative() != 0)
+      return false;
+    if (current == null || current.isEmpty())
+      return false;
+    // For single-character inputs (e.g. typing "h "), do not auto-replace with a longer word
+    // unless it is an exact case-insensitive match (e.g. "a" -> "a" or "i" -> "I").
+    if (current.length() == 1)
+    {
+      String top = _suggestions.suggestions[0];
+      return top != null && top.equalsIgnoreCase(current);
+    }
+    return true;
+  }
+
   /** Implement autocorrect when enabled in the settings. */
   void handle_space_bar()
   {
@@ -930,9 +947,7 @@ public final class KeyEventHandler
       AvroEngine.get().reset();
     }
     String current = _typedword != null ? _typedword.get() : null;
-    if (_space_bar_auto_complete && _suggestions.count > 0
-            && !_typedword.is_selection_not_empty()
-            && _typedword.cursor_relative() == 0)
+    if (should_auto_complete_on_space(current))
     {
       suggestion_entered(_suggestions.suggestions[0] + " ");
       return;

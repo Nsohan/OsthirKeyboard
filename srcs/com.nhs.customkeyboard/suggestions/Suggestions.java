@@ -31,7 +31,7 @@ public final class Suggestions
   public int count = 0;
   public String emoji_suggestion = null;
   /** Number of suggestions in [suggestions]. */
-  public static final int MAX_COUNT = 15;
+  public static final int MAX_COUNT = 20;
 
   public Suggestions(Callback c, Config conf)
   {
@@ -63,7 +63,7 @@ public final class Suggestions
   {
     if (!_enabled)
       return;
-    if (word.length() < 2 || _config.current_dictionary == null)
+    if (word == null || word.isEmpty() || _config.current_dictionary == null)
       clear();
     else
       query_suggestions(word);
@@ -198,12 +198,32 @@ public final class Suggestions
         suggestions[i++] = w;
     }
 
+    // If first character is uppercase, also query lowercase in dictionary
+    if (first_char_upper && i < MAX_COUNT)
+    {
+      String lower = word.toLowerCase(java.util.Locale.ROOT);
+      if (!lower.equals(word))
+      {
+        Cdict.Result rLower = dict.find(lower);
+        if (rLower.found && !contains(suggestions, i, dict.word(rLower.index)))
+          suggestions[i++] = dict.word(rLower.index);
+
+        int[] suffixesLower = dict.suffixes(rLower, MAX_COUNT);
+        for (int j = 0; j < suffixesLower.length && i < MAX_COUNT; j++)
+        {
+          String w = dict.word(suffixesLower[j]);
+          if (!contains(suggestions, i, w))
+            suggestions[i++] = w;
+        }
+      }
+    }
+
+    count = i;
     if (first_char_upper)
       capitalize_results();
 
     // Priority 3: Emoji shortcut lookup
     emoji_suggestion = query_emoji(word);
-    count = i;
     return i;
   }
 

@@ -156,13 +156,15 @@ public final class UserLearningEngine
    */
   public List<String> get_word_completions(String prefix, int maxCount)
   {
-    if (prefix == null || prefix.length() < 2) return Collections.emptyList();
+    if (prefix == null || prefix.isEmpty()) return Collections.emptyList();
     String p = prefix.trim();
+    if (p.isEmpty()) return Collections.emptyList();
 
+    String pLower = p.toLowerCase(Locale.ROOT);
     List<String> matches = new ArrayList<>();
     for (String w : _wordFrequencyCache.keySet())
     {
-      if (w.startsWith(p))
+      if (w.toLowerCase(Locale.ROOT).startsWith(pLower))
       {
         matches.add(w);
         if (matches.size() >= maxCount) break;
