@@ -28,49 +28,64 @@
         style="@style/toolbar_icon_btn"
         android:src="@drawable/ic_grid_menu"/>
 
-    <HorizontalScrollView
-        android:id="@+id/tools_action_scroll"
+    <FrameLayout
+        android:id="@+id/candidates_center_frame"
         android:layout_width="0dp"
         android:layout_height="match_parent"
         android:layout_weight="1"
-        android:scrollbars="none"
-        android:fillViewport="true"
-        android:visibility="visible">
+        android:clipChildren="true"
+        android:clipToPadding="false">
 
       <LinearLayout
-          android:id="@+id/tools_action_bar"
-          android:layout_width="wrap_content"
+          android:id="@+id/candidates_words_layout"
+          android:layout_width="match_parent"
           android:layout_height="match_parent"
           android:orientation="horizontal"
-          android:gravity="center_vertical|start"/>
-    </HorizontalScrollView>
+          android:gravity="center_vertical"
+          android:visibility="gone">
 
-    <TextView
-        android:id="@+id/candidates_emoji"
-        style="@style/candidates_emoji"/>
+        <TextView
+            android:id="@+id/candidates_emoji"
+            style="@style/candidates_emoji"/>
 
-    <HorizontalScrollView
-        android:id="@+id/candidates_scroll"
-        android:layout_width="0dp"
-        android:layout_height="match_parent"
-        android:layout_weight="1"
-        android:scrollbars="none"
-        android:fillViewport="true"
-        android:visibility="gone">
-      <LinearLayout
-          android:id="@+id/candidates_container"
-          android:layout_width="wrap_content"
+        <HorizontalScrollView
+            android:id="@+id/candidates_scroll"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:scrollbars="none"
+            android:fillViewport="true">
+          <LinearLayout
+              android:id="@+id/candidates_container"
+              android:layout_width="wrap_content"
+              android:layout_height="match_parent"
+              android:orientation="horizontal"
+              android:gravity="center_vertical"/>
+        </HorizontalScrollView>
+      </LinearLayout>
+
+      <HorizontalScrollView
+          android:id="@+id/tools_action_scroll"
+          android:layout_width="match_parent"
           android:layout_height="match_parent"
-          android:orientation="horizontal"
-          android:gravity="center_vertical"/>
-    </HorizontalScrollView>
+          android:scrollbars="none"
+          android:fillViewport="true"
+          android:visibility="visible">
 
-    <View
-        android:id="@+id/tools_spacer"
-        android:layout_width="0dp"
-        android:layout_height="match_parent"
-        android:layout_weight="1"
-        android:visibility="gone"/>
+        <LinearLayout
+            android:id="@+id/tools_action_bar"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:orientation="horizontal"
+            android:gravity="center_vertical|start"/>
+      </HorizontalScrollView>
+
+      <View
+          android:id="@+id/tools_spacer"
+          android:layout_width="match_parent"
+          android:layout_height="match_parent"
+          android:visibility="gone"/>
+    </FrameLayout>
 
     <ImageButton
         android:id="@+id/voice_typing_button"

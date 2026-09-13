@@ -10,7 +10,10 @@ import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.AccelerateInterpolator;
+import android.view.animation.DecelerateInterpolator;
 import android.view.inputmethod.EditorInfo;
+import android.widget.FrameLayout;
 import android.widget.HorizontalScrollView;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -51,8 +54,12 @@ public class CandidatesView extends LinearLayout
   private OnMenuToggleListener _menu_toggle_listener;
   private OnTranslateToggleListener _translate_toggle_listener;
   private ImageButton _tools_menu_button;
+  private FrameLayout _candidates_center_frame;
+  private LinearLayout _candidates_words_layout;
   private View _tools_spacer;
   private boolean _tools_open = false;
+  private boolean _tools_expanded_over_suggestions = false;
+  private boolean _is_animating = false;
 
   private View _tools_action_scroll;
   private LinearLayout _tools_action_bar;
@@ -96,6 +103,10 @@ public class CandidatesView extends LinearLayout
     if (_tools_open != open)
     {
       _tools_open = open;
+      if (_tools_open)
+      {
+        _tools_expanded_over_suggestions = false;
+      }
       update_toolbar_visibility();
       if (_menu_toggle_listener != null)
       {
@@ -109,6 +120,8 @@ public class CandidatesView extends LinearLayout
   {
     super.onFinishInflate();
     _tools_menu_button = findViewById(R.id.tools_menu_button);
+    _candidates_center_frame = findViewById(R.id.candidates_center_frame);
+    _candidates_words_layout = findViewById(R.id.candidates_words_layout);
     _tools_spacer = findViewById(R.id.tools_spacer);
     _tools_action_scroll = findViewById(R.id.tools_action_scroll);
     _tools_action_bar = findViewById(R.id.tools_action_bar);
@@ -125,6 +138,7 @@ public class CandidatesView extends LinearLayout
   public void set_candidates(Suggestions s)
   {
     int s_count = (s != null) ? s.count : 0;
+    boolean prev_has_suggestions = _has_suggestions;
     _has_suggestions = (s_count > 0) || (s != null && s.emoji_suggestion != null && s.emoji_suggestion.length() > 0);
 
     if (s_count > 0 && !_tools_open)
@@ -132,66 +146,274 @@ public class CandidatesView extends LinearLayout
       _tools_open = false;
     }
 
-    update_toolbar_visibility();
+    populate_candidate_views(s, s_count);
 
-    if (s != null && s.emoji_suggestion != null && _emoji_view != null)
+    if (_tools_open)
+    {
+      update_toolbar_visibility();
+      return;
+    }
+
+    if (_has_suggestions)
+    {
+      if (!prev_has_suggestions)
       {
-        final String emoji = s.emoji_suggestion;
-        _emoji_view.setText(emoji);
-        _emoji_view.setVisibility(View.VISIBLE);
-        _emoji_view.setOnClickListener(new OnClickListener()
+        _tools_expanded_over_suggestions = false;
+        animate_collapse_tools_into_menu();
+      }
+      else
+      {
+        if (_tools_expanded_over_suggestions)
         {
-          @Override
-          public void onClick(View _v)
+          _tools_expanded_over_suggestions = false;
+          animate_collapse_tools_into_menu();
+        }
+        else
+        {
+          if (_candidates_words_layout != null && _candidates_words_layout.getVisibility() != View.VISIBLE)
           {
-            Config.globalConfig().handler.suggestion_entered(emoji);
+            _candidates_words_layout.setVisibility(View.VISIBLE);
+            _candidates_words_layout.setAlpha(1f);
+            _candidates_words_layout.setTranslationX(0f);
           }
-        });
+          if (_tools_action_scroll != null && _tools_action_scroll.getVisibility() != View.GONE)
+          {
+            _tools_action_scroll.setVisibility(View.GONE);
+          }
+        }
       }
-    else if (_emoji_view != null)
+    }
+    else
+    {
+      if (prev_has_suggestions)
       {
-        _emoji_view.setVisibility(View.GONE);
-        _emoji_view.setOnClickListener(null);
+        _tools_expanded_over_suggestions = false;
+        animate_expand_tools_from_menu();
       }
+      else
+      {
+        _tools_expanded_over_suggestions = false;
+        update_toolbar_visibility();
+      }
+    }
+
+    if (_voice_typing_button != null)
+    {
+      _voice_typing_button.setVisibility(show_voice_typing ? View.VISIBLE : View.GONE);
+    }
+
+    if (_dictionary_switch_button != null)
+    {
+      _dictionary_switch_button.setVisibility(
+          should_show_dictionary_switch ? View.VISIBLE : View.GONE);
+    }
+  }
+
+  private void populate_candidate_views(Suggestions s, int s_count)
+  {
+    if (s != null && s.emoji_suggestion != null && _emoji_view != null)
+    {
+      final String emoji = s.emoji_suggestion;
+      _emoji_view.setText(emoji);
+      _emoji_view.setVisibility(View.VISIBLE);
+      _emoji_view.setOnClickListener(new OnClickListener()
+      {
+        @Override
+        public void onClick(View _v)
+        {
+          Config.globalConfig().handler.suggestion_entered(emoji);
+        }
+      });
+    }
+    else if (_emoji_view != null)
+    {
+      _emoji_view.setVisibility(View.GONE);
+      _emoji_view.setOnClickListener(null);
+    }
 
     if (s_count != 0 && _status_no_dict != null)
       _status_no_dict.setVisibility(View.GONE);
 
     if (_container != null)
+    {
+      _container.removeAllViews();
+      for (int i = 0; i < s_count; i++)
       {
-        _container.removeAllViews();
-        for (int i = 0; i < s_count; i++)
-          {
-            final String word = s.suggestions[i];
-            if (word == null) continue;
+        final String word = s.suggestions[i];
+        if (word == null) continue;
 
-            TextView v = get_or_create_item_view(i);
-            v.setText(word);
-            v.setOnClickListener(new OnClickListener()
-            {
-              @Override
-              public void onClick(View _v)
-              {
-                Config.globalConfig().handler.suggestion_entered(word + " ");
-              }
-            });
-            _container.addView(v);
+        TextView v = get_or_create_item_view(i);
+        v.setText(word);
+        v.setOnClickListener(new OnClickListener()
+        {
+          @Override
+          public void onClick(View _v)
+          {
+            Config.globalConfig().handler.suggestion_entered(word + " ");
           }
+        });
+        _container.addView(v);
       }
+    }
 
     if (_scroll_view != null)
       _scroll_view.scrollTo(0, 0);
+  }
 
-    if (_voice_typing_button != null)
-      {
-        _voice_typing_button.setVisibility(show_voice_typing ? View.VISIBLE : View.GONE);
-      }
+  private float get_anim_distance()
+  {
+    if (_tools_action_scroll != null && _tools_action_scroll.getWidth() > 0)
+    {
+      return _tools_action_scroll.getWidth();
+    }
+    if (_candidates_center_frame != null && _candidates_center_frame.getWidth() > 0)
+    {
+      return _candidates_center_frame.getWidth();
+    }
+    return 200 * getResources().getDisplayMetrics().density;
+  }
 
-    if (_dictionary_switch_button != null)
-      {
-        _dictionary_switch_button.setVisibility(
-            should_show_dictionary_switch ? View.VISIBLE : View.GONE);
-      }
+  private void update_menu_button_icon(final int resId, boolean animated)
+  {
+    if (_tools_menu_button == null) return;
+    if (!animated)
+    {
+      _tools_menu_button.setImageResource(resId);
+      _tools_menu_button.setRotation(0f);
+      return;
+    }
+
+    _tools_menu_button.animate().cancel();
+    _tools_menu_button.animate()
+        .rotation(90f)
+        .setDuration(100)
+        .withEndAction(new Runnable()
+        {
+          @Override
+          public void run()
+          {
+            if (_tools_menu_button != null)
+            {
+              _tools_menu_button.setImageResource(resId);
+              _tools_menu_button.setRotation(-90f);
+              _tools_menu_button.animate()
+                  .rotation(0f)
+                  .setDuration(100)
+                  .start();
+            }
+          }
+        })
+        .start();
+  }
+
+  private void animate_collapse_tools_into_menu()
+  {
+    if (_tools_action_scroll == null) return;
+
+    final float distance = get_anim_distance();
+    _is_animating = true;
+
+    update_menu_button_icon(R.drawable.ic_grid_menu, true);
+
+    if (_candidates_words_layout != null)
+    {
+      _candidates_words_layout.animate().cancel();
+      _candidates_words_layout.setVisibility(View.VISIBLE);
+      _candidates_words_layout.setAlpha(0f);
+      _candidates_words_layout.setTranslationX(30 * getResources().getDisplayMetrics().density);
+      _candidates_words_layout.animate()
+          .alpha(1f)
+          .translationX(0f)
+          .setDuration(220)
+          .setInterpolator(new DecelerateInterpolator())
+          .start();
+    }
+
+    _tools_action_scroll.animate().cancel();
+    _tools_action_scroll.setVisibility(View.VISIBLE);
+    _tools_action_scroll.setAlpha(1f);
+    _tools_action_scroll.setTranslationX(0f);
+    _tools_action_scroll.setPivotX(0f);
+    _tools_action_scroll.animate()
+        .translationX(-distance)
+        .alpha(0f)
+        .scaleX(0.85f)
+        .setDuration(200)
+        .setInterpolator(new AccelerateInterpolator())
+        .withEndAction(new Runnable()
+        {
+          @Override
+          public void run()
+          {
+            if (_tools_action_scroll != null)
+            {
+              _tools_action_scroll.setVisibility(View.GONE);
+              _tools_action_scroll.setTranslationX(0f);
+              _tools_action_scroll.setAlpha(1f);
+              _tools_action_scroll.setScaleX(1f);
+            }
+            _is_animating = false;
+          }
+        })
+        .start();
+  }
+
+  private void animate_expand_tools_from_menu()
+  {
+    if (_tools_action_scroll == null) return;
+
+    final float distance = get_anim_distance();
+    _is_animating = true;
+
+    int iconRes = _has_suggestions ? R.drawable.ic_arrow_back : R.drawable.ic_grid_menu;
+    update_menu_button_icon(iconRes, true);
+
+    if (_candidates_words_layout != null)
+    {
+      _candidates_words_layout.animate().cancel();
+      _candidates_words_layout.animate()
+          .alpha(0f)
+          .translationX(30 * getResources().getDisplayMetrics().density)
+          .setDuration(180)
+          .setInterpolator(new AccelerateInterpolator())
+          .withEndAction(new Runnable()
+          {
+            @Override
+            public void run()
+            {
+              if (_candidates_words_layout != null)
+              {
+                _candidates_words_layout.setVisibility(View.GONE);
+                _candidates_words_layout.setAlpha(1f);
+                _candidates_words_layout.setTranslationX(0f);
+              }
+            }
+          })
+          .start();
+    }
+
+    _tools_action_scroll.animate().cancel();
+    _tools_action_scroll.setVisibility(View.VISIBLE);
+    _tools_action_scroll.setTranslationX(-distance);
+    _tools_action_scroll.setAlpha(0f);
+    _tools_action_scroll.setPivotX(0f);
+    _tools_action_scroll.setScaleX(0.85f);
+
+    _tools_action_scroll.animate()
+        .translationX(0f)
+        .alpha(1f)
+        .scaleX(1f)
+        .setDuration(220)
+        .setInterpolator(new DecelerateInterpolator())
+        .withEndAction(new Runnable()
+        {
+          @Override
+          public void run()
+          {
+            _is_animating = false;
+          }
+        })
+        .start();
   }
 
   private void update_toolbar_visibility()
@@ -199,7 +421,10 @@ public class CandidatesView extends LinearLayout
     if (_tools_menu_button != null)
     {
       _tools_menu_button.setVisibility(show_toolbar ? View.VISIBLE : View.GONE);
-      _tools_menu_button.setImageResource(_tools_open ? R.drawable.ic_close : R.drawable.ic_grid_menu);
+      int iconRes = _tools_open ? R.drawable.ic_close
+          : (_tools_expanded_over_suggestions ? R.drawable.ic_arrow_back : R.drawable.ic_grid_menu);
+      _tools_menu_button.setImageResource(iconRes);
+      _tools_menu_button.setRotation(0f);
       TypedValue outValue = new TypedValue();
       getContext().getTheme().resolveAttribute(android.R.attr.selectableItemBackgroundBorderless, outValue, true);
       _tools_menu_button.setBackgroundResource(outValue.resourceId);
@@ -216,9 +441,12 @@ public class CandidatesView extends LinearLayout
     {
       if (_tools_spacer != null) _tools_spacer.setVisibility(View.VISIBLE);
       if (_tools_action_scroll != null) _tools_action_scroll.setVisibility(View.GONE);
-      else if (_tools_action_bar != null) _tools_action_bar.setVisibility(View.GONE);
-      if (_scroll_view != null) _scroll_view.setVisibility(View.GONE);
-      if (_emoji_view != null) _emoji_view.setVisibility(View.GONE);
+      if (_candidates_words_layout != null) _candidates_words_layout.setVisibility(View.GONE);
+      else
+      {
+        if (_scroll_view != null) _scroll_view.setVisibility(View.GONE);
+        if (_emoji_view != null) _emoji_view.setVisibility(View.GONE);
+      }
       if (_dictionary_switch_button != null) _dictionary_switch_button.setVisibility(View.GONE);
       if (_voice_typing_button != null)
         _voice_typing_button.setVisibility(show_voice_typing ? View.VISIBLE : View.GONE);
@@ -228,21 +456,57 @@ public class CandidatesView extends LinearLayout
       if (_tools_spacer != null) _tools_spacer.setVisibility(View.GONE);
       if (_has_suggestions)
       {
-        if (_tools_action_scroll != null) _tools_action_scroll.setVisibility(View.GONE);
-        else if (_tools_action_bar != null) _tools_action_bar.setVisibility(View.GONE);
-        if (_scroll_view != null) _scroll_view.setVisibility(View.VISIBLE);
-        if (_emoji_view != null && _emoji_view.getText().length() > 0)
-          _emoji_view.setVisibility(View.VISIBLE);
+        if (_tools_expanded_over_suggestions)
+        {
+          if (_tools_action_scroll != null)
+          {
+            _tools_action_scroll.setVisibility(View.VISIBLE);
+            _tools_action_scroll.setTranslationX(0f);
+            _tools_action_scroll.setAlpha(1f);
+            _tools_action_scroll.setScaleX(1f);
+          }
+          if (_candidates_words_layout != null)
+            _candidates_words_layout.setVisibility(View.GONE);
+          else
+          {
+            if (_scroll_view != null) _scroll_view.setVisibility(View.GONE);
+            if (_emoji_view != null) _emoji_view.setVisibility(View.GONE);
+          }
+        }
+        else
+        {
+          if (_tools_action_scroll != null) _tools_action_scroll.setVisibility(View.GONE);
+          if (_candidates_words_layout != null)
+          {
+            _candidates_words_layout.setVisibility(View.VISIBLE);
+            _candidates_words_layout.setAlpha(1f);
+            _candidates_words_layout.setTranslationX(0f);
+          }
+          else
+          {
+            if (_scroll_view != null) _scroll_view.setVisibility(View.VISIBLE);
+            if (_emoji_view != null && _emoji_view.getText().length() > 0)
+              _emoji_view.setVisibility(View.VISIBLE);
+          }
+        }
       }
       else
       {
         boolean showActionBar = (_status_no_dict == null || _status_no_dict.getVisibility() != View.VISIBLE);
         if (_tools_action_scroll != null)
+        {
           _tools_action_scroll.setVisibility(showActionBar ? View.VISIBLE : View.GONE);
-        else if (_tools_action_bar != null)
-          _tools_action_bar.setVisibility(showActionBar ? View.VISIBLE : View.GONE);
-        if (_scroll_view != null) _scroll_view.setVisibility(View.GONE);
-        if (_emoji_view != null) _emoji_view.setVisibility(View.GONE);
+          _tools_action_scroll.setTranslationX(0f);
+          _tools_action_scroll.setAlpha(1f);
+          _tools_action_scroll.setScaleX(1f);
+        }
+        if (_candidates_words_layout != null)
+          _candidates_words_layout.setVisibility(View.GONE);
+        else
+        {
+          if (_scroll_view != null) _scroll_view.setVisibility(View.GONE);
+          if (_emoji_view != null) _emoji_view.setVisibility(View.GONE);
+        }
       }
       if (_dictionary_switch_button != null)
         _dictionary_switch_button.setVisibility(
@@ -266,9 +530,44 @@ public class CandidatesView extends LinearLayout
         @Override
         public void onClick(View v)
         {
-          setMenuOpen(!_tools_open);
+          handle_menu_button_click();
         }
       });
+      _tools_menu_button.setOnLongClickListener(new OnLongClickListener()
+      {
+        @Override
+        public boolean onLongClick(View v)
+        {
+          setMenuOpen(!_tools_open);
+          return true;
+        }
+      });
+    }
+  }
+
+  private void handle_menu_button_click()
+  {
+    if (_tools_open)
+    {
+      setMenuOpen(false);
+      return;
+    }
+
+    if (_has_suggestions)
+    {
+      _tools_expanded_over_suggestions = !_tools_expanded_over_suggestions;
+      if (_tools_expanded_over_suggestions)
+      {
+        animate_expand_tools_from_menu();
+      }
+      else
+      {
+        animate_collapse_tools_into_menu();
+      }
+    }
+    else
+    {
+      setMenuOpen(!_tools_open);
     }
   }
 
@@ -684,7 +983,9 @@ public class CandidatesView extends LinearLayout
 
   void clear_candidates()
   {
+    boolean prev_has_suggestions = _has_suggestions;
     _has_suggestions = false;
+    _tools_expanded_over_suggestions = false;
     if (_container != null)
       _container.removeAllViews();
     if (_emoji_view != null)
@@ -693,7 +994,14 @@ public class CandidatesView extends LinearLayout
       _emoji_view.setText("");
       _emoji_view.setOnClickListener(null);
     }
-    update_toolbar_visibility();
+    if (prev_has_suggestions && !_tools_open)
+    {
+      animate_expand_tools_from_menu();
+    }
+    else
+    {
+      update_toolbar_visibility();
+    }
   }
 
   public void refresh_config(Config config)
