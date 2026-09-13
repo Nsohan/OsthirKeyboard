@@ -378,10 +378,26 @@
     <string name="pref_screen_languages_summary" translatable="false">English (US)</string>
     <string name="pref_screen_preferences_title" translatable="false">Preferences</string>
     <string name="pref_screen_theme_title" translatable="false">Theme</string>
-    <string name="pref_screen_suggestions_title" translatable="false">Corrections &amp; suggestions</string>
+    <string name="pref_screen_suggestions_title" translatable="false">Dictionary &amp; suggestions</string>
+    <string name="pref_next_word_prediction_title">Predict next word</string>
+    <string name="pref_next_word_prediction_summary">Suggest the next likely word after typing a space</string>
+    <string name="pref_user_learning_title">Self-learning dictionary</string>
+    <string name="pref_user_learning_summary">Personalize suggestions based on your typed words and phrases</string>
+    <string name="pref_backup_restore_title">Backup &amp; Restore</string>
+    <string name="pref_backup_restore_summary">Export or import learned words and sync with system dictionary</string>
+    <string name="pref_export_words_title">Export learned words</string>
+    <string name="pref_export_words_summary">Save your personalized words to a backup file</string>
+    <string name="pref_import_words_title">Import backup file</string>
+    <string name="pref_import_words_summary">Restore learned words and patterns from a backup file</string>
+    <string name="pref_sync_system_dict_title">Sync with Android User Dictionary</string>
+    <string name="pref_sync_system_dict_summary">Keep your words in sync with the system-wide dictionary</string>
+    <string name="pref_clear_learned_title">Clear learned history</string>
+    <string name="pref_clear_learned_summary">Delete all automatically learned words and phrase patterns</string>
+    <string name="pref_clear_learned_confirm">Are you sure you want to clear all learned words and predictions?</string>
+    <string name="user_dict_stats_format">Learned Words: %1$d\nLearned Phrase Transitions: %2$d</string>
     <string name="pref_screen_typing_title" translatable="false">Glide typing</string>
     <string name="pref_screen_clipboard_title" translatable="false">Clipboard</string>
-    <string name="pref_screen_dictionary_title" translatable="false">Dictionary</string>
+    <string name="pref_screen_dictionary_title" translatable="false">Installed dictionaries</string>
     <string name="pref_screen_tasker_title" translatable="false">Tasker &amp; Automation</string>
     <string name="pref_screen_about_title" translatable="false">About</string>
 

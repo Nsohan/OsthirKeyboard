@@ -13,6 +13,7 @@ import java.util.Iterator;
 
 import com.nhs.customkeyboard.suggestions.NextWordPredictor;
 import com.nhs.customkeyboard.suggestions.Suggestions;
+import com.nhs.customkeyboard.suggestions.UserLearningEngine;
 import com.nhs.customkeyboard.avro.AvroEngine;
 
 import android.content.Context;
@@ -26,6 +27,7 @@ public final class KeyEventHandler
   Autocapitalisation _autocap;
   Suggestions _suggestions;
   CurrentlyTypedWord _typedword;
+  private String _last_word = null;
 
   /** Keeps CurrentlyTypedWord in sync with the edits KeymapEngine makes,
    so suggestions are queried against the actual (e.g. Tamil) text on
@@ -119,6 +121,7 @@ public final class KeyEventHandler
             conf.editor_config.should_move_cursor_force_fallback;
     _space_bar_auto_complete = conf.space_bar_auto_complete;
     _last_action = null;
+    _last_word = null;
     KeymapEngine.get().reset();
     AvroEngine.get().reset();
     // Not TaskerTriggerEngine.reset(): this is a genuine field/app
@@ -176,6 +179,22 @@ public final class KeyEventHandler
     }
   }
 
+  private static boolean is_sentence_terminator(char c)
+  {
+    return c == '.' || c == '\u0964' || c == '\u0965' || c == '?' || c == '!' || c == '\n';
+  }
+
+  private static boolean has_sentence_terminator(String s)
+  {
+    if (s == null) return false;
+    for (int i = 0; i < s.length(); i++)
+    {
+      if (is_sentence_terminator(s.charAt(i)))
+        return true;
+    }
+    return false;
+  }
+
   /** A key has been released. */
   @Override
   public void key_up(KeyValue key, Pointers.Modifiers mods)
@@ -188,9 +207,14 @@ public final class KeyEventHandler
     switch (key.getKind())
     {
       case Char:
+        char c = key.getChar();
+        if (is_sentence_terminator(c))
+        {
+          _last_word = null;
+          _suggestions.clear_predictions();
+        }
         if (is_translation_active())
         {
-          char c = key.getChar();
           String s = String.valueOf(c);
           _translation_interceptor.onCharTyped(c);
           _autocap.typed(s);
@@ -198,14 +222,19 @@ public final class KeyEventHandler
         }
         else
         {
-          send_text(String.valueOf(key.getChar()), _last_key_is_swipe);
+          send_text(String.valueOf(c), _last_key_is_swipe);
         }
         _recv.onKeyCommitted();
         break;
       case String:
+        String s = key.getString();
+        if (has_sentence_terminator(s))
+        {
+          _last_word = null;
+          _suggestions.clear_predictions();
+        }
         if (is_translation_active())
         {
-          String s = key.getString();
           if (s != null)
           {
             _translation_interceptor.onStringTyped(s);
@@ -215,12 +244,20 @@ public final class KeyEventHandler
         }
         else
         {
-          send_text(key.getString(), _last_key_is_swipe);
+          send_text(s, _last_key_is_swipe);
         }
         _recv.onKeyCommitted();
         break;
       case Event: _recv.handle_event_key(key.getEvent()); break;
-      case Keyevent: send_key_down_up_checking_expand(key.getKeyevent()); break;
+      case Keyevent:
+        int kc = key.getKeyevent();
+        if (kc == KeyEvent.KEYCODE_ENTER || kc == KeyEvent.KEYCODE_NUMPAD_ENTER)
+        {
+          _last_word = null;
+          _suggestions.clear_predictions();
+        }
+        send_key_down_up_checking_expand(kc);
+        break;
       case Modifier: break;
       case Editing: handle_editing_key(key.getEditing()); break;
       case Compose_pending: _recv.set_compose_pending(true); break;
@@ -263,6 +300,43 @@ public final class KeyEventHandler
     last_replaced_word = old;
     last_replacement_word_len = text != null ? text.length() : 0;
     _next_last_action = LastAction.SUGGESTION_ENTERED;
+
+    String cleanChosen = text != null ? text.trim() : "";
+    boolean isWord = false;
+    for (int i = 0; i < cleanChosen.length(); i++)
+    {
+      if (Character.isLetterOrDigit(cleanChosen.charAt(i)))
+      {
+        isWord = true;
+        break;
+      }
+    }
+    if (isWord)
+    {
+      if (_recv != null && _recv.getContext() != null)
+      {
+        Config conf = Config.globalConfig();
+        if (conf != null && conf.user_learning_enabled)
+        {
+          UserLearningEngine engine = UserLearningEngine.getInstance(_recv.getContext());
+          if (_last_word != null && !_last_word.isEmpty())
+          {
+            engine.record_transition(_last_word, cleanChosen);
+          }
+          else
+          {
+            engine.record_word(cleanChosen);
+          }
+        }
+      }
+      _last_word = cleanChosen;
+      _suggestions.on_space_pressed(cleanChosen);
+    }
+    else
+    {
+      _last_word = null;
+      _suggestions.clear_predictions();
+    }
   }
 
   @Override
@@ -458,6 +532,12 @@ public final class KeyEventHandler
     for (int i = 0; i < text.length(); i++)
     {
       char c = text.charAt(i);
+      if (is_sentence_terminator(c))
+      {
+        _last_word = null;
+        _suggestions.clear_predictions();
+      }
+
       if (TaskerTriggerEngine.get().handle_char(_recv.getContext(), conn, c,
               _typedword_tracker, _tasker_conn_provider))
       {
@@ -563,6 +643,8 @@ public final class KeyEventHandler
       case ASSIST: send_context_menu_action(android.R.id.textAssist); break;
       case AUTOFILL: send_context_menu_action(android.R.id.autofill); break;
       case DELETE_WORD:
+        _last_word = null;
+        _suggestions.clear_predictions();
         if (is_translation_active())
         {
           _translation_interceptor.onBackspace();
@@ -847,12 +929,45 @@ public final class KeyEventHandler
     {
       AvroEngine.get().reset();
     }
+    String current = _typedword != null ? _typedword.get() : null;
     if (_space_bar_auto_complete && _suggestions.count > 0
             && !_typedword.is_selection_not_empty()
             && _typedword.cursor_relative() == 0)
+    {
       suggestion_entered(_suggestions.suggestions[0] + " ");
+      return;
+    }
     else
+    {
       send_text(" ");
+    }
+
+    if (current != null && !current.trim().isEmpty())
+    {
+      String word = current.trim();
+      if (_recv != null && _recv.getContext() != null)
+      {
+        Config conf = Config.globalConfig();
+        if (conf != null && conf.user_learning_enabled)
+        {
+          UserLearningEngine engine = UserLearningEngine.getInstance(_recv.getContext());
+          if (_last_word != null && !_last_word.isEmpty())
+          {
+            engine.record_transition(_last_word, word);
+          }
+          else
+          {
+            engine.record_word(word);
+          }
+        }
+      }
+      _last_word = word;
+      _suggestions.on_space_pressed(word);
+    }
+    else if (_last_word != null && !_last_word.isEmpty())
+    {
+      _suggestions.on_space_pressed(_last_word);
+    }
   }
 
   /** Undo the last autocorrect, or the last Tasker trigger

@@ -45,6 +45,8 @@ public final class Config
   public float swipe_dist_px;
   public float slide_step_px;
   public boolean suggestions_enabled;
+  public boolean next_word_prediction_enabled;
+  public boolean user_learning_enabled;
   public boolean show_toolbar;
   public java.util.List<com.nhs.customkeyboard.suggestions.SuggestionToolItem> suggestion_tools;
   public boolean show_voice_typing = true;
@@ -161,6 +163,8 @@ public final class Config
     int nr_height_percent = _prefs.getInt("number_row_height", 100);
     number_row_height_scale = Math.max(0.4f, Math.min(2.0f, nr_height_percent / 100.0f));
     suggestions_enabled = _prefs.getBoolean("suggestions", true);
+    next_word_prediction_enabled = _prefs.getBoolean("next_word_prediction", true);
+    user_learning_enabled = _prefs.getBoolean("user_learning_enabled", true);
     int sb_height_percent = _prefs.getInt("suggestion_bar_height", 100);
     suggestion_bar_scale = Math.max(0.5f, Math.min(2.0f, sb_height_percent / 100.0f));
     suggestion_text_size = _prefs.getInt("suggestion_text_size", 15);

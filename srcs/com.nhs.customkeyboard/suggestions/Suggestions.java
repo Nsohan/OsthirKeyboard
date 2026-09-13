@@ -1,5 +1,6 @@
 package com.nhs.customkeyboard.suggestions;
 
+import android.content.Context;
 import java.util.Arrays;
 import java.util.List;
 import nhs.cdict.Cdict;
@@ -8,18 +9,25 @@ import com.nhs.customkeyboard.Config;
 import com.nhs.customkeyboard.ComposeKey;
 import com.nhs.customkeyboard.ComposeKeyData;
 
-/** Keep track of the word being typed and provide suggestions for
-    [CandidatesView]. */
+/**
+ * Keep track of the word being typed and provide suggestions for [CandidatesView].
+ * Supports:
+ *  1. Dynamic user learning (custom words & bigram transitions).
+ *  2. Static next-word prediction via NextWordPredictor (bn_bigrams.bin).
+ *  3. Static dictionary prefix autocomplete via cdict (bn.dict).
+ *  4. Bilingual & phonetic emoji shortcut suggestions.
+ *  5. Sentence boundary suppression (., ।, ?, !).
+ */
 public final class Suggestions
 {
   Callback _callback;
   Config _config;
+  Context _context;
   boolean _enabled;
 
   /** Current suggestions. The best suggestion is at index [0]. */
   public String[] suggestions = new String[MAX_COUNT];
-  /** Number of suggestions at the beginning of the [suggestions] array that
-      are not [null]. */
+  /** Number of suggestions at the beginning of the [suggestions] array that are not [null]. */
   public int count = 0;
   public String emoji_suggestion = null;
   /** Number of suggestions in [suggestions]. */
@@ -27,8 +35,22 @@ public final class Suggestions
 
   public Suggestions(Callback c, Config conf)
   {
+    this(c, conf, null);
+  }
+
+  public Suggestions(Callback c, Config conf, Context context)
+  {
     _callback = c;
     _config = conf;
+    _context = (context != null) ? context.getApplicationContext() : null;
+  }
+
+  public void setContext(Context context)
+  {
+    if (context != null && _context == null)
+    {
+      _context = context.getApplicationContext();
+    }
   }
 
   public void started()
@@ -48,7 +70,7 @@ public final class Suggestions
     _callback.set_suggestions(this);
   }
 
-  void clear()
+  public void clear()
   {
     count = 0;
     for (int i = 0; i < MAX_COUNT; i++)
@@ -56,18 +78,113 @@ public final class Suggestions
     emoji_suggestion = null;
   }
 
+  public void clear_predictions()
+  {
+    clear();
+    _callback.set_suggestions(this);
+  }
+
+  /**
+   * Triggered when spacebar is pressed after completing [lastWord].
+   * Predicts next likely words unless suppressed by a sentence boundary (. or ।).
+   */
+  public void on_space_pressed(String lastWord)
+  {
+    if (!_enabled || !_config.next_word_prediction_enabled)
+    {
+      clear_predictions();
+      return;
+    }
+
+    if (lastWord == null || lastWord.isEmpty())
+    {
+      clear_predictions();
+      return;
+    }
+
+    String clean = lastWord.trim();
+    // Check sentence boundary punctuation (. or । or ? or !)
+    if (clean.endsWith(".") || clean.endsWith("\u0964") || clean.endsWith("?") || clean.endsWith("!"))
+    {
+      clear_predictions();
+      return;
+    }
+
+    clear();
+    int i = 0;
+
+    // Priority 1: User's personalized learned transitions
+    if (_config.user_learning_enabled && _context != null)
+    {
+      UserLearningEngine engine = UserLearningEngine.getInstance(_context);
+      List<String> userBigrams = engine.get_next_word_predictions(clean, 3);
+      if (userBigrams != null)
+      {
+        for (String w : userBigrams)
+        {
+          if (i < MAX_COUNT && !contains(suggestions, i, w))
+          {
+            suggestions[i++] = w;
+          }
+        }
+      }
+    }
+
+    // Priority 2: Static language bigram predictions (bn_bigrams.bin)
+    if (_context != null)
+    {
+      NextWordPredictor predictor = NextWordPredictor.getInstance(_context);
+      String[] staticBigrams = predictor.predict(clean);
+      if (staticBigrams != null)
+      {
+        for (String w : staticBigrams)
+        {
+          if (i < MAX_COUNT && !contains(suggestions, i, w))
+          {
+            suggestions[i++] = w;
+          }
+        }
+      }
+    }
+
+    count = i;
+    emoji_suggestion = null;
+    _callback.set_suggestions(this);
+  }
+
   int query_suggestions(String word)
   {
     Cdict dict = _config.current_dictionary;
     boolean first_char_upper = Character.isUpperCase(word.charAt(0));
     word = apply_substitutions(word);
-    Cdict.Result r = dict.find(word);
     int i = 0;
-    if (r.found)
+
+    // Priority 1: Check user's learned custom words matching prefix
+    if (_config.user_learning_enabled && _context != null)
+    {
+      UserLearningEngine engine = UserLearningEngine.getInstance(_context);
+      List<String> learnedWords = engine.get_word_completions(word, 3);
+      if (learnedWords != null)
+      {
+        for (String w : learnedWords)
+        {
+          if (i < MAX_COUNT && !contains(suggestions, i, w))
+          {
+            suggestions[i++] = w;
+          }
+        }
+      }
+    }
+
+    // Priority 2: Static dictionary exact match and suffixes
+    Cdict.Result r = dict.find(word);
+    if (r.found && !contains(suggestions, i, dict.word(r.index)))
       suggestions[i++] = dict.word(r.index);
+
     int[] suffixes = dict.suffixes(r, MAX_COUNT);
     int[] dist = (word.length() < 3) ? NO_RESULTS :
       dict.distance(word, 1, MAX_COUNT);
+
     for (int j = 0; j < suffixes.length && i < MAX_COUNT; j++)
     {
       String w = dict.word(suffixes[j]);
@@ -80,9 +197,12 @@ public final class Suggestions
       if (!contains(suggestions, i, w))
         suggestions[i++] = w;
     }
+
     if (first_char_upper)
       capitalize_results();
-    emoji_suggestion = query_emoji(word); // word with substitutions applied
+
+    // Priority 3: Emoji shortcut lookup
+    emoji_suggestion = query_emoji(word);
     count = i;
     return i;
   }
@@ -100,8 +220,13 @@ public final class Suggestions
   void capitalize_results()
   {
     for (int i = 0; i < count; i++)
-      suggestions[i] = suggestions[i].substring(0, 1).toUpperCase()
-        + suggestions[i].substring(1);
+    {
+      if (suggestions[i] != null && !suggestions[i].isEmpty())
+      {
+        suggestions[i] = suggestions[i].substring(0, 1).toUpperCase()
+          + suggestions[i].substring(1);
+      }
+    }
   }
 
   String query_emoji(String word)

@@ -176,6 +176,11 @@ public class SettingsActivity extends AppCompatActivity
         startActivity(new Intent(requireContext(), com.nhs.customkeyboard.dict.DictionariesActivity.class));
         return true;
       }
+      if ("screen_backup_restore".equals(preference.getKey()))
+      {
+        startActivity(new Intent(requireContext(), com.nhs.customkeyboard.prefs.UserDictionaryBackupActivity.class));
+        return true;
+      }
       if ("screen_guide".equals(preference.getKey()))
       {
         Intent intent = new Intent(requireContext(), LauncherActivity.class);

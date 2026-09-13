@@ -196,7 +196,7 @@ public class Keyboard2 extends InputMethodService
             _foldStateTracker.isUnfolded(), _dictionaries);
     _config = Config.globalConfig();
     Receiver recvr = this.new Receiver();
-    _suggestions = new Suggestions(recvr, _config);
+    _suggestions = new Suggestions(recvr, _config, this);
     _keyeventhandler = new KeyEventHandler(recvr, _suggestions);
     _translationPanelController = new TranslationPanelController();
     _voiceTypingController = new VoiceTypingController(new VoiceTypingController.HostProvider()

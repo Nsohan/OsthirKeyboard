@@ -110,6 +110,18 @@
         android:icon="@drawable/ic_spellcheck">
       <PreferenceCategory android:title="@string/pref_category_suggestions" android:layout="@layout/pref_category_settings">
         <SwitchPreferenceCompat android:key="suggestions" android:icon="@drawable/ic_suggestions" android:title="@string/pref_suggestions_title" android:summary="@string/pref_suggestions_summary" android:defaultValue="true"/>
+        <SwitchPreferenceCompat android:key="next_word_prediction" android:icon="@drawable/ic_suggestions" android:title="@string/pref_next_word_prediction_title" android:summary="@string/pref_next_word_prediction_summary" android:defaultValue="true"/>
+        <SwitchPreferenceCompat android:key="user_learning_enabled" android:icon="@drawable/ic_spellcheck" android:title="@string/pref_user_learning_title" android:summary="@string/pref_user_learning_summary" android:defaultValue="true"/>
+        <Preference
+            android:key="screen_backup_restore"
+            android:icon="@drawable/ic_clipboard_outline"
+            android:title="@string/pref_backup_restore_title"
+            android:summary="@string/pref_backup_restore_summary" />
+        <Preference
+            android:key="screen_dictionary"
+            android:icon="@drawable/ic_menu_book"
+            android:title="@string/pref_screen_dictionary_title"
+            android:summary="Manage installed offline dictionaries and languages" />
         <com.nhs.customkeyboard.prefs.IntSlideBarPreference android:key="suggestion_bar_height" android:icon="@drawable/ic_height" android:title="@string/pref_suggestion_bar_height_title" android:summary="%s%%" android:defaultValue="100" min="50" max="150"/>
         <com.nhs.customkeyboard.prefs.IntSlideBarPreference android:key="suggestion_text_size" android:icon="@drawable/ic_lable_size" android:title="@string/pref_suggestion_text_size_title" android:summary="%spx" android:defaultValue="15" min="8" max="28"/>
         <SwitchPreferenceCompat android:key="show_toolbar" android:icon="@drawable/ic_grid_menu" android:title="@string/pref_show_toolbar_title" android:summary="@string/pref_show_toolbar_summary" android:defaultValue="true"/>
@@ -147,7 +159,7 @@
     </PreferenceScreen>
   </PreferenceCategory>
 
-  <!-- Group 3: Clipboard, Dictionary -->
+  <!-- Group 3: Clipboard, Gestures -->
   <PreferenceCategory android:key="cat_group_tools" android:layout="@layout/pref_category_space">
     <!-- 6. Clipboard -->
     <PreferenceScreen
@@ -158,12 +170,6 @@
         <ListPreference android:key="clipboard_history_duration" android:icon="@drawable/ic_clipboard" android:title="@string/pref_clipboard_history_duration" android:summary="%s" android:defaultValue="5" android:entries="@array/pref_clipboard_duration_entries" android:entryValues="@array/pref_clipboard_duration_values"/>
       </PreferenceCategory>
     </PreferenceScreen>
-
-    <!-- 7. Dictionary -->
-    <Preference
-        android:key="screen_dictionary"
-        android:title="@string/pref_screen_dictionary_title"
-        android:icon="@drawable/ic_menu_book" />
 
     <!-- 8. Gestures Guide & Playground -->
     <Preference
