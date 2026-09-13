@@ -55,6 +55,39 @@ public final class Suggestions
     }
   }
 
+  private int _batch_count = 0;
+  private boolean _pending_callback = false;
+
+  public void begin_batch()
+  {
+    _batch_count++;
+  }
+
+  public void end_batch()
+  {
+    if (_batch_count > 0)
+    {
+      _batch_count--;
+      if (_batch_count == 0 && _pending_callback)
+      {
+        _pending_callback = false;
+        _callback.set_suggestions(this);
+      }
+    }
+  }
+
+  private void notify_callback()
+  {
+    if (_batch_count > 0)
+    {
+      _pending_callback = true;
+    }
+    else
+    {
+      _callback.set_suggestions(this);
+    }
+  }
+
   public void started()
   {
     _enabled = _config.editor_config.should_show_candidates_view;
@@ -80,7 +113,7 @@ public final class Suggestions
       _active_predicted_word = null;
       query_suggestions(word);
     }
-    _callback.set_suggestions(this);
+    notify_callback();
   }
 
   public void clear()
@@ -95,7 +128,7 @@ public final class Suggestions
   public void clear_predictions()
   {
     clear();
-    _callback.set_suggestions(this);
+    notify_callback();
   }
 
   /**
@@ -172,7 +205,7 @@ public final class Suggestions
 
     count = i;
     emoji_suggestion = null;
-    _callback.set_suggestions(this);
+    notify_callback();
   }
 
   int query_suggestions(String word)

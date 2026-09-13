@@ -294,47 +294,55 @@ public final class KeyEventHandler
       _next_last_action = LastAction.SUGGESTION_ENTERED;
       return;
     }
-    int cur_rel = _typedword.cursor_relative();
-    replace_surrounding_text(old.length() + cur_rel, -cur_rel, text);
-    last_replaced_word = old;
-    last_replacement_word_len = text != null ? text.length() : 0;
-    _next_last_action = LastAction.SUGGESTION_ENTERED;
+    _suggestions.begin_batch();
+    try
+    {
+      int cur_rel = _typedword.cursor_relative();
+      replace_surrounding_text(old.length() + cur_rel, -cur_rel, text);
+      last_replaced_word = old;
+      last_replacement_word_len = text != null ? text.length() : 0;
+      _next_last_action = LastAction.SUGGESTION_ENTERED;
 
-    String cleanChosen = text != null ? text.trim() : "";
-    boolean isWord = false;
-    for (int i = 0; i < cleanChosen.length(); i++)
-    {
-      if (Character.isLetterOrDigit(cleanChosen.charAt(i)))
+      String cleanChosen = text != null ? text.trim() : "";
+      boolean isWord = false;
+      for (int i = 0; i < cleanChosen.length(); i++)
       {
-        isWord = true;
-        break;
-      }
-    }
-    if (isWord)
-    {
-      if (_recv != null && _recv.getContext() != null)
-      {
-        Config conf = Config.globalConfig();
-        if (conf != null && conf.user_learning_enabled)
+        if (Character.isLetterOrDigit(cleanChosen.charAt(i)))
         {
-          UserLearningEngine engine = UserLearningEngine.getInstance(_recv.getContext());
-          if (_last_word != null && !_last_word.isEmpty())
-          {
-            engine.record_transition(_last_word, cleanChosen);
-          }
-          else
-          {
-            engine.record_word(cleanChosen);
-          }
+          isWord = true;
+          break;
         }
       }
-      _last_word = cleanChosen;
-      _suggestions.on_space_pressed(cleanChosen);
+      if (isWord)
+      {
+        if (_recv != null && _recv.getContext() != null)
+        {
+          Config conf = Config.globalConfig();
+          if (conf != null && conf.user_learning_enabled)
+          {
+            UserLearningEngine engine = UserLearningEngine.getInstance(_recv.getContext());
+            if (_last_word != null && !_last_word.isEmpty())
+            {
+              engine.record_transition(_last_word, cleanChosen);
+            }
+            else
+            {
+              engine.record_word(cleanChosen);
+            }
+          }
+        }
+        _last_word = cleanChosen;
+        _suggestions.on_space_pressed(cleanChosen);
+      }
+      else
+      {
+        _last_word = null;
+        _suggestions.clear_predictions();
+      }
     }
-    else
+    finally
     {
-      _last_word = null;
-      _suggestions.clear_predictions();
+      _suggestions.end_batch();
     }
   }
 
@@ -976,36 +984,45 @@ public final class KeyEventHandler
       suggestion_entered(_suggestions.suggestions[0] + " ");
       return;
     }
-    else
+    _suggestions.begin_batch();
+    try
     {
       send_text(" ");
-    }
 
-    if (current != null && !current.trim().isEmpty())
-    {
-      String word = current.trim();
-      if (_recv != null && _recv.getContext() != null)
+      if (current != null && !current.trim().isEmpty())
       {
-        Config conf = Config.globalConfig();
-        if (conf != null && conf.user_learning_enabled)
+        String word = current.trim();
+        if (_recv != null && _recv.getContext() != null)
         {
-          UserLearningEngine engine = UserLearningEngine.getInstance(_recv.getContext());
-          if (_last_word != null && !_last_word.isEmpty())
+          Config conf = Config.globalConfig();
+          if (conf != null && conf.user_learning_enabled)
           {
-            engine.record_transition(_last_word, word);
-          }
-          else
-          {
-            engine.record_word(word);
+            UserLearningEngine engine = UserLearningEngine.getInstance(_recv.getContext());
+            if (_last_word != null && !_last_word.isEmpty())
+            {
+              engine.record_transition(_last_word, word);
+            }
+            else
+            {
+              engine.record_word(word);
+            }
           }
         }
+        _last_word = word;
+        _suggestions.on_space_pressed(word);
       }
-      _last_word = word;
-      _suggestions.on_space_pressed(word);
+      else if (_last_word != null && !_last_word.isEmpty())
+      {
+        _suggestions.on_space_pressed(_last_word);
+      }
+      else
+      {
+        _suggestions.clear_predictions();
+      }
     }
-    else if (_last_word != null && !_last_word.isEmpty())
+    finally
     {
-      _suggestions.on_space_pressed(_last_word);
+      _suggestions.end_batch();
     }
   }
 

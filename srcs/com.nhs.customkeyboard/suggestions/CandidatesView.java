@@ -61,6 +61,10 @@ public class CandidatesView extends LinearLayout
   private boolean _tools_expanded_over_suggestions = false;
   private boolean _is_animating = false;
 
+  private final Handler _debounce_handler = new Handler(Looper.getMainLooper());
+  private Runnable _expand_tools_runnable = null;
+  private static final long TOOLS_EXPAND_DEBOUNCE_MS = 1000L;
+
   private View _tools_action_scroll;
   private LinearLayout _tools_action_bar;
   private boolean _has_suggestions = false;
@@ -103,6 +107,7 @@ public class CandidatesView extends LinearLayout
     if (_tools_open != open)
     {
       _tools_open = open;
+      cancel_expand_tools_debounce();
       if (_tools_open)
       {
         _tools_expanded_over_suggestions = false;
@@ -113,6 +118,40 @@ public class CandidatesView extends LinearLayout
         _menu_toggle_listener.onMenuToggled(_tools_open);
       }
     }
+  }
+
+  private void cancel_expand_tools_debounce()
+  {
+    if (_expand_tools_runnable != null)
+    {
+      _debounce_handler.removeCallbacks(_expand_tools_runnable);
+      _expand_tools_runnable = null;
+    }
+  }
+
+  private void schedule_expand_tools_debounce(long delayMs)
+  {
+    cancel_expand_tools_debounce();
+    _expand_tools_runnable = new Runnable()
+    {
+      @Override
+      public void run()
+      {
+        _expand_tools_runnable = null;
+        if (!_has_suggestions && !_tools_open)
+        {
+          animate_expand_tools_from_menu();
+        }
+      }
+    };
+    _debounce_handler.postDelayed(_expand_tools_runnable, delayMs);
+  }
+
+  @Override
+  protected void onDetachedFromWindow()
+  {
+    super.onDetachedFromWindow();
+    cancel_expand_tools_debounce();
   }
 
   @Override
@@ -150,12 +189,14 @@ public class CandidatesView extends LinearLayout
 
     if (_tools_open)
     {
+      cancel_expand_tools_debounce();
       update_toolbar_visibility();
       return;
     }
 
     if (_has_suggestions)
     {
+      cancel_expand_tools_debounce();
       if (!prev_has_suggestions)
       {
         _tools_expanded_over_suggestions = false;
@@ -188,12 +229,15 @@ public class CandidatesView extends LinearLayout
       if (prev_has_suggestions)
       {
         _tools_expanded_over_suggestions = false;
-        animate_expand_tools_from_menu();
+        schedule_expand_tools_debounce(TOOLS_EXPAND_DEBOUNCE_MS);
       }
       else
       {
         _tools_expanded_over_suggestions = false;
-        update_toolbar_visibility();
+        if (_expand_tools_runnable == null)
+        {
+          update_toolbar_visibility();
+        }
       }
     }
 
@@ -547,6 +591,7 @@ public class CandidatesView extends LinearLayout
 
   private void handle_menu_button_click()
   {
+    cancel_expand_tools_debounce();
     if (_tools_open)
     {
       setMenuOpen(false);
@@ -996,9 +1041,9 @@ public class CandidatesView extends LinearLayout
     }
     if (prev_has_suggestions && !_tools_open)
     {
-      animate_expand_tools_from_menu();
+      schedule_expand_tools_debounce(TOOLS_EXPAND_DEBOUNCE_MS);
     }
-    else
+    else if (_expand_tools_runnable == null)
     {
       update_toolbar_visibility();
     }
@@ -1006,7 +1051,9 @@ public class CandidatesView extends LinearLayout
 
   public void refresh_config(Config config)
   {
+    cancel_expand_tools_debounce();
     clear_candidates();
+    cancel_expand_tools_debounce();
     show_toolbar = config.show_toolbar;
     show_voice_typing = config.show_voice_typing;
     if (config.current_dictionary == null)
