@@ -5,6 +5,7 @@ import android.content.ContextWrapper;
 import android.graphics.Canvas;
 import android.graphics.Insets;
 import android.graphics.Paint;
+import android.graphics.Path;
 import android.graphics.Rect;
 import android.graphics.RectF;
 import android.inputmethodservice.InputMethodService;
@@ -62,6 +63,8 @@ public class Keyboard2View extends View
   private Theme.Computed _tc;
 
   private static RectF _tmpRect = new RectF();
+  private final Path _shiftArrowPath = new Path();
+  private final RectF _shiftBarRect = new RectF();
   private boolean _previewMode = false;
   private Paint _previewBorderPaint = null;
   private Paint _previewFallbackBgPaint = null;
@@ -532,14 +535,14 @@ public class Keyboard2View extends View
         boolean isHighlighted = (_previewMode && _highlightedKey != null &&
             (k == _highlightedKey || (k.sourceLineNumber >= 0 && k.sourceLineNumber == _highlightedKey.sourceLineNumber)));
         Theme.Computed.Key tc_key;
+        boolean isAction = isActionKey(k) || (k != null && k.role == KeyboardData.Key.Role.Action);
         if (isKeyDown)
-          tc_key = _tc.key_activated;
-        else if (isActionKey(k))
+          tc_key = isAction ? _tc.key_action_activated : _tc.key_activated;
+        else if (isAction)
           tc_key = _tc.key_action;
         else
           switch (k.role)
           {
-            case Action: tc_key = _tc.key_action; break;
             case Space_bar: tc_key = _tc.key_space_bar; break;
             case Suggestion: tc_key = _tc.key_suggestion; break;
             default:
@@ -708,6 +711,115 @@ public class Keyboard2View extends View
     return sublabel ? _theme.subLabelColor : _theme.labelColor;
   }
 
+  private boolean isShiftKey(KeyboardData.Key key, KeyValue kv)
+  {
+    if (key != null && key == _shift_key)
+      return true;
+    if (kv != null)
+    {
+      if (kv == KeyValue.SHIFT)
+        return true;
+      if (kv.getKind() == KeyValue.Kind.Modifier && kv.getModifier() == KeyValue.Modifier.SHIFT)
+        return true;
+    }
+    if (key != null && key.keys != null && key.keys.length > 0 && key.keys[0] != null)
+    {
+      KeyValue k0 = key.keys[0];
+      if (k0 == KeyValue.SHIFT || (k0.getKind() == KeyValue.Kind.Modifier && k0.getModifier() == KeyValue.Modifier.SHIFT))
+        return true;
+    }
+    return false;
+  }
+
+  private void drawShiftIcon(Canvas canvas,
+                             float cx,
+                             float cy,
+                             float keyH,
+                             int state,
+                             Paint paint)
+  {
+    float maxIconH = keyH * 0.44f;
+    float scale = Math.min(1.0f, maxIconH / dp(16f));
+    float w = dp(17f) * scale;
+    float h = dp(15.5f) * scale;
+    float headH = dp(8.5f) * scale;
+    float stemW = dp(7.2f) * scale;
+    float strokeW = Math.max(dp(1.5f), dp(1.8f) * scale);
+
+    float barH = Math.max(dp(1.8f), dp(2.2f) * scale);
+    float barW = dp(16f) * scale;
+    float barGap = Math.max(dp(2.0f), dp(2.5f) * scale);
+
+    float arrowCenterY = cy;
+    if (state == 2)
+    {
+      arrowCenterY -= (barGap + barH) / 2f;
+    }
+
+    float top = arrowCenterY - h / 2f;
+    float bottom = arrowCenterY + h / 2f;
+    float wingY = top + headH;
+    float leftWingX = cx - w / 2f;
+    float rightWingX = cx + w / 2f;
+    float leftStemX = cx - stemW / 2f;
+    float rightStemX = cx + stemW / 2f;
+
+    _shiftArrowPath.reset();
+    _shiftArrowPath.moveTo(cx, top);
+    _shiftArrowPath.lineTo(rightWingX, wingY);
+    _shiftArrowPath.lineTo(rightStemX, wingY);
+    _shiftArrowPath.lineTo(rightStemX, bottom);
+    _shiftArrowPath.lineTo(leftStemX, bottom);
+    _shiftArrowPath.lineTo(leftStemX, wingY);
+    _shiftArrowPath.lineTo(leftWingX, wingY);
+    _shiftArrowPath.close();
+
+    Paint.Style origStyle = paint.getStyle();
+    float origStrokeWidth = paint.getStrokeWidth();
+    Paint.Join origJoin = paint.getStrokeJoin();
+    Paint.Cap origCap = paint.getStrokeCap();
+
+    try
+    {
+      paint.setStrokeJoin(Paint.Join.ROUND);
+      paint.setStrokeCap(Paint.Cap.ROUND);
+      paint.setStrokeWidth(strokeW);
+
+      if (state == 0)
+      {
+        // Shift OFF: hollow / outline arrow
+        paint.setStyle(Paint.Style.STROKE);
+        canvas.drawPath(_shiftArrowPath, paint);
+      }
+      else
+      {
+        // Shift ON (state == 1) or Caps Lock (state == 2): solid filled arrow
+        paint.setStyle(Paint.Style.FILL_AND_STROKE);
+        canvas.drawPath(_shiftArrowPath, paint);
+
+        if (state == 2)
+        {
+          // Caps Lock: underline bar below arrow
+          paint.setStyle(Paint.Style.FILL);
+          float barTop = bottom + barGap;
+          float barBottom = barTop + barH;
+          float barLeft = cx - barW / 2f;
+          float barRight = cx + barW / 2f;
+          float barR = barH / 2f;
+          _shiftBarRect.set(barLeft, barTop, barRight, barBottom);
+          canvas.drawRoundRect(_shiftBarRect, barR, barR, paint);
+        }
+      }
+    }
+    finally
+    {
+      paint.setStyle(origStyle);
+      paint.setStrokeWidth(origStrokeWidth);
+      paint.setStrokeJoin(origJoin);
+      paint.setStrokeCap(origCap);
+    }
+  }
+
   private void drawLabel(Canvas canvas,
                          KeyboardData.Key key,
                          KeyValue kv,
@@ -727,6 +839,22 @@ public class Keyboard2View extends View
             kv.hasFlagsAny(KeyValue.FLAG_KEY_FONT),
             labelColor(key, kv, isKeyDown, false),
             textSize);
+
+    boolean hasCustomLabel = (key.keyLabels != null
+            && key.keyLabels[_mods.has(KeyValue.Modifier.SHIFT) ? 9 : 0] != null
+            && !key.keyLabels[_mods.has(KeyValue.Modifier.SHIFT) ? 9 : 0].isEmpty());
+
+    if (isShiftKey(key, kv) && !hasCustomLabel)
+    {
+      int shiftState = 0;
+      if (_pointers.isShiftLocked(key))
+        shiftState = 2;
+      else if (_pointers.isShiftLatched(key) || _mods.has(KeyValue.Modifier.SHIFT) || isKeyDown)
+        shiftState = 1;
+
+      drawShiftIcon(canvas, x, (keyH / 2f) + y, keyH, shiftState, p);
+      return;
+    }
 
     String text;
 

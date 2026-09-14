@@ -13,6 +13,7 @@ public class Theme
   public final int colorKey;
   public final int colorKeyActivated;
   public final int colorKeyAction;
+  public final int colorKeyActionActivated;
   public final int colorKeySpaceBar;
 
   // Label colors
@@ -46,6 +47,7 @@ public class Theme
     colorKey = s.getColor(R.styleable.keyboard_colorKey, 0);
     colorKeyActivated = s.getColor(R.styleable.keyboard_colorKeyActivated, 0);
     colorKeyAction = s.getColor(R.styleable.keyboard_colorKeyAction, colorKey);
+    colorKeyActionActivated = s.getColor(R.styleable.keyboard_colorKeyActionActivated, colorKeyAction);
     colorKeySpaceBar = s.getColor(R.styleable.keyboard_colorKeySpaceBar, colorKey);
     // colorKeyboard = s.getColor(R.styleable.keyboard_colorKeyboard, 0);
     colorNavBar = s.getColor(R.styleable.keyboard_navigationBarColor, 0);
@@ -112,6 +114,7 @@ public class Theme
     public final Key key;
     public final Key key_activated;
     public final Key key_action;
+    public final Key key_action_activated;
     public final Key key_space_bar;
     public final Key key_suggestion;
 
@@ -131,6 +134,7 @@ public class Theme
       key_action = new Key(theme, config, keyWidth, false, KeyboardData.Key.Role.Action);
       key_space_bar = new Key(theme, config, keyWidth, false, KeyboardData.Key.Role.Space_bar);
       key_activated = new Key(theme, config, keyWidth, true, KeyboardData.Key.Role.Normal);
+      key_action_activated = new Key(theme, config, keyWidth, true, KeyboardData.Key.Role.Action);
       key_suggestion = new Key(theme, config, keyWidth, false, KeyboardData.Key.Role.Suggestion);
       indication_paint = init_label_paint(config, null);
       indication_paint.setColor(theme.subLabelColor);
@@ -158,8 +162,8 @@ public class Theme
         int bg_color;
         if (activated)
         {
-          bg_color = theme.colorKeyActivated;
-          border_width = theme.keyBorderWidthActivated;
+          bg_color = (role == KeyboardData.Key.Role.Action) ? theme.colorKeyActionActivated : theme.colorKeyActivated;
+          border_width = (role == KeyboardData.Key.Role.Action) ? theme.keyBorderWidthAction : theme.keyBorderWidthActivated;
           bg_paint.setAlpha(config.keyActivatedOpacity);
         }
         else

@@ -2,6 +2,8 @@ package com.nhs.customkeyboard;
 
 import android.os.Handler;
 import android.os.Message;
+import android.os.SystemClock;
+import android.view.ViewConfiguration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
@@ -74,6 +76,34 @@ public final class Pointers implements Handler.Callback
     return -1;
   }
 
+  public boolean isShiftLocked(KeyboardData.Key k)
+  {
+    for (Pointer p : _ptrs)
+    {
+      if ((p.key == k || (p.value != null && isShiftVal(p.value)))
+              && (p.flags & FLAG_P_LOCKED) != 0)
+        return true;
+    }
+    return false;
+  }
+
+  public boolean isShiftLatched(KeyboardData.Key k)
+  {
+    for (Pointer p : _ptrs)
+    {
+      if ((p.key == k || (p.value != null && isShiftVal(p.value)))
+              && (p.flags & FLAG_P_LATCHED) != 0 && (p.flags & FLAG_P_LOCKED) == 0)
+        return true;
+    }
+    return false;
+  }
+
+  private static boolean isShiftVal(KeyValue kv)
+  {
+    return kv == KeyValue.SHIFT
+            || (kv.getKind() == KeyValue.Kind.Modifier && kv.getModifier() == KeyValue.Modifier.SHIFT);
+  }
+
   void add_fake_pointer(KeyboardData.Key key, KeyValue kv, boolean locked)
   {
     int flags = pointer_flags_of_kv(kv) | FLAG_P_FAKE | FLAG_P_LATCHED;
@@ -96,8 +126,6 @@ public final class Pointers implements Handler.Callback
         _handler.onPointerFlagsChanged(false);
       }
     }
-    else if ((ptr.flags & FLAG_P_FAKE) == 0)
-    {}
     else if (lock)
     {
       removePtr(ptr);
@@ -142,7 +170,12 @@ public final class Pointers implements Handler.Callback
     if (latched != null)
     {
       removePtr(ptr);
-      if ((latched.flags & (FLAG_P_FAKE | FLAG_P_DOUBLE_TAP_LOCK)) == FLAG_P_DOUBLE_TAP_LOCK)
+      long now = (ptr.downTime > 0) ? ptr.downTime : SystemClock.uptimeMillis();
+      int doubleTapTimeout = Math.max(ViewConfiguration.getDoubleTapTimeout(), 350);
+      boolean isDoubleTap = (latched.latchedTime > 0)
+              && ((now - latched.latchedTime) <= doubleTapTimeout);
+
+      if (isDoubleTap && ((latched.flags & (FLAG_P_FAKE | FLAG_P_DOUBLE_TAP_LOCK)) == FLAG_P_DOUBLE_TAP_LOCK))
         lockPointer(latched, false);
       else
       {
@@ -155,6 +188,7 @@ public final class Pointers implements Handler.Callback
       if ((ptr.flags & FLAG_P_CLEAR_LATCHED) != 0)
         clearLatched();
       ptr.flags |= FLAG_P_LATCHED;
+      ptr.latchedTime = SystemClock.uptimeMillis();
       ptr.pointerId = -1;
       _handler.onPointerFlagsChanged(false);
     }
@@ -196,6 +230,7 @@ public final class Pointers implements Handler.Callback
       value = _handler.modifyKey(value, mods);
 
     Pointer ptr = make_pointer(pointerId, key, value, x, y, mods);
+    ptr.downTime = SystemClock.uptimeMillis();
     _ptrs.add(ptr);
     startLongPress(ptr);
     _handler.onPointerDown(value, false);
@@ -475,8 +510,8 @@ public final class Pointers implements Handler.Callback
         flags |= FLAG_P_CLEAR_LATCHED | FLAG_P_CANT_LOCK;
       flags |= FLAG_P_LATCHABLE;
     }
-    if (_config.double_tap_lock_shift &&
-            kv.hasFlagsAny(KeyValue.FLAG_DOUBLE_TAP_LOCK))
+    if (isShiftVal(kv) || (_config.double_tap_lock_shift &&
+            kv.hasFlagsAny(KeyValue.FLAG_DOUBLE_TAP_LOCK)))
       flags |= FLAG_P_DOUBLE_TAP_LOCK;
     return flags;
   }
@@ -533,6 +568,8 @@ public final class Pointers implements Handler.Callback
     public int timeoutWhat;
     public Sliding sliding;
     public boolean longPressHandled;
+    public long downTime;
+    public long latchedTime;
 
     public Pointer(int p, KeyboardData.Key k, KeyValue v, float x, float y, Modifiers m, int f)
     {
@@ -547,6 +584,8 @@ public final class Pointers implements Handler.Callback
       timeoutWhat = -1;
       sliding = null;
       longPressHandled = false;
+      downTime = 0;
+      latchedTime = 0;
     }
 
     public boolean hasFlagsAny(int has)
