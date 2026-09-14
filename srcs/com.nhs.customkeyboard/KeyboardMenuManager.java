@@ -16,6 +16,7 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewConfiguration;
 import android.view.ViewGroup;
+import android.view.animation.DecelerateInterpolator;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -128,9 +129,15 @@ public class KeyboardMenuManager
     }
   }
 
+  private boolean _animateNextBind = false;
+
   public void onMenuVisibilityChanged(boolean visible)
   {
-    if (!visible)
+    if (visible)
+    {
+      playMenuEntranceAnimation();
+    }
+    else
     {
       if (_isEditMode)
       {
@@ -141,6 +148,52 @@ public class KeyboardMenuManager
           _adapter.notifyDataSetChanged();
         }
       }
+    }
+  }
+
+  public void playMenuEntranceAnimation()
+  {
+    if (_menuGridPanel == null || _viewPager == null) return;
+
+    _animateNextBind = true;
+
+    _viewPager.post(() -> {
+      if (_viewPager == null) return;
+      if (_viewPager.getChildCount() > 0)
+      {
+        View rvChild = _viewPager.getChildAt(0);
+        if (rvChild instanceof RecyclerView)
+        {
+          RecyclerView rv = (RecyclerView) rvChild;
+          int currentPos = _viewPager.getCurrentItem();
+          RecyclerView.ViewHolder vh = rv.findViewHolderForAdapterPosition(currentPos);
+          if (vh instanceof PageViewHolder)
+          {
+            ((PageViewHolder) vh).animateTilesEntrance();
+            _animateNextBind = false;
+          }
+        }
+      }
+    });
+
+    if (_dotsContainer != null)
+    {
+      _dotsContainer.setAlpha(0f);
+      _dotsContainer.animate().alpha(1.0f).setDuration(220).setStartDelay(60).start();
+    }
+    if (_btnEdit != null)
+    {
+      _btnEdit.setAlpha(0f);
+      _btnEdit.setScaleX(0.85f);
+      _btnEdit.setScaleY(0.85f);
+      _btnEdit.animate()
+          .alpha(1.0f)
+          .scaleX(1.0f)
+          .scaleY(1.0f)
+          .setDuration(220)
+          .setStartDelay(60)
+          .setInterpolator(new DecelerateInterpolator(1.4f))
+          .start();
     }
   }
 
@@ -443,6 +496,9 @@ public class KeyboardMenuManager
           MenuItemInfo item = _items.get(itemIndex);
           slotView.setVisibility(View.VISIBLE);
           slotView.setAlpha(1.0f);
+          slotView.setTranslationY(0f);
+          slotView.setScaleX(1.0f);
+          slotView.setScaleY(1.0f);
           iconView.setImageResource(item.iconRes);
           textView.setText(item.titleRes);
 
@@ -530,6 +586,45 @@ public class KeyboardMenuManager
 
         slotView.setOnDragListener((v, event) ->
             handleSlotDrag(v, event, this, currentSlotIndex));
+      }
+
+      if (_animateNextBind && pagePosition == (_viewPager != null ? _viewPager.getCurrentItem() : 0))
+      {
+        _animateNextBind = false;
+        itemView.post(this::animateTilesEntrance);
+      }
+    }
+
+    void animateTilesEntrance()
+    {
+      if (itemView == null) return;
+      float density = itemView.getResources().getDisplayMetrics().density;
+      float translateY = 18f * density;
+
+      for (int i = 0; i < ITEMS_PER_PAGE; i++)
+      {
+        final View slotView = slotViews[i];
+        if (slotView != null && slotView.getVisibility() == View.VISIBLE)
+        {
+          slotView.animate().cancel();
+          slotView.setAlpha(0f);
+          slotView.setTranslationY(translateY);
+          slotView.setScaleX(0.92f);
+          slotView.setScaleY(0.92f);
+
+          int row = i / 2;
+          long delay = row * 35L;
+
+          slotView.animate()
+              .alpha(1.0f)
+              .translationY(0f)
+              .scaleX(1.0f)
+              .scaleY(1.0f)
+              .setDuration(200)
+              .setStartDelay(delay)
+              .setInterpolator(new DecelerateInterpolator(1.4f))
+              .start();
+        }
       }
     }
   }

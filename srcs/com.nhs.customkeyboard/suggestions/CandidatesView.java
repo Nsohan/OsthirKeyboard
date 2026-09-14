@@ -12,6 +12,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.AccelerateInterpolator;
 import android.view.animation.DecelerateInterpolator;
+import android.view.animation.OvershootInterpolator;
 import android.view.inputmethod.EditorInfo;
 import android.widget.FrameLayout;
 import android.widget.HorizontalScrollView;
@@ -104,6 +105,11 @@ public class CandidatesView extends LinearLayout
 
   public void setMenuOpen(boolean open)
   {
+    setMenuOpen(open, true);
+  }
+
+  public void setMenuOpen(boolean open, boolean animated)
+  {
     if (_tools_open != open)
     {
       _tools_open = open;
@@ -112,7 +118,7 @@ public class CandidatesView extends LinearLayout
       {
         _tools_expanded_over_suggestions = false;
       }
-      update_toolbar_visibility();
+      update_toolbar_visibility(animated);
       if (_menu_toggle_listener != null)
       {
         _menu_toggle_listener.onMenuToggled(_tools_open);
@@ -320,17 +326,25 @@ public class CandidatesView extends LinearLayout
   private void update_menu_button_icon(final int resId, boolean animated)
   {
     if (_tools_menu_button == null) return;
-    if (!animated)
+    if (!animated || !_tools_menu_button.isAttachedToWindow() || _tools_menu_button.getVisibility() != View.VISIBLE)
     {
+      _tools_menu_button.animate().cancel();
       _tools_menu_button.setImageResource(resId);
       _tools_menu_button.setRotation(0f);
+      _tools_menu_button.setScaleX(1f);
+      _tools_menu_button.setScaleY(1f);
+      _tools_menu_button.setAlpha(1f);
       return;
     }
 
     _tools_menu_button.animate().cancel();
     _tools_menu_button.animate()
         .rotation(90f)
-        .setDuration(100)
+        .scaleX(0.78f)
+        .scaleY(0.78f)
+        .alpha(0.25f)
+        .setDuration(200)
+        .setInterpolator(new AccelerateInterpolator())
         .withEndAction(new Runnable()
         {
           @Override
@@ -342,7 +356,11 @@ public class CandidatesView extends LinearLayout
               _tools_menu_button.setRotation(-90f);
               _tools_menu_button.animate()
                   .rotation(0f)
-                  .setDuration(100)
+                  .scaleX(1f)
+                  .scaleY(1f)
+                  .alpha(1f)
+                  .setDuration(200)
+                  .setInterpolator(new OvershootInterpolator(1.2f))
                   .start();
             }
           }
@@ -462,13 +480,17 @@ public class CandidatesView extends LinearLayout
 
   private void update_toolbar_visibility()
   {
+    update_toolbar_visibility(false);
+  }
+
+  private void update_toolbar_visibility(boolean animated)
+  {
     if (_tools_menu_button != null)
     {
       _tools_menu_button.setVisibility(show_toolbar ? View.VISIBLE : View.GONE);
       int iconRes = _tools_open ? R.drawable.ic_close
           : (_tools_expanded_over_suggestions ? R.drawable.ic_arrow_back : R.drawable.ic_grid_menu);
-      _tools_menu_button.setImageResource(iconRes);
-      _tools_menu_button.setRotation(0f);
+      update_menu_button_icon(iconRes, animated);
       TypedValue outValue = new TypedValue();
       getContext().getTheme().resolveAttribute(android.R.attr.selectableItemBackgroundBorderless, outValue, true);
       _tools_menu_button.setBackgroundResource(outValue.resourceId);
@@ -582,7 +604,7 @@ public class CandidatesView extends LinearLayout
         @Override
         public boolean onLongClick(View v)
         {
-          setMenuOpen(!_tools_open);
+          setMenuOpen(!_tools_open, true);
           return true;
         }
       });
@@ -594,7 +616,7 @@ public class CandidatesView extends LinearLayout
     cancel_expand_tools_debounce();
     if (_tools_open)
     {
-      setMenuOpen(false);
+      setMenuOpen(false, true);
       return;
     }
 
@@ -612,7 +634,7 @@ public class CandidatesView extends LinearLayout
     }
     else
     {
-      setMenuOpen(!_tools_open);
+      setMenuOpen(true, true);
     }
   }
 
