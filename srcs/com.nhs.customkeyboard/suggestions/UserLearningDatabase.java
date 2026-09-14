@@ -254,6 +254,51 @@ public final class UserLearningDatabase extends SQLiteOpenHelper
     return list;
   }
 
+  public synchronized void deleteWord(String word)
+  {
+    if (word == null || word.isEmpty()) return;
+    String clean = word.trim();
+    SQLiteDatabase db = getWritableDatabase();
+    try
+    {
+      db.execSQL("DELETE FROM user_words WHERE word = ?;", new Object[]{clean});
+      db.execSQL("DELETE FROM user_bigrams WHERE w1 = ? OR w2 = ?;", new Object[]{clean, clean});
+      db.execSQL("DELETE FROM user_emails WHERE email = ?;", new Object[]{clean});
+      Log.i(TAG, "Deleted learned word/bigram/email: " + clean);
+    }
+    catch (Exception e)
+    {
+      Logs.exn(TAG, e);
+    }
+  }
+
+  public synchronized boolean isLearnedWord(String word)
+  {
+    if (word == null || word.isEmpty()) return false;
+    String clean = word.trim();
+    SQLiteDatabase db = getReadableDatabase();
+    try
+    {
+      try (Cursor c = db.rawQuery("SELECT 1 FROM user_words WHERE word = ? LIMIT 1", new String[]{clean}))
+      {
+        if (c.moveToNext()) return true;
+      }
+      try (Cursor c = db.rawQuery("SELECT 1 FROM user_emails WHERE email = ? LIMIT 1", new String[]{clean}))
+      {
+        if (c.moveToNext()) return true;
+      }
+      try (Cursor c = db.rawQuery("SELECT 1 FROM user_bigrams WHERE w1 = ? OR w2 = ? LIMIT 1", new String[]{clean, clean}))
+      {
+        if (c.moveToNext()) return true;
+      }
+    }
+    catch (Exception e)
+    {
+      Logs.exn(TAG, e);
+    }
+    return false;
+  }
+
   public synchronized void recordEmail(String email)
   {
     if (email == null) return;

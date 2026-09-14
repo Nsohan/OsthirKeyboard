@@ -292,6 +292,39 @@ public final class UserLearningEngine
     return _db.getMatchingEmails(prefix, maxCount);
   }
 
+  public boolean is_learned_word(String word)
+  {
+    if (word == null || word.isEmpty()) return false;
+    String clean = word.trim();
+    if (_wordFrequencyCache.containsKey(clean)) return true;
+    for (LearnedEmail le : _emailCache)
+    {
+      if (le.email.equalsIgnoreCase(clean)) return true;
+    }
+    if (_bigramCache.containsKey(clean)) return true;
+    for (Map<String, Integer> succs : _bigramCache.values())
+    {
+      if (succs.containsKey(clean)) return true;
+    }
+    return _db.isLearnedWord(clean);
+  }
+
+  public void delete_learned_word(String word)
+  {
+    if (word == null || word.isEmpty()) return;
+    String clean = word.trim();
+    _wordFrequencyCache.remove(clean);
+    _emailCache.removeIf(le -> le.email.equalsIgnoreCase(clean));
+    _bigramCache.remove(clean);
+    for (Map<String, Integer> succs : _bigramCache.values())
+    {
+      succs.remove(clean);
+    }
+    _executor.execute(() -> {
+      _db.deleteWord(clean);
+    });
+  }
+
   public void clearAll()
   {
     _wordFrequencyCache.clear();

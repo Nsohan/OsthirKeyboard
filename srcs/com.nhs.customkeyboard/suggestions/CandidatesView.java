@@ -86,6 +86,8 @@ public class CandidatesView extends LinearLayout
 
   private final List<TextView> _item_pool = new ArrayList<>();
   private float _cached_text_size = 0f;
+  private Suggestions _current_suggestions = null;
+  private ExpandedCandidatesPopup _expanded_popup = null;
 
   public CandidatesView(Context context, AttributeSet attrs)
   {
@@ -162,6 +164,10 @@ public class CandidatesView extends LinearLayout
   {
     super.onDetachedFromWindow();
     cancel_expand_tools_debounce();
+    if (_expanded_popup != null && _expanded_popup.isShowing())
+    {
+      _expanded_popup.dismiss();
+    }
   }
 
   @Override
@@ -185,6 +191,7 @@ public class CandidatesView extends LinearLayout
 
   public void set_candidates(Suggestions s)
   {
+    _current_suggestions = s;
     int s_count = (s != null) ? s.count : 0;
     boolean prev_has_suggestions = _has_suggestions;
     _has_suggestions = (s_count > 0) || (s != null && s.emoji_suggestion != null && s.emoji_suggestion.length() > 0);
@@ -372,6 +379,22 @@ public class CandidatesView extends LinearLayout
             Config.globalConfig().handler.suggestion_entered(insertion);
           }
         });
+
+        v.setOnLongClickListener(new OnLongClickListener()
+        {
+          @Override
+          public boolean onLongClick(View _v)
+          {
+            try
+            {
+              VibratorCompat.vibrate(v, Config.globalConfig());
+            }
+            catch (Exception ignored) {}
+            show_expanded_candidates_popup();
+            return true;
+          }
+        });
+
         _container.addView(v);
       }
     }
@@ -1292,6 +1315,11 @@ public class CandidatesView extends LinearLayout
 
   void clear_candidates()
   {
+    _current_suggestions = null;
+    if (_expanded_popup != null && _expanded_popup.isShowing())
+    {
+      _expanded_popup.dismiss();
+    }
     boolean prev_has_suggestions = _has_suggestions;
     _has_suggestions = false;
     _tools_expanded_over_suggestions = false;
@@ -1422,11 +1450,47 @@ public class CandidatesView extends LinearLayout
     }
   }
 
-  private static boolean is_email_string(String str)
+  public static boolean is_email_string(String str)
   {
     if (str == null) return false;
     int at = str.indexOf('@');
     return at > 0 && at < str.length() - 1 && str.indexOf('.', at) > at;
+  }
+
+  public void show_expanded_candidates_popup()
+  {
+    if (_current_suggestions == null || _current_suggestions.count == 0)
+    {
+      return;
+    }
+    if (_expanded_popup == null)
+    {
+      _expanded_popup = new ExpandedCandidatesPopup(getContext(), this);
+    }
+    _expanded_popup.show(_current_suggestions, this);
+  }
+
+  public void on_learned_word_deleted(String word)
+  {
+    if (_current_suggestions != null && word != null)
+    {
+      int newCount = 0;
+      for (int i = 0; i < _current_suggestions.count; i++)
+      {
+        if (_current_suggestions.suggestions[i] != null &&
+            !_current_suggestions.suggestions[i].equalsIgnoreCase(word))
+        {
+          _current_suggestions.suggestions[newCount++] = _current_suggestions.suggestions[i];
+        }
+      }
+      for (int i = newCount; i < _current_suggestions.count; i++)
+      {
+        _current_suggestions.suggestions[i] = null;
+      }
+      _current_suggestions.count = newCount;
+      _has_suggestions = (newCount > 0) || (_current_suggestions.emoji_suggestion != null && _current_suggestions.emoji_suggestion.length() > 0);
+      populate_candidate_views(_current_suggestions, newCount);
+    }
   }
 
   public static boolean should_show(EditorInfo info)
