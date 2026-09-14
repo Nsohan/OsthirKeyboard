@@ -85,6 +85,7 @@ public final class Config
   public String themeName = "system";
   public String customThemeImagePath = null;
   public float customThemeDarkness = 0.3f;
+  public float customThemeKeyOpacity = 1.0f;
   public int circle_sensitivity;
   public boolean clipboard_history_enabled;
   public int clipboard_history_duration;
@@ -235,6 +236,11 @@ public final class Config
     themeName = _prefs.getString("theme", "system");
     customThemeImagePath = _prefs.getString("custom_theme_image_path", null);
     customThemeDarkness = _prefs.getFloat("custom_theme_darkness", 0.3f);
+    customThemeKeyOpacity = _prefs.getFloat("custom_theme_key_opacity", 1.0f);
+    if (themeName != null && themeName.startsWith("custom_"))
+    {
+      keyOpacity = Math.max(0, Math.min(255, Math.round(customThemeKeyOpacity * 255)));
+    }
     theme = getThemeId(res, themeName);
     autocapitalisation = _prefs.getBoolean("autocapitalisation", true);
     change_method_key_replacement = get_change_method_key_replacement(_prefs);
@@ -338,7 +344,7 @@ public final class Config
       case "mintlight": return R.style.ThemeMintLight;
       default:
         if (theme_name != null && theme_name.startsWith("custom_"))
-          return R.style.Dark;
+          return R.style.CustomImageTheme;
       case "system":
         if ((night_mode & Configuration.UI_MODE_NIGHT_NO) != 0)
           return R.style.Light;

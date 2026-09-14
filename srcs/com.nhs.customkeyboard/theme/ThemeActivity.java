@@ -210,6 +210,8 @@ public class ThemeActivity extends AppCompatActivity
         intent.putExtra(ThemeCropActivity.EXTRA_IMAGE_PATH, model.imagePath);
         intent.putExtra(ThemeCropActivity.EXTRA_EDIT_THEME_ID, model.id);
         intent.putExtra(ThemeCropActivity.EXTRA_INITIAL_DARKNESS, model.darknessOverlay);
+        intent.putExtra(ThemeCropActivity.EXTRA_INITIAL_KEY_OPACITY, model.keyOpacity);
+        intent.putExtra(ThemeCropActivity.EXTRA_INITIAL_BLUR, model.blur);
         _cropLauncher.launch(intent);
       }
 

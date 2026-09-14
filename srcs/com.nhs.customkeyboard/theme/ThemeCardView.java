@@ -188,7 +188,9 @@ public class ThemeCardView extends View
         _bgPaint.setAlpha((int) (_model.darknessOverlay * 255));
         canvas.drawRect(_cardRect, _bgPaint);
       }
-      drawKeyIndicators(canvas, _cardRect, 0x44FFFFFF, 0xFF4285F4);
+      int keyAlpha = Math.max(0, Math.min(255, (int) (_model.keyOpacity * 0x55)));
+      int keyColor = (keyAlpha << 24) | 0x00FFFFFF;
+      drawKeyIndicators(canvas, _cardRect, keyColor, 0xFF4285F4);
     }
     else if (_model.isSystemAuto)
     {

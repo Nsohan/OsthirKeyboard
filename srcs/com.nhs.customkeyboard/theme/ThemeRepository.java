@@ -178,9 +178,11 @@ public class ThemeRepository
           String title = obj.optString("title", context.getString(R.string.theme_custom_theme_title));
           String path = obj.getString("path");
           double darkness = obj.optDouble("darkness", 0.3);
+          double keyOpacity = obj.optDouble("key_opacity", 1.0);
+          double blur = obj.optDouble("blur", 0.0);
           if (new File(path).exists())
           {
-            list.add(new ThemeModel(id, title, path, (float) darkness));
+            list.add(new ThemeModel(id, title, path, (float) darkness, (float) keyOpacity, (float) blur));
           }
         }
       }
@@ -192,7 +194,20 @@ public class ThemeRepository
   public static void saveCustomTheme(Context context, ThemeModel model)
   {
     List<ThemeModel> existing = getCustomThemes(context);
-    existing.add(0, model); // newest first
+    boolean replaced = false;
+    for (int i = 0; i < existing.size(); i++)
+    {
+      if (existing.get(i).id.equals(model.id))
+      {
+        existing.set(i, model);
+        replaced = true;
+        break;
+      }
+    }
+    if (!replaced)
+    {
+      existing.add(0, model); // newest first
+    }
     writeCustomThemes(context, existing);
   }
 
@@ -205,7 +220,13 @@ public class ThemeRepository
       {
         if (existing.get(i).imagePath != null)
         {
-          try { new File(existing.get(i).imagePath).delete(); } catch (Exception ignored) {}
+          try
+          {
+            new File(existing.get(i).imagePath).delete();
+            String rawPath = existing.get(i).imagePath.replace(".jpg", "_raw.jpg");
+            new File(rawPath).delete();
+          }
+          catch (Exception ignored) {}
         }
         existing.remove(i);
       }
@@ -225,6 +246,8 @@ public class ThemeRepository
         obj.put("title", m.customTitle);
         obj.put("path", m.imagePath);
         obj.put("darkness", m.darknessOverlay);
+        obj.put("key_opacity", m.keyOpacity);
+        obj.put("blur", m.blur);
         arr.put(obj);
       }
       PreferenceManager.getDefaultSharedPreferences(context)

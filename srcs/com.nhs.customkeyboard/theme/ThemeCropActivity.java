@@ -38,6 +38,8 @@ public class ThemeCropActivity extends AppCompatActivity
   public static final String EXTRA_IMAGE_PATH = "extra_image_path";
   public static final String EXTRA_EDIT_THEME_ID = "extra_edit_theme_id";
   public static final String EXTRA_INITIAL_DARKNESS = "extra_initial_darkness";
+  public static final String EXTRA_INITIAL_KEY_OPACITY = "extra_initial_key_opacity";
+  public static final String EXTRA_INITIAL_BLUR = "extra_initial_blur";
   public static final String EXTRA_RESULT_THEME_ID = "extra_result_theme_id";
 
   private View _layoutStepCrop;
@@ -50,21 +52,42 @@ public class ThemeCropActivity extends AppCompatActivity
   private ImageView _btnBrightnessBack;
   private Slider _sliderBrightness;
   private TextView _tvBrightnessValue;
+  private Slider _sliderKeyOpacity;
+  private TextView _tvKeyOpacityValue;
+  private Slider _sliderBlur;
+  private TextView _tvBlurValue;
   private ImageView _ivCroppedPreview;
   private View _darknessOverlay;
   private FrameLayout _keyboardHolder;
+  private Keyboard2View _previewKeyboardView;
   private MaterialButton _btnBrightnessDone;
 
   private Bitmap _sourceBitmap;
+  private Bitmap _baseCroppedBitmap;
   private Bitmap _croppedBitmap;
   private String _editThemeId = null;
   private int _brightnessPercent = 80;
+  private int _keyOpacityPercent = 100;
+  private int _blurPercent = 0;
 
   @Override
   protected void onCreate(@Nullable Bundle savedInstanceState)
   {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.activity_theme_crop);
+
+    if (getWindow() != null)
+    {
+      getWindow().setStatusBarColor(0xFF121316);
+      getWindow().setNavigationBarColor(0xFF121316);
+      androidx.core.view.WindowInsetsControllerCompat insetsController =
+          androidx.core.view.WindowCompat.getInsetsController(getWindow(), getWindow().getDecorView());
+      if (insetsController != null)
+      {
+        insetsController.setAppearanceLightStatusBars(false);
+        insetsController.setAppearanceLightNavigationBars(false);
+      }
+    }
 
     View root = findViewById(R.id.crop_root_layout);
     if (root != null)
@@ -89,6 +112,10 @@ public class ThemeCropActivity extends AppCompatActivity
     _btnBrightnessBack = findViewById(R.id.btn_brightness_back);
     _sliderBrightness = findViewById(R.id.slider_brightness);
     _tvBrightnessValue = findViewById(R.id.tv_brightness_value);
+    _sliderKeyOpacity = findViewById(R.id.slider_key_opacity);
+    _tvKeyOpacityValue = findViewById(R.id.tv_key_opacity_value);
+    _sliderBlur = findViewById(R.id.slider_blur);
+    _tvBlurValue = findViewById(R.id.tv_blur_value);
     _ivCroppedPreview = findViewById(R.id.iv_cropped_preview);
     _darknessOverlay = findViewById(R.id.brightness_darkness_overlay);
     _keyboardHolder = findViewById(R.id.brightness_keyboard_holder);
@@ -97,6 +124,10 @@ public class ThemeCropActivity extends AppCompatActivity
     _editThemeId = getIntent().getStringExtra(EXTRA_EDIT_THEME_ID);
     float initialDarkness = getIntent().getFloatExtra(EXTRA_INITIAL_DARKNESS, 0.20f);
     _brightnessPercent = Math.max(0, Math.min(100, Math.round((1f - initialDarkness) * 100f)));
+    float initialKeyOpacity = getIntent().getFloatExtra(EXTRA_INITIAL_KEY_OPACITY, 1.0f);
+    _keyOpacityPercent = Math.max(0, Math.min(100, Math.round(initialKeyOpacity * 100f)));
+    float initialBlur = getIntent().getFloatExtra(EXTRA_INITIAL_BLUR, 0.0f);
+    _blurPercent = Math.max(0, Math.min(100, Math.round(initialBlur * 100f)));
 
     _btnCropBack.setOnClickListener(v -> finish());
     _btnCropNext.setOnClickListener(v -> goToBrightnessStep());
@@ -105,6 +136,8 @@ public class ThemeCropActivity extends AppCompatActivity
     _btnBrightnessDone.setOnClickListener(v -> saveCustomThemeAndFinish());
 
     setupBrightnessSlider();
+    setupKeyOpacitySlider();
+    setupBlurSlider();
     loadInputBitmap();
   }
 
@@ -134,11 +167,17 @@ public class ThemeCropActivity extends AppCompatActivity
           exifStream.close();
         }
       }
-      else if (imagePath != null && new File(imagePath).exists())
+      else if (imagePath != null)
       {
-        _sourceBitmap = BitmapFactory.decodeFile(imagePath);
-        ExifInterface exif = new ExifInterface(imagePath);
-        _sourceBitmap = rotateBitmapIfNeeded(_sourceBitmap, exif);
+        String rawPath = imagePath.replace(".jpg", "_raw.jpg");
+        File rawFile = new File(rawPath);
+        String pathToLoad = rawFile.exists() ? rawPath : imagePath;
+        if (new File(pathToLoad).exists())
+        {
+          _sourceBitmap = BitmapFactory.decodeFile(pathToLoad);
+          ExifInterface exif = new ExifInterface(pathToLoad);
+          _sourceBitmap = rotateBitmapIfNeeded(_sourceBitmap, exif);
+        }
       }
     }
     catch (Exception e)
@@ -158,9 +197,10 @@ public class ThemeCropActivity extends AppCompatActivity
     _cropImageView.setImageBitmap(_sourceBitmap);
     if (_editThemeId != null)
     {
-      _croppedBitmap = _sourceBitmap;
-      _ivCroppedPreview.setImageBitmap(_croppedBitmap);
+      _baseCroppedBitmap = _sourceBitmap;
+      applyBlurAndPreview();
       updateBrightnessDisplay(_brightnessPercent);
+      updateKeyOpacityDisplay(_keyOpacityPercent);
       setupSuperimposedKeyboard();
       _layoutStepCrop.setVisibility(View.GONE);
       _layoutStepBrightness.setVisibility(View.VISIBLE);
@@ -211,14 +251,15 @@ public class ThemeCropActivity extends AppCompatActivity
 
   private void goToBrightnessStep()
   {
-    _croppedBitmap = _cropImageView.getCroppedBitmap();
-    if (_croppedBitmap == null)
+    _baseCroppedBitmap = _cropImageView.getCroppedBitmap();
+    if (_baseCroppedBitmap == null)
     {
-      _croppedBitmap = _sourceBitmap;
+      _baseCroppedBitmap = _sourceBitmap;
     }
 
-    _ivCroppedPreview.setImageBitmap(_croppedBitmap);
+    applyBlurAndPreview();
     updateBrightnessDisplay(_brightnessPercent);
+    updateKeyOpacityDisplay(_keyOpacityPercent);
     setupSuperimposedKeyboard();
 
     _layoutStepCrop.setVisibility(View.GONE);
@@ -227,30 +268,111 @@ public class ThemeCropActivity extends AppCompatActivity
 
   private void setupBrightnessSlider()
   {
-    _sliderBrightness.setValue((float) _brightnessPercent);
-    _sliderBrightness.addOnChangeListener((slider, value, fromUser) -> {
-      updateBrightnessDisplay(Math.round(value));
-    });
+    if (_sliderBrightness != null)
+    {
+      _sliderBrightness.setValue((float) _brightnessPercent);
+      _sliderBrightness.addOnChangeListener((slider, value, fromUser) -> {
+        updateBrightnessDisplay(Math.round(value));
+      });
+    }
   }
 
   private void updateBrightnessDisplay(int brightness)
   {
     _brightnessPercent = brightness;
-    _tvBrightnessValue.setText(brightness + "%");
+    if (_tvBrightnessValue != null)
+    {
+      _tvBrightnessValue.setText(brightness + "%");
+    }
     float darkness = (100f - brightness) / 100f;
-    _darknessOverlay.setAlpha(darkness);
+    if (_darknessOverlay != null)
+    {
+      _darknessOverlay.setAlpha(darkness);
+    }
+  }
+
+  private void setupKeyOpacitySlider()
+  {
+    if (_sliderKeyOpacity != null)
+    {
+      _sliderKeyOpacity.setValue((float) _keyOpacityPercent);
+      _sliderKeyOpacity.addOnChangeListener((slider, value, fromUser) -> {
+        updateKeyOpacityDisplay(Math.round(value));
+      });
+    }
+  }
+
+  private void updateKeyOpacityDisplay(int opacityPercent)
+  {
+    _keyOpacityPercent = opacityPercent;
+    if (_tvKeyOpacityValue != null)
+    {
+      _tvKeyOpacityValue.setText(opacityPercent + "%");
+    }
+    if (Config.globalConfig() != null)
+    {
+      Config.globalConfig().keyOpacity = Math.max(0, Math.min(255, Math.round(opacityPercent * 255 / 100f)));
+    }
+    if (_previewKeyboardView != null)
+    {
+      _previewKeyboardView.reset();
+      _previewKeyboardView.invalidate();
+    }
+  }
+
+  private void setupBlurSlider()
+  {
+    if (_sliderBlur != null)
+    {
+      _sliderBlur.setValue((float) _blurPercent);
+      _sliderBlur.addOnChangeListener((slider, value, fromUser) -> {
+        updateBlurDisplay(Math.round(value));
+      });
+    }
+  }
+
+  private void updateBlurDisplay(int blurPercent)
+  {
+    _blurPercent = blurPercent;
+    if (_tvBlurValue != null)
+    {
+      _tvBlurValue.setText(blurPercent + "%");
+    }
+    applyBlurAndPreview();
+  }
+
+  private void applyBlurAndPreview()
+  {
+    if (_baseCroppedBitmap == null || _baseCroppedBitmap.isRecycled()) return;
+    if (_blurPercent <= 0)
+    {
+      _croppedBitmap = _baseCroppedBitmap;
+    }
+    else
+    {
+      int radius = Math.max(1, Math.min(25, Math.round(_blurPercent * 25f / 100f)));
+      _croppedBitmap = ImageBlurUtils.fastBlur(_baseCroppedBitmap, radius);
+    }
+    if (_ivCroppedPreview != null && _croppedBitmap != null)
+    {
+      _ivCroppedPreview.setImageBitmap(_croppedBitmap);
+    }
   }
 
   private void setupSuperimposedKeyboard()
   {
-    Context themeContext = new ContextThemeWrapper(this, R.style.Dark);
-    Keyboard2View kv = new Keyboard2View(themeContext);
-    kv.setThemePreviewMode(true);
-    kv.setBackgroundColor(Color.TRANSPARENT);
-    kv.setKeyboard(loadPreviewKeyboard());
+    if (Config.globalConfig() != null)
+    {
+      Config.globalConfig().keyOpacity = Math.max(0, Math.min(255, Math.round(_keyOpacityPercent * 255 / 100f)));
+    }
+    Context themeContext = new ContextThemeWrapper(this, R.style.CustomImageTheme);
+    _previewKeyboardView = new Keyboard2View(themeContext);
+    _previewKeyboardView.setThemePreviewMode(true);
+    _previewKeyboardView.setBackgroundColor(Color.TRANSPARENT);
+    _previewKeyboardView.setKeyboard(loadPreviewKeyboard());
 
     _keyboardHolder.removeAllViews();
-    _keyboardHolder.addView(kv, new FrameLayout.LayoutParams(
+    _keyboardHolder.addView(_previewKeyboardView, new FrameLayout.LayoutParams(
         FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.WRAP_CONTENT));
   }
 
@@ -285,14 +407,25 @@ public class ThemeCropActivity extends AppCompatActivity
 
       String themeId = (_editThemeId != null) ? _editThemeId : ("custom_" + UUID.randomUUID().toString());
       File destFile = new File(dir, themeId + ".jpg");
+      File destRawFile = new File(dir, themeId + "_raw.jpg");
 
-      Bitmap bitmapToSave = (_croppedBitmap != null) ? _croppedBitmap : _sourceBitmap;
+      Bitmap rawToSave = (_baseCroppedBitmap != null) ? _baseCroppedBitmap : _sourceBitmap;
+      if (rawToSave != null)
+      {
+        FileOutputStream fosRaw = new FileOutputStream(destRawFile);
+        rawToSave.compress(Bitmap.CompressFormat.JPEG, 90, fosRaw);
+        fosRaw.close();
+      }
+
+      Bitmap bitmapToSave = (_croppedBitmap != null) ? _croppedBitmap : rawToSave;
       FileOutputStream fos = new FileOutputStream(destFile);
       bitmapToSave.compress(Bitmap.CompressFormat.JPEG, 90, fos);
       fos.close();
 
       float darkness = (100f - _brightnessPercent) / 100f;
-      ThemeModel model = new ThemeModel(themeId, getString(R.string.theme_custom_theme_title), destFile.getAbsolutePath(), darkness);
+      float keyOpacity = _keyOpacityPercent / 100f;
+      float blur = _blurPercent / 100f;
+      ThemeModel model = new ThemeModel(themeId, getString(R.string.theme_custom_theme_title), destFile.getAbsolutePath(), darkness, keyOpacity, blur);
       ThemeRepository.saveCustomTheme(this, model);
 
       Intent resultIntent = new Intent();

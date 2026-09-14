@@ -164,7 +164,6 @@ public class Theme
         {
           bg_color = (role == KeyboardData.Key.Role.Action) ? theme.colorKeyActionActivated : theme.colorKeyActivated;
           border_width = (role == KeyboardData.Key.Role.Action) ? theme.keyBorderWidthAction : theme.keyBorderWidthActivated;
-          bg_paint.setAlpha(config.keyActivatedOpacity);
         }
         else
         {
@@ -187,9 +186,11 @@ public class Theme
               border_width = config.keyBorders ? (config.borderConfig ? config.customBorderLineWidth : theme.keyBorderWidth) : 0;
               break;
           }
-          bg_paint.setAlpha(config.keyOpacity);
         }
-        bg_paint.setColor(bg_color);
+        int opacity = activated ? config.keyActivatedOpacity : config.keyOpacity;
+        int baseAlpha = (bg_color >>> 24);
+        int finalAlpha = (int) (baseAlpha * (opacity / 255f));
+        bg_paint.setColor((bg_color & 0x00FFFFFF) | (finalAlpha << 24));
         border_left_paint = init_border_paint(config, border_width, theme.keyBorderColorLeft);
         border_top_paint = init_border_paint(config, border_width, theme.keyBorderColorTop);
         border_right_paint = init_border_paint(config, border_width, theme.keyBorderColorRight);
@@ -222,10 +223,11 @@ public class Theme
     static Paint init_border_paint(Config config, float border_width, int color)
     {
       Paint p = new Paint();
-      p.setAlpha(config.keyOpacity);
       p.setStyle(Paint.Style.STROKE);
       p.setStrokeWidth(border_width);
-      p.setColor(color);
+      int baseAlpha = (color >>> 24);
+      int finalAlpha = (int) (baseAlpha * (config.keyOpacity / 255f));
+      p.setColor((color & 0x00FFFFFF) | (finalAlpha << 24));
       return p;
     }
 

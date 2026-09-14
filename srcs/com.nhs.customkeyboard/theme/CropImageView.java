@@ -23,8 +23,12 @@ public class CropImageView extends View
   private final RectF _bitmapRect = new RectF();
   private final RectF _mappedBitmapRect = new RectF();
 
+  public static final float EXTRA_TOP_RATIO = 0.28f;
+  public static final float EXTRA_BOTTOM_RATIO = 0.12f;
+
   private final Paint _maskPaint = new Paint();
   private final Paint _borderPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+  private final Paint _guidePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
 
   private ScaleGestureDetector _scaleDetector;
   private float _lastX = 0f;
@@ -52,6 +56,11 @@ public class CropImageView extends View
     _borderPaint.setColor(Color.WHITE);
     _borderPaint.setStyle(Paint.Style.STROKE);
     _borderPaint.setStrokeWidth(dp(1.5f));
+
+    _guidePaint.setColor(0x88FFFFFF);
+    _guidePaint.setStyle(Paint.Style.STROKE);
+    _guidePaint.setStrokeWidth(dp(1f));
+    _guidePaint.setPathEffect(new android.graphics.DashPathEffect(new float[]{dp(4), dp(4)}, 0));
 
     _scaleDetector = new ScaleGestureDetector(context, new ScaleGestureDetector.SimpleOnScaleGestureListener()
     {
@@ -243,7 +252,22 @@ public class CropImageView extends View
     // Right rect
     canvas.drawRect(_cropRect.right, _cropRect.top, w, _cropRect.bottom, _maskPaint);
 
-    // Draw white crop border
+    // Draw top & bottom expansion guidelines
+    float topHeadroom = _cropRect.height() * EXTRA_TOP_RATIO;
+    float botFootroom = _cropRect.height() * EXTRA_BOTTOM_RATIO;
+    float guideTop = _cropRect.top - topHeadroom;
+    float guideBot = _cropRect.bottom + botFootroom;
+
+    if (guideTop > 0)
+    {
+      canvas.drawLine(_cropRect.left, guideTop, _cropRect.right, guideTop, _guidePaint);
+    }
+    if (guideBot < h)
+    {
+      canvas.drawLine(_cropRect.left, guideBot, _cropRect.right, guideBot, _guidePaint);
+    }
+
+    // Draw main white crop border
     canvas.drawRect(_cropRect, _borderPaint);
   }
 
@@ -255,23 +279,73 @@ public class CropImageView extends View
     try
     {
       _matrix.invert(_inverseMatrix);
-      RectF srcRect = new RectF();
-      _inverseMatrix.mapRect(srcRect, _cropRect);
 
-      // Clamp to bitmap boundaries
-      srcRect.left = Math.max(0, srcRect.left);
-      srcRect.top = Math.max(0, srcRect.top);
-      srcRect.right = Math.min(_bitmap.getWidth(), srcRect.right);
-      srcRect.bottom = Math.min(_bitmap.getHeight(), srcRect.bottom);
+      float cropW = _cropRect.width();
+      float cropH = _cropRect.height();
+      float topHeadroom = cropH * EXTRA_TOP_RATIO;
+      float bottomFootroom = cropH * EXTRA_BOTTOM_RATIO;
+
+      RectF extCropRect = new RectF(
+          _cropRect.left,
+          _cropRect.top - topHeadroom,
+          _cropRect.right,
+          _cropRect.bottom + bottomFootroom
+      );
+
+      RectF srcRect = new RectF();
+      _inverseMatrix.mapRect(srcRect, extCropRect);
 
       int targetW = 1080;
-      int targetH = Math.round(targetW / 1.55f);
+      float totalRatio = 1f + EXTRA_TOP_RATIO + EXTRA_BOTTOM_RATIO;
+      int targetH = Math.round((targetW / 1.55f) * totalRatio);
 
       Bitmap outBmp = Bitmap.createBitmap(targetW, targetH, Bitmap.Config.ARGB_8888);
       Canvas canvas = new Canvas(outBmp);
       Paint p = new Paint(Paint.ANTI_ALIAS_FLAG | Paint.FILTER_BITMAP_FLAG);
-      RectF dstRect = new RectF(0, 0, targetW, targetH);
-      canvas.drawBitmap(_bitmap, new android.graphics.Rect((int) srcRect.left, (int) srcRect.top, (int) srcRect.right, (int) srcRect.bottom), dstRect, p);
+
+      int bmpW = _bitmap.getWidth();
+      int bmpH = _bitmap.getHeight();
+
+      float srcL = Math.max(0, Math.min(bmpW, srcRect.left));
+      float srcR = Math.max(0, Math.min(bmpW, srcRect.right));
+      float srcT = Math.max(0, Math.min(bmpH, srcRect.top));
+      float srcB = Math.max(0, Math.min(bmpH, srcRect.bottom));
+
+      float srcW = srcRect.width();
+      float srcHeight = srcRect.height();
+
+      if (srcW > 0 && srcHeight > 0 && srcR > srcL && srcB > srcT)
+      {
+        float dstL = ((srcL - srcRect.left) / srcW) * targetW;
+        float dstR = ((srcR - srcRect.left) / srcW) * targetW;
+        float dstT = ((srcT - srcRect.top) / srcHeight) * targetH;
+        float dstB = ((srcB - srcRect.top) / srcHeight) * targetH;
+
+        android.graphics.Rect src = new android.graphics.Rect((int) srcL, (int) srcT, (int) srcR, (int) srcB);
+        RectF dst = new RectF(dstL, dstT, dstR, dstB);
+        canvas.drawBitmap(_bitmap, src, dst, p);
+
+        // Fill edge margins if image was close to boundary
+        if (dstT > 0)
+        {
+          android.graphics.Rect topSrc = new android.graphics.Rect((int) srcL, (int) srcT, (int) srcR, (int) Math.min(bmpH, srcT + 2));
+          RectF topDst = new RectF(0, 0, targetW, dstT);
+          canvas.drawBitmap(_bitmap, topSrc, topDst, p);
+        }
+        if (dstB < targetH)
+        {
+          android.graphics.Rect botSrc = new android.graphics.Rect((int) srcL, (int) Math.max(0, srcB - 2), (int) srcR, (int) srcB);
+          RectF botDst = new RectF(0, dstB, targetW, targetH);
+          canvas.drawBitmap(_bitmap, botSrc, botDst, p);
+        }
+      }
+      else
+      {
+        android.graphics.Rect src = new android.graphics.Rect(0, 0, bmpW, bmpH);
+        RectF dst = new RectF(0, 0, targetW, targetH);
+        canvas.drawBitmap(_bitmap, src, dst, p);
+      }
+
       return outBmp;
     }
     catch (Throwable t)

@@ -239,7 +239,7 @@ public class ThemePreviewBottomSheet extends BottomSheetDialogFragment
     Context themeContext;
     if (_model.isCustomPhoto)
     {
-      themeContext = new ContextThemeWrapper(requireContext(), R.style.Dark);
+      themeContext = new ContextThemeWrapper(requireContext(), R.style.CustomImageTheme);
     }
     else
     {
@@ -293,7 +293,19 @@ public class ThemePreviewBottomSheet extends BottomSheetDialogFragment
       if (micIcon != null) micIcon.setColorFilter(colorLabel);
     }
 
-    Config.globalConfig().keyBorders = _currentKeyBorders;
+    if (Config.globalConfig() != null)
+    {
+      Config.globalConfig().keyBorders = _currentKeyBorders;
+      if (_model.isCustomPhoto)
+      {
+        Config.globalConfig().keyOpacity = Math.max(0, Math.min(255, Math.round(_model.keyOpacity * 255)));
+      }
+      else
+      {
+        SharedPreferences p = PreferenceManager.getDefaultSharedPreferences(requireContext());
+        Config.globalConfig().keyOpacity = p.getInt("key_opacity", 100) * 255 / 100;
+      }
+    }
     _singleKeyboardView = new Keyboard2View(themeContext);
     _singleKeyboardView.setThemePreviewMode(true);
     _singleKeyboardView.setBackgroundColor(Color.TRANSPARENT);
@@ -412,6 +424,8 @@ public class ThemePreviewBottomSheet extends BottomSheetDialogFragment
     {
       editor.putString("custom_theme_image_path", _model.imagePath);
       editor.putFloat("custom_theme_darkness", _model.darknessOverlay);
+      editor.putFloat("custom_theme_key_opacity", _model.keyOpacity);
+      editor.putInt("key_opacity", Math.round(_model.keyOpacity * 100));
     }
 
     editor.apply();

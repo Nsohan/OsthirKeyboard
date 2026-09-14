@@ -234,9 +234,8 @@ public class KeyboardMenuManager
     {
       _btnEdit.setBackgroundResource(R.drawable.bg_menu_edit_pill);
       _btnEditIcon.setImageResource(R.drawable.ic_edit_pencil);
-      int keyActionColor = getColorFromAttr(R.attr.colorKeyAction,
-          getColorFromAttr(R.attr.colorLabel, Color.LTGRAY));
-      _btnEditIcon.setColorFilter(keyActionColor, PorterDuff.Mode.SRC_IN);
+      int labelColor = getColorFromAttr(R.attr.colorLabel, Color.DKGRAY);
+      _btnEditIcon.setColorFilter(labelColor, PorterDuff.Mode.SRC_IN);
     }
   }
 

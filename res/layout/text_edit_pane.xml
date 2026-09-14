@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="?attr/colorKeyboard">
+    android:background="@android:color/transparent">
 
   <!-- Header Bar -->
   <RelativeLayout
@@ -188,7 +188,7 @@
               android:layout_height="wrap_content"
               android:layout_gravity="center"
               android:text="@string/text_edit_select_all"
-              android:textColor="#FFDBCF"
+              android:textColor="?attr/colorLabelAction"
               android:textSize="13sp"
               android:fontFamily="sans-serif-medium"/>
         </FrameLayout>
@@ -209,7 +209,7 @@
               android:layout_height="wrap_content"
               android:layout_gravity="center"
               android:text="@string/text_edit_copy"
-              android:textColor="#FFDBCF"
+              android:textColor="?attr/colorLabelAction"
               android:textSize="13sp"
               android:fontFamily="sans-serif-medium"/>
         </FrameLayout>
@@ -230,7 +230,7 @@
               android:layout_height="wrap_content"
               android:layout_gravity="center"
               android:text="@string/text_edit_cut"
-              android:textColor="#FFDBCF"
+              android:textColor="?attr/colorLabelAction"
               android:textSize="13sp"
               android:fontFamily="sans-serif-medium"/>
         </FrameLayout>
@@ -251,7 +251,7 @@
               android:layout_height="wrap_content"
               android:layout_gravity="center"
               android:text="@string/text_edit_paste"
-              android:textColor="#FFDBCF"
+              android:textColor="?attr/colorLabelAction"
               android:textSize="13sp"
               android:fontFamily="sans-serif-medium"/>
         </FrameLayout>
@@ -319,7 +319,7 @@
             android:layout_height="24dp"
             android:layout_gravity="center"
             android:src="@drawable/ic_tool_backspace"
-            android:tint="#FFDBCF"/>
+            android:tint="?attr/colorLabelAction"/>
       </FrameLayout>
     </LinearLayout>
 

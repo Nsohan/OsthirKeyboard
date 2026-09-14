@@ -563,4 +563,32 @@
     <item name="emoji_button_bg">?colorKeyAction</item>
     <item name="emoji_color">?colorLabelAction</item>
   </style>
+
+  <style name="CustomImageTheme" parent="BaseTheme">
+    <item name="android:isLightTheme">false</item>
+    <item name="colorKeyboard">@android:color/transparent</item>
+    <item name="colorKey">#60FFFFFF</item>
+    <item name="colorKeyActivated">#8AFFFFFF</item>
+    <item name="colorKeyAction">#7AFFFFFF</item>
+    <item name="colorKeyActionActivated">#9EFFFFFF</item>
+    <item name="colorKeySpaceBar">#52FFFFFF</item>
+    <item name="colorLabel">#FFFFFF</item>
+    <item name="colorLabelAction">#FFFFFF</item>
+    <item name="colorLabelActivated">#FFFFFF</item>
+    <item name="colorLabelLocked">#80D8FF</item>
+    <item name="colorSubLabel">#D0FFFFFF</item>
+    <item name="keyBorderRadius">6dp</item>
+    <item name="keyBorderWidth">0dp</item>
+    <item name="keyBorderWidthActivated">0dp</item>
+    <item name="keyBorderWidthAction">0dp</item>
+    <item name="keyBorderWidthSpaceBar">0dp</item>
+    <item name="navigationBarColor">@android:color/transparent</item>
+    <item name="windowLightNavigationBar">false</item>
+    <item name="suggestions_background">@android:color/transparent</item>
+    <item name="emoji_button_bg">#60FFFFFF</item>
+    <item name="emoji_color">#FFFFFF</item>
+    <item name="emoji_key_bg">#60FFFFFF</item>
+    <item name="emoji_key_text">#FFFFFF</item>
+    <item name="clipboard_divider_color">#33FFFFFF</item>
+  </style>
 </resources>

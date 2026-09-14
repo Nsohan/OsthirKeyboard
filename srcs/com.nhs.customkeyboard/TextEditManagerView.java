@@ -242,7 +242,19 @@ public class TextEditManagerView extends LinearLayout
       _btnSelect.setBackgroundResource(R.drawable.bg_text_edit_select_active);
       if (_tvSelect != null)
       {
-        _tvSelect.setTextColor(0xFF1E1A19);
+        TypedValue tv = new TypedValue();
+        if (getContext().getTheme().resolveAttribute(R.attr.colorLabelActivated, tv, true))
+        {
+          _tvSelect.setTextColor(tv.data);
+        }
+        else if (getContext().getTheme().resolveAttribute(R.attr.colorLabelAction, tv, true))
+        {
+          _tvSelect.setTextColor(tv.data);
+        }
+        else
+        {
+          _tvSelect.setTextColor(0xFF1E1A19);
+        }
       }
     }
     else

@@ -760,29 +760,7 @@ public class Keyboard2 extends InputMethodService
       _text_edit_pane = null;
       setInputView(_keyboard_container_view);
     }
-    if (_config.themeName != null && _config.themeName.startsWith("custom_") && _config.customThemeImagePath != null)
-    {
-      try
-      {
-        android.graphics.Bitmap bmp = android.graphics.BitmapFactory.decodeFile(_config.customThemeImagePath);
-        if (bmp != null)
-        {
-          _keyboard_container_view.setBackground(new CustomThemeBackgroundDrawable(bmp, _config.customThemeDarkness));
-        }
-        else
-        {
-          restoreDefaultContainerBackground();
-        }
-      }
-      catch (Throwable ignored)
-      {
-        restoreDefaultContainerBackground();
-      }
-    }
-    else
-    {
-      restoreDefaultContainerBackground();
-    }
+    applyRootContainerBackground(_keyboard_container_view);
     _keyboard_layout_view.setCustomBackgroundBitmap(null, 0f);
 
     _keyboard_layout_view.reset();
@@ -830,6 +808,7 @@ public class Keyboard2 extends InputMethodService
     _keyeventhandler.started(_config);
     set_menu_panel_visible(false);
     setInputView(_keyboard_container_view);
+    updateNavigationBar();
     Logs.debug_startup_input_view(info, _config);
   }
 
@@ -884,6 +863,7 @@ public class Keyboard2 extends InputMethodService
     if (parent != null && parent instanceof ViewGroup)
       ((ViewGroup)parent).removeView(v);
     super.setInputView(v);
+    applyRootContainerBackground(v);
     updateSoftInputWindowLayoutParams();
     v.requestApplyInsets();
   }
@@ -916,7 +896,113 @@ public class Keyboard2 extends InputMethodService
                     ? ViewGroup.LayoutParams.MATCH_PARENT
                     : ViewGroup.LayoutParams.WRAP_CONTENT);
     updateLayoutGravityOf((View) inputArea.getParent(), Gravity.BOTTOM);
+    updateNavigationBar();
+  }
 
+  @Override
+  public void onWindowShown()
+  {
+    super.onWindowShown();
+    updateNavigationBar();
+  }
+
+  public void updateNavigationBar()
+  {
+    if (VERSION.SDK_INT < 21) return;
+    try
+    {
+      android.app.Dialog dialog = getWindow();
+      if (dialog == null) return;
+      Window window = dialog.getWindow();
+      if (window == null) return;
+
+      int themeResId = (_config != null) ? _config.theme : R.style.Light;
+      android.view.ContextThemeWrapper ctx = new android.view.ContextThemeWrapper(this, themeResId);
+
+      android.util.TypedValue tvNavColor = new android.util.TypedValue();
+      android.util.TypedValue tvLightNav = new android.util.TypedValue();
+      int navColor = 0;
+      boolean isLightNav = false;
+
+      if (ctx.getTheme().resolveAttribute(R.attr.navigationBarColor, tvNavColor, true))
+      {
+        if (tvNavColor.type >= android.util.TypedValue.TYPE_FIRST_COLOR_INT && tvNavColor.type <= android.util.TypedValue.TYPE_LAST_COLOR_INT)
+        {
+          navColor = tvNavColor.data;
+        }
+        else
+        {
+          navColor = androidx.core.content.ContextCompat.getColor(ctx, tvNavColor.resourceId);
+        }
+      }
+      else if (ctx.getTheme().resolveAttribute(R.attr.colorKeyboard, tvNavColor, true))
+      {
+        if (tvNavColor.type >= android.util.TypedValue.TYPE_FIRST_COLOR_INT && tvNavColor.type <= android.util.TypedValue.TYPE_LAST_COLOR_INT)
+        {
+          navColor = tvNavColor.data;
+        }
+        else
+        {
+          navColor = androidx.core.content.ContextCompat.getColor(ctx, tvNavColor.resourceId);
+        }
+      }
+
+      if (ctx.getTheme().resolveAttribute(R.attr.windowLightNavigationBar, tvLightNav, true))
+      {
+        isLightNav = (tvLightNav.data != 0);
+      }
+      else if (ctx.getTheme().resolveAttribute(android.R.attr.isLightTheme, tvLightNav, true))
+      {
+        isLightNav = (tvLightNav.data != 0);
+      }
+
+      if (navColor != 0)
+      {
+        window.setNavigationBarColor(navColor);
+      }
+
+      if (VERSION.SDK_INT >= 30)
+      {
+        WindowInsetsController insetsController = window.getInsetsController();
+        if (insetsController != null)
+        {
+          if (isLightNav)
+          {
+            insetsController.setSystemBarsAppearance(
+                WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS,
+                WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS);
+          }
+          else
+          {
+            insetsController.setSystemBarsAppearance(
+                0,
+                WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS);
+          }
+        }
+      }
+
+      if (VERSION.SDK_INT >= 26)
+      {
+        View decor = window.getDecorView();
+        if (decor != null)
+        {
+          int flags = decor.getSystemUiVisibility();
+          if (isLightNav)
+          {
+            flags |= View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR;
+          }
+          else
+          {
+            flags &= ~View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR;
+          }
+          decor.setSystemUiVisibility(flags);
+        }
+      }
+    }
+    catch (Exception e)
+    {
+      Log.e("Keyboard2", "Failed to update navigation bar", e);
+    }
   }
 
   private static void updateLayoutHeightOf(final Window window, final int layoutHeight) {
@@ -1020,6 +1106,7 @@ public class Keyboard2 extends InputMethodService
     _keyboard_layout_view.setKeyboard(current_layout());
     refresh_keymap();
     refresh_tasker_automation();
+    updateNavigationBar();
   }
 
   @Override
@@ -1032,6 +1119,7 @@ public class Keyboard2 extends InputMethodService
       _keyboard_layout_view.setKeyboard(current_layout());
       refresh_keymap();
     }
+    updateNavigationBar();
   }
 
   @Override
@@ -1335,25 +1423,43 @@ public class Keyboard2 extends InputMethodService
     return ic.commitText(text, 1);
   }
 
+  public void applyRootContainerBackground(View v)
+  {
+    if (v == null) return;
+    if (_config != null && _config.themeName != null && _config.themeName.startsWith("custom_") && _config.customThemeImagePath != null)
+    {
+      try
+      {
+        Bitmap bmp = android.graphics.BitmapFactory.decodeFile(_config.customThemeImagePath);
+        if (bmp != null)
+        {
+          v.setBackground(new CustomThemeBackgroundDrawable(bmp, _config.customThemeDarkness));
+          return;
+        }
+      }
+      catch (Throwable ignored) {}
+    }
+
+    int themeRes = (_config != null) ? _config.theme : R.style.Light;
+    Context themeCtx = new ContextThemeWrapper(this, themeRes);
+    android.content.res.TypedArray a = themeCtx.obtainStyledAttributes(new int[]{ R.attr.colorKeyboard });
+    int color = a.getColor(0, Color.TRANSPARENT);
+    a.recycle();
+
+    android.graphics.drawable.ColorDrawable cd = new android.graphics.drawable.ColorDrawable(color);
+    if (_config != null)
+    {
+      cd.setAlpha(_config.keyboardOpacity);
+    }
+    v.setBackground(cd);
+  }
+
   private void restoreDefaultContainerBackground()
   {
-    if (_keyboard_container_view == null) return;
-    int defaultColor = 0xFF121316;
-    android.util.TypedValue tv = new android.util.TypedValue();
-    if (getTheme().resolveAttribute(R.attr.colorKeyboard, tv, true))
+    if (_keyboard_container_view != null)
     {
-      if (tv.type >= android.util.TypedValue.TYPE_FIRST_COLOR_INT && tv.type <= android.util.TypedValue.TYPE_LAST_COLOR_INT)
-      {
-        defaultColor = tv.data;
-      }
-      else if (tv.resourceId != 0)
-      {
-        try { defaultColor = androidx.core.content.ContextCompat.getColor(this, tv.resourceId); } catch (Throwable ignored) {}
-      }
+      applyRootContainerBackground(_keyboard_container_view);
     }
-    android.graphics.drawable.ColorDrawable cd = new android.graphics.drawable.ColorDrawable(defaultColor);
-    cd.setAlpha(_config.keyboardOpacity);
-    _keyboard_container_view.setBackground(cd);
   }
 
   private static class CustomThemeBackgroundDrawable extends Drawable
@@ -1390,7 +1496,7 @@ public class Keyboard2 extends InputMethodService
       float scaledH = bmpH * scale;
 
       float left = bounds.left + (viewW - scaledW) / 2f;
-      float top = bounds.top + (viewH - scaledH) / 2f;
+      float top = bounds.bottom - scaledH;
 
       _srcRect.set(0, 0, bmpW, bmpH);
       _dstRect.set((int) left, (int) top, (int) (left + scaledW), (int) (top + scaledH));
