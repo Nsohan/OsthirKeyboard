@@ -44,15 +44,10 @@
           android:gravity="center_vertical"
           android:visibility="gone">
 
-        <TextView
-            android:id="@+id/candidates_emoji"
-            style="@style/candidates_emoji"/>
-
         <HorizontalScrollView
             android:id="@+id/candidates_scroll"
-            android:layout_width="0dp"
+            android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_weight="1"
             android:scrollbars="none"
             android:fillViewport="true">
           <LinearLayout

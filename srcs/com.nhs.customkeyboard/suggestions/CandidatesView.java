@@ -170,7 +170,6 @@ public class CandidatesView extends LinearLayout
     _tools_spacer = findViewById(R.id.tools_spacer);
     _tools_action_scroll = findViewById(R.id.tools_action_scroll);
     _tools_action_bar = findViewById(R.id.tools_action_bar);
-    _emoji_view = findViewById(R.id.candidates_emoji);
     _scroll_view = findViewById(R.id.candidates_scroll);
     _container = findViewById(R.id.candidates_container);
 
@@ -259,34 +258,67 @@ public class CandidatesView extends LinearLayout
     }
   }
 
+  private TextView get_or_create_emoji_view()
+  {
+    if (_emoji_view != null) return _emoji_view;
+    TextView v = new TextView(getContext());
+    int gap = getResources().getDimensionPixelSize(R.dimen.candidates_gap);
+    int vMargin = getResources().getDimensionPixelSize(R.dimen.candidates_margin_vertical);
+    int hPadding = (int)(9 * getResources().getDisplayMetrics().density);
+
+    LayoutParams lp = new LayoutParams(
+        ViewGroup.LayoutParams.WRAP_CONTENT,
+        ViewGroup.LayoutParams.MATCH_PARENT);
+    lp.setMargins(gap, vMargin, 0, vMargin);
+    v.setLayoutParams(lp);
+    v.setPadding(hPadding, 0, hPadding, 0);
+    v.setGravity(Gravity.CENTER);
+    v.setBackgroundResource(R.drawable.suggestions_item_background);
+    v.setMaxLines(1);
+
+    TypedValue outValue = new TypedValue();
+    getContext().getTheme().resolveAttribute(R.attr.colorLabel, outValue, true);
+    v.setTextColor(outValue.data);
+
+    if (_cached_text_size > 0)
+      apply_text_size(v, _cached_text_size * 1.12f);
+
+    _emoji_view = v;
+    return _emoji_view;
+  }
+
   private void populate_candidate_views(Suggestions s, int s_count)
   {
-    if (s != null && s.emoji_suggestion != null && _emoji_view != null)
-    {
-      final String emoji = s.emoji_suggestion;
-      _emoji_view.setText(emoji);
-      _emoji_view.setVisibility(View.VISIBLE);
-      _emoji_view.setOnClickListener(new OnClickListener()
-      {
-        @Override
-        public void onClick(View _v)
-        {
-          Config.globalConfig().handler.suggestion_entered(emoji);
-        }
-      });
-    }
-    else if (_emoji_view != null)
-    {
-      _emoji_view.setVisibility(View.GONE);
-      _emoji_view.setOnClickListener(null);
-    }
-
     if (s_count != 0 && _status_no_dict != null)
       _status_no_dict.setVisibility(View.GONE);
 
     if (_container != null)
     {
       _container.removeAllViews();
+
+      // Show emoji as the first scrollable candidate item so it swipes naturally with words
+      if (s != null && s.emoji_suggestion != null && s.emoji_suggestion.length() > 0)
+      {
+        final String emoji = s.emoji_suggestion;
+        TextView emojiV = get_or_create_emoji_view();
+        emojiV.setText(emoji);
+        emojiV.setVisibility(View.VISIBLE);
+        emojiV.setOnClickListener(new OnClickListener()
+        {
+          @Override
+          public void onClick(View _v)
+          {
+            Config.globalConfig().handler.suggestion_entered(emoji);
+          }
+        });
+        _container.addView(emojiV);
+      }
+      else if (_emoji_view != null)
+      {
+        _emoji_view.setVisibility(View.GONE);
+        _emoji_view.setOnClickListener(null);
+      }
+
       for (int i = 0; i < s_count; i++)
       {
         final String word = s.suggestions[i];
