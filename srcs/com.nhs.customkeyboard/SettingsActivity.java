@@ -45,6 +45,12 @@ public class SettingsActivity extends AppCompatActivity
   public void onCreate(Bundle savedInstanceState)
   {
     super.onCreate(savedInstanceState);
+    androidx.core.view.WindowInsetsControllerCompat insetsController = androidx.core.view.WindowCompat.getInsetsController(getWindow(), getWindow().getDecorView());
+    if (insetsController != null) {
+      boolean isNight = (getResources().getConfiguration().uiMode & android.content.res.Configuration.UI_MODE_NIGHT_MASK) == android.content.res.Configuration.UI_MODE_NIGHT_YES;
+      insetsController.setAppearanceLightStatusBars(!isNight);
+      insetsController.setAppearanceLightNavigationBars(!isNight);
+    }
     setContentView(R.layout.settings_activity);
     Toolbar toolbar = findViewById(R.id.settings_toolbar);
     setSupportActionBar(toolbar);
@@ -274,12 +280,12 @@ public class SettingsActivity extends AppCompatActivity
             {
               divider.setVisibility(View.VISIBLE);
               ViewGroup.MarginLayoutParams lp = (ViewGroup.MarginLayoutParams) divider.getLayoutParams();
-              float density = itemView.getResources().getDisplayMetrics().density;
-              if (pref.getIcon() != null)
-                lp.leftMargin = (int) (56 * density);
-              else
-                lp.leftMargin = (int) (16 * density);
-              divider.setLayoutParams(lp);
+              if (lp != null)
+              {
+                lp.leftMargin = 0;
+                lp.rightMargin = 0;
+                divider.setLayoutParams(lp);
+              }
             }
           }
         }

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <!-- Material You / Monet system dynamic colors for Settings on Android 12+ (API 31+) in light mode.
+       In dark mode (system dark), values-night/colors_settings.xml takes qualifier precedence
+       (UI mode qualifier 'night' ranks higher than platform version 'v31'), keeping dark mode pure black. -->
+  <color name="settings_primary">@android:color/system_accent1_600</color>
+  <color name="settings_primary_dark">@android:color/system_accent2_50</color>
+  <color name="settings_accent">@android:color/system_accent1_600</color>
+  <color name="settings_secondary">@android:color/system_accent2_600</color>
+  <color name="settings_tertiary">@android:color/system_accent3_600</color>
+
+  <color name="settings_background">@android:color/system_accent2_50</color>
+  <color name="settings_surface">@android:color/system_neutral1_0</color>
+  <color name="settings_card_bg">@android:color/system_neutral1_0</color>
+  <color name="settings_divider">@android:color/system_neutral2_100</color>
+  <color name="settings_icon_tint">@android:color/system_neutral2_700</color>
+  <color name="settings_on_surface">@android:color/system_neutral1_900</color>
+  <color name="settings_on_surface_variant">@android:color/system_neutral2_700</color>
+  <color name="settings_error">#BA1A1A</color>
+  <color name="settings_on_primary">@android:color/system_neutral1_0</color>
+</resources>
