@@ -141,6 +141,34 @@
     <string name="pref_theme_e_cobalt">Cobalt</string>
     <string name="pref_theme_e_pine">Pine</string>
     <string name="pref_theme_e_epaperblack">ePaper Black</string>
+    <string name="pref_theme_e_red" translatable="false">Red</string>
+    <string name="pref_theme_e_green" translatable="false">Green</string>
+    <string name="pref_theme_e_blue" translatable="false">Blue</string>
+    <string name="pref_theme_e_cyan" translatable="false">Cyan</string>
+    <string name="pref_theme_e_amber" translatable="false">Amber</string>
+    <string name="pref_theme_e_purple" translatable="false">Purple</string>
+    <string name="pref_theme_e_pink" translatable="false">Pink</string>
+    <string name="pref_theme_e_darkteal" translatable="false">Dark Teal</string>
+    <string name="pref_theme_e_darkblue" translatable="false">Dark Blue</string>
+    <string name="pref_theme_e_mintlight" translatable="false">Mint</string>
+    <string name="theme_section_my_themes" translatable="false">My themes</string>
+    <string name="theme_section_default" translatable="false">Default</string>
+    <string name="theme_section_colors" translatable="false">Colors</string>
+    <string name="theme_dynamic_color" translatable="false">Dynamic Color</string>
+    <string name="theme_system_auto" translatable="false">System Auto</string>
+    <string name="theme_default_light" translatable="false">Default</string>
+    <string name="theme_default_dark" translatable="false">Default Dark</string>
+    <string name="theme_key_borders" translatable="false">Key borders</string>
+    <string name="theme_auto_subtext" translatable="false">Appearance will follow system settings</string>
+    <string name="theme_apply" translatable="false">Apply</string>
+    <string name="theme_cancel" translatable="false">Cancel</string>
+    <string name="theme_applied_toast" translatable="false">Theme applied</string>
+    <string name="theme_adjust_brightness" translatable="false">Adjust brightness</string>
+    <string name="theme_custom_theme_title" translatable="false">Custom Theme</string>
+    <string name="theme_delete_confirm" translatable="false">Delete this custom theme?</string>
+    <string name="theme_btn_delete" translatable="false">Delete</string>
+    <string name="theme_btn_edit" translatable="false">Edit</string>
+    <string name="theme_pinch_drag" translatable="false">Pinch to Scale, Drag to Move</string>
     <string name="pref_swipe_dist_e_very_short">Very short</string>
     <string name="pref_swipe_dist_e_short">Short</string>
     <string name="pref_swipe_dist_e_default">Normal</string>

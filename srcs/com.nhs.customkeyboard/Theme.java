@@ -108,7 +108,7 @@ public class Theme
     public float horizontal_margin;
     public float margin_top;
     public float margin_left;
-    public final float row_height;
+    public float row_height;
     public final Paint indication_paint;
 
     public final Key key;
@@ -183,8 +183,8 @@ public class Theme
               border_width = 0;
               break;
             default:
-              bg_color = theme.colorKey;
-              border_width = config.borderConfig ? config.customBorderLineWidth : theme.keyBorderWidth;
+              bg_color = config.keyBorders ? theme.colorKey : 0;
+              border_width = config.keyBorders ? (config.borderConfig ? config.customBorderLineWidth : theme.keyBorderWidth) : 0;
               break;
           }
           bg_paint.setAlpha(config.keyOpacity);

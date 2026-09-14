@@ -1108,8 +1108,7 @@ public class CandidatesView extends LinearLayout
       case "theme":
         try
         {
-          Intent intent = new Intent(getContext(), SettingsActivity.class);
-          intent.putExtra(SettingsActivity.EXTRA_START_SCREEN, "screen_theme");
+          Intent intent = new Intent(getContext(), com.nhs.customkeyboard.theme.ThemeActivity.class);
           intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
           getContext().startActivity(intent);
         }

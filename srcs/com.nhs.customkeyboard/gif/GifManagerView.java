@@ -521,7 +521,7 @@ public class GifManagerView extends LinearLayout
     try
     {
       Intent intent = new Intent(getContext(), SettingsActivity.class);
-      intent.putExtra(SettingsActivity.EXTRA_START_SCREEN, "screen_theme");
+      intent.putExtra(SettingsActivity.EXTRA_START_SCREEN, "screen_style_advanced");
       intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
       getContext().startActivity(intent);
     }

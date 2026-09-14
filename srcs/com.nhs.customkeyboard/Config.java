@@ -81,6 +81,10 @@ public final class Config
   public KeyValue change_method_key_replacement;
   public NumberLayout selected_number_layout;
   public boolean borderConfig;
+  public boolean keyBorders = true;
+  public String themeName = "system";
+  public String customThemeImagePath = null;
+  public float customThemeDarkness = 0.3f;
   public int circle_sensitivity;
   public boolean clipboard_history_enabled;
   public int clipboard_history_duration;
@@ -227,7 +231,11 @@ public final class Config
     characterSize =
       _prefs.getFloat("character_size", 1.15f)
       * characterSizeScale;
-    theme = getThemeId(res, _prefs.getString("theme", ""));
+    keyBorders = _prefs.getBoolean("key_borders", true);
+    themeName = _prefs.getString("theme", "system");
+    customThemeImagePath = _prefs.getString("custom_theme_image_path", null);
+    customThemeDarkness = _prefs.getFloat("custom_theme_darkness", 0.3f);
+    theme = getThemeId(res, themeName);
     autocapitalisation = _prefs.getBoolean("autocapitalisation", true);
     change_method_key_replacement = get_change_method_key_replacement(_prefs);
     extra_keys_param = ExtraKeysPreference.get_extra_keys(_prefs);
@@ -318,7 +326,19 @@ public final class Config
       case "cobalt": return R.style.Cobalt;
       case "pine": return R.style.Pine;
       case "epaperblack": return R.style.ePaperBlack;
+      case "red": return R.style.ThemeRed;
+      case "green": return R.style.ThemeGreen;
+      case "blue": return R.style.ThemeBlue;
+      case "cyan": return R.style.ThemeCyan;
+      case "amber": return R.style.ThemeAmber;
+      case "purple": return R.style.ThemePurple;
+      case "pink": return R.style.ThemePink;
+      case "darkteal": return R.style.ThemeDarkTeal;
+      case "darkblue": return R.style.ThemeDarkBlue;
+      case "mintlight": return R.style.ThemeMintLight;
       default:
+        if (theme_name != null && theme_name.startsWith("custom_"))
+          return R.style.Dark;
       case "system":
         if ((night_mode & Configuration.UI_MODE_NIGHT_NO) != 0)
           return R.style.Light;

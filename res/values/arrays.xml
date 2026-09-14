@@ -46,6 +46,16 @@
     <item>@string/pref_theme_e_cobalt</item>
     <item>@string/pref_theme_e_pine</item>
     <item>@string/pref_theme_e_epaperblack</item>
+    <item>@string/pref_theme_e_red</item>
+    <item>@string/pref_theme_e_green</item>
+    <item>@string/pref_theme_e_blue</item>
+    <item>@string/pref_theme_e_cyan</item>
+    <item>@string/pref_theme_e_amber</item>
+    <item>@string/pref_theme_e_purple</item>
+    <item>@string/pref_theme_e_pink</item>
+    <item>@string/pref_theme_e_darkteal</item>
+    <item>@string/pref_theme_e_darkblue</item>
+    <item>@string/pref_theme_e_mintlight</item>
   </string-array>
   <string-array name="pref_theme_values">
     <item>system</item>
@@ -65,6 +75,16 @@
     <item>cobalt</item>
     <item>pine</item>
     <item>epaperblack</item>
+    <item>red</item>
+    <item>green</item>
+    <item>blue</item>
+    <item>cyan</item>
+    <item>amber</item>
+    <item>purple</item>
+    <item>pink</item>
+    <item>darkteal</item>
+    <item>darkblue</item>
+    <item>mintlight</item>
   </string-array>
   <string-array name="pref_swipe_dist_entries">
     <item>@string/pref_swipe_dist_e_very_short</item>

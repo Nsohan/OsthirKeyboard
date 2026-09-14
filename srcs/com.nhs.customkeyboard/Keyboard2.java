@@ -4,6 +4,13 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.ColorFilter;
+import android.graphics.Paint;
+import android.graphics.PixelFormat;
+import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
 import android.inputmethodservice.InputMethodService;
 import android.os.Build.VERSION;
@@ -753,10 +760,31 @@ public class Keyboard2 extends InputMethodService
       _text_edit_pane = null;
       setInputView(_keyboard_container_view);
     }
-    // Set keyboard background opacity
-    Drawable bg = _keyboard_container_view.getBackground().mutate();
-    bg.setAlpha(_config.keyboardOpacity);
-    _keyboard_container_view.setBackground(bg);
+    if (_config.themeName != null && _config.themeName.startsWith("custom_") && _config.customThemeImagePath != null)
+    {
+      try
+      {
+        android.graphics.Bitmap bmp = android.graphics.BitmapFactory.decodeFile(_config.customThemeImagePath);
+        if (bmp != null)
+        {
+          _keyboard_container_view.setBackground(new CustomThemeBackgroundDrawable(bmp, _config.customThemeDarkness));
+        }
+        else
+        {
+          restoreDefaultContainerBackground();
+        }
+      }
+      catch (Throwable ignored)
+      {
+        restoreDefaultContainerBackground();
+      }
+    }
+    else
+    {
+      restoreDefaultContainerBackground();
+    }
+    _keyboard_layout_view.setCustomBackgroundBitmap(null, 0f);
+
     _keyboard_layout_view.reset();
     refresh_candidates_view();
   }
@@ -995,6 +1023,18 @@ public class Keyboard2 extends InputMethodService
   }
 
   @Override
+  public void onConfigurationChanged(Configuration newConfig)
+  {
+    super.onConfigurationChanged(newConfig);
+    refresh_config();
+    if (_keyboard_layout_view != null)
+    {
+      _keyboard_layout_view.setKeyboard(current_layout());
+      refresh_keymap();
+    }
+  }
+
+  @Override
   public boolean onEvaluateFullscreenMode()
   {
     /* Entirely disable fullscreen mode. */
@@ -1211,12 +1251,17 @@ public class Keyboard2 extends InputMethodService
 
     public String provide_stateful_key_symbol(KeyValue.Stateful q)
     {
+      if (_suggestions == null) return "";
       switch (q)
       {
-        case Complete_first: return _suggestions.suggestions[0];
-        case Complete_second: return _suggestions.suggestions[1];
-        case Complete_third: return _suggestions.suggestions[2];
-        case Complete_emoji: return _suggestions.emoji_suggestion;
+        case Complete_first:
+          return (_suggestions.suggestions != null && _suggestions.suggestions.length > 0 && _suggestions.suggestions[0] != null) ? _suggestions.suggestions[0] : "";
+        case Complete_second:
+          return (_suggestions.suggestions != null && _suggestions.suggestions.length > 1 && _suggestions.suggestions[1] != null) ? _suggestions.suggestions[1] : "";
+        case Complete_third:
+          return (_suggestions.suggestions != null && _suggestions.suggestions.length > 2 && _suggestions.suggestions[2] != null) ? _suggestions.suggestions[2] : "";
+        case Complete_emoji:
+          return _suggestions.emoji_suggestion != null ? _suggestions.emoji_suggestion : "";
       }
       return "";
     }
@@ -1288,5 +1333,94 @@ public class Keyboard2 extends InputMethodService
     if (ic == null)
       return false;
     return ic.commitText(text, 1);
+  }
+
+  private void restoreDefaultContainerBackground()
+  {
+    if (_keyboard_container_view == null) return;
+    int defaultColor = 0xFF121316;
+    android.util.TypedValue tv = new android.util.TypedValue();
+    if (getTheme().resolveAttribute(R.attr.colorKeyboard, tv, true))
+    {
+      if (tv.type >= android.util.TypedValue.TYPE_FIRST_COLOR_INT && tv.type <= android.util.TypedValue.TYPE_LAST_COLOR_INT)
+      {
+        defaultColor = tv.data;
+      }
+      else if (tv.resourceId != 0)
+      {
+        try { defaultColor = androidx.core.content.ContextCompat.getColor(this, tv.resourceId); } catch (Throwable ignored) {}
+      }
+    }
+    android.graphics.drawable.ColorDrawable cd = new android.graphics.drawable.ColorDrawable(defaultColor);
+    cd.setAlpha(_config.keyboardOpacity);
+    _keyboard_container_view.setBackground(cd);
+  }
+
+  private static class CustomThemeBackgroundDrawable extends Drawable
+  {
+    private final Bitmap _bitmap;
+    private final float _darkness;
+    private final Paint _paint = new Paint(Paint.ANTI_ALIAS_FLAG | Paint.FILTER_BITMAP_FLAG);
+    private final Paint _darknessPaint = new Paint();
+    private final Rect _srcRect = new Rect();
+    private final Rect _dstRect = new Rect();
+
+    public CustomThemeBackgroundDrawable(Bitmap bitmap, float darkness)
+    {
+      _bitmap = bitmap;
+      _darkness = darkness;
+      _darknessPaint.setColor(Color.BLACK);
+      _darknessPaint.setStyle(Paint.Style.FILL);
+      _darknessPaint.setAlpha((int) (Math.min(0.9f, Math.max(0f, darkness)) * 255));
+    }
+
+    @Override
+    public void draw(@androidx.annotation.NonNull Canvas canvas)
+    {
+      Rect bounds = getBounds();
+      if (bounds.isEmpty() || _bitmap == null || _bitmap.isRecycled()) return;
+
+      int viewW = bounds.width();
+      int viewH = bounds.height();
+      int bmpW = _bitmap.getWidth();
+      int bmpH = _bitmap.getHeight();
+
+      float scale = Math.max((float) viewW / bmpW, (float) viewH / bmpH);
+      float scaledW = bmpW * scale;
+      float scaledH = bmpH * scale;
+
+      float left = bounds.left + (viewW - scaledW) / 2f;
+      float top = bounds.top + (viewH - scaledH) / 2f;
+
+      _srcRect.set(0, 0, bmpW, bmpH);
+      _dstRect.set((int) left, (int) top, (int) (left + scaledW), (int) (top + scaledH));
+
+      canvas.save();
+      canvas.clipRect(bounds);
+      canvas.drawBitmap(_bitmap, _srcRect, _dstRect, _paint);
+      if (_darkness > 0f)
+      {
+        canvas.drawRect(bounds, _darknessPaint);
+      }
+      canvas.restore();
+    }
+
+    @Override
+    public void setAlpha(int alpha)
+    {
+      _paint.setAlpha(alpha);
+    }
+
+    @Override
+    public void setColorFilter(@androidx.annotation.Nullable ColorFilter colorFilter)
+    {
+      _paint.setColorFilter(colorFilter);
+    }
+
+    @Override
+    public int getOpacity()
+    {
+      return PixelFormat.TRANSLUCENT;
+    }
   }
 }

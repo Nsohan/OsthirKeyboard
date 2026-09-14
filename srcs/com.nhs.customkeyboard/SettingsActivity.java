@@ -61,6 +61,12 @@ public class SettingsActivity extends AppCompatActivity
     {
       startScreen = getIntent().getStringExtra(PreferenceFragmentCompat.ARG_PREFERENCE_ROOT);
     }
+    if ("screen_theme".equals(startScreen))
+    {
+      startActivity(new Intent(this, com.nhs.customkeyboard.theme.ThemeActivity.class));
+      finish();
+      return;
+    }
     _initial_start_screen = startScreen;
     DirectBootAwarePreferences.copy_preferences_to_default_storage(this);
 
@@ -127,6 +133,11 @@ public class SettingsActivity extends AppCompatActivity
   @Override
   public boolean onPreferenceStartScreen(PreferenceFragmentCompat caller, PreferenceScreen pref)
   {
+    if ("screen_theme".equals(pref.getKey()))
+    {
+      startActivity(new Intent(this, com.nhs.customkeyboard.theme.ThemeActivity.class));
+      return true;
+    }
     SettingsFragment fragment = new SettingsFragment();
     Bundle args = new Bundle();
     args.putString(PreferenceFragmentCompat.ARG_PREFERENCE_ROOT, pref.getKey());
@@ -199,6 +210,11 @@ public class SettingsActivity extends AppCompatActivity
         Intent intent = new Intent(requireContext(), LauncherActivity.class);
         intent.putExtra(LauncherActivity.EXTRA_FORCE_GUIDE_MODE, true);
         startActivity(intent);
+        return true;
+      }
+      if ("screen_theme".equals(preference.getKey()))
+      {
+        startActivity(new Intent(requireContext(), com.nhs.customkeyboard.theme.ThemeActivity.class));
         return true;
       }
       return super.onPreferenceTreeClick(preference);

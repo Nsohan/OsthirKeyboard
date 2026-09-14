@@ -1,0 +1,247 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="20dp"
+    android:background="@drawable/bg_bottom_sheet_theme">
+
+  <!-- Fixed Top Drag Handle -->
+  <View
+      android:id="@+id/preview_drag_handle"
+      android:layout_width="36dp"
+      android:layout_height="4dp"
+      android:layout_gravity="center_horizontal"
+      android:background="@drawable/bg_bottom_sheet_drag_handle"
+      android:alpha="0.4"
+      android:layout_marginBottom="8dp"/>
+
+  <!-- Custom Theme Actions (Edit & Delete) -->
+  <LinearLayout
+      android:id="@+id/layout_custom_actions"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:orientation="horizontal"
+      android:gravity="end|center_vertical"
+      android:layout_marginBottom="8dp"
+      android:visibility="gone">
+
+    <ImageView
+        android:id="@+id/btn_action_edit"
+        android:layout_width="36dp"
+        android:layout_height="36dp"
+        android:padding="6dp"
+        android:src="@drawable/ic_edit"
+        app:tint="@color/settings_on_surface"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="@string/theme_btn_edit"
+        android:layout_marginEnd="8dp"/>
+
+    <ImageView
+        android:id="@+id/btn_action_delete"
+        android:layout_width="36dp"
+        android:layout_height="36dp"
+        android:padding="6dp"
+        android:src="@drawable/ic_delete"
+        app:tint="@color/settings_on_surface"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="@string/theme_btn_delete"/>
+  </LinearLayout>
+
+  <!-- Single Theme Preview Card -->
+  <FrameLayout
+      android:id="@+id/preview_single_container"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:layout_gravity="center_horizontal">
+
+    <androidx.cardview.widget.CardView
+        android:id="@+id/preview_single_card"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:cardCornerRadius="18dp"
+        app:cardElevation="0dp"
+        app:cardBackgroundColor="#1E1F22">
+
+      <RelativeLayout
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content">
+
+        <!-- Custom Image Background -->
+        <ImageView
+            android:id="@+id/preview_custom_bg"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_alignTop="@+id/preview_card_content"
+            android:layout_alignBottom="@+id/preview_card_content"
+            android:scaleType="centerCrop"
+            android:visibility="gone"
+            android:contentDescription="@null"/>
+
+        <!-- Custom Darkness Overlay -->
+        <View
+            android:id="@+id/preview_darkness_overlay"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_alignTop="@+id/preview_card_content"
+            android:layout_alignBottom="@+id/preview_card_content"
+            android:background="#000000"
+            android:visibility="gone"/>
+
+        <!-- Card Content (Toolbar + Keyboard) -->
+        <LinearLayout
+            android:id="@+id/preview_card_content"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="4dp">
+
+          <!-- Simulated Suggestion/Toolbar Bar -->
+          <LinearLayout
+              android:id="@+id/preview_toolbar_bar"
+              android:layout_width="match_parent"
+              android:layout_height="24dp"
+              android:orientation="horizontal"
+              android:gravity="center_vertical"
+              android:paddingHorizontal="10dp">
+
+            <ImageView
+                android:id="@+id/preview_menu_icon"
+                android:layout_width="18dp"
+                android:layout_height="18dp"
+                android:src="@drawable/ic_grid_menu"
+                android:contentDescription="@null"/>
+
+            <View
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"/>
+
+            <ImageView
+                android:id="@+id/preview_mic_icon"
+                android:layout_width="18dp"
+                android:layout_height="18dp"
+                android:src="@drawable/ic_mic"
+                android:contentDescription="@null"/>
+          </LinearLayout>
+
+          <!-- Keyboard View Preview Holder -->
+          <FrameLayout
+              android:id="@+id/preview_keyboard_holder"
+              android:layout_width="match_parent"
+              android:layout_height="wrap_content"/>
+        </LinearLayout>
+      </RelativeLayout>
+    </androidx.cardview.widget.CardView>
+  </FrameLayout>
+
+  <!-- Dual Auto Preview (System Auto) -->
+  <LinearLayout
+      android:id="@+id/preview_dual_container"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:orientation="vertical"
+      android:visibility="gone">
+
+    <HorizontalScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:scrollbars="none"
+        android:overScrollMode="never">
+
+      <LinearLayout
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:orientation="horizontal">
+
+        <!-- Light Preview Card -->
+        <FrameLayout
+            android:id="@+id/preview_dual_light_holder"
+            android:layout_width="280dp"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="12dp"/>
+
+        <!-- Dark Preview Card -->
+        <FrameLayout
+            android:id="@+id/preview_dual_dark_holder"
+            android:layout_width="280dp"
+            android:layout_height="wrap_content"/>
+      </LinearLayout>
+    </HorizontalScrollView>
+
+    <TextView
+        android:id="@+id/tv_auto_subtitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:text="@string/theme_auto_subtext"
+        android:textSize="13sp"
+        android:textColor="@color/settings_on_surface_variant"
+        android:layout_marginTop="12dp"/>
+  </LinearLayout>
+
+  <!-- Key Borders Toggle Row -->
+  <LinearLayout
+      android:id="@+id/row_key_borders"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:orientation="horizontal"
+      android:gravity="center_vertical"
+      android:layout_marginTop="20dp"
+      android:layout_marginBottom="18dp">
+
+    <TextView
+        android:id="@+id/tv_key_borders_label"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:text="@string/theme_key_borders"
+        android:textSize="16sp"
+        android:textColor="@color/settings_on_surface"/>
+
+    <com.google.android.material.switchmaterial.SwitchMaterial
+        android:id="@+id/switch_key_borders"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:useMaterialThemeColors="true"/>
+  </LinearLayout>
+
+  <!-- Action Buttons Row -->
+  <LinearLayout
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:orientation="horizontal"
+      android:gravity="center_vertical"
+      android:layout_marginTop="6dp">
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btn_cancel"
+        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+        android:layout_width="0dp"
+        android:layout_height="48dp"
+        android:layout_weight="1"
+        android:layout_marginEnd="8dp"
+        android:text="@string/theme_cancel"
+        android:textAllCaps="false"
+        android:textSize="15sp"
+        android:textColor="@color/settings_on_surface"
+        app:strokeColor="@color/settings_divider"
+        app:strokeWidth="1dp"
+        app:cornerRadius="24dp"/>
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btn_apply"
+        style="@style/Widget.MaterialComponents.Button"
+        android:layout_width="0dp"
+        android:layout_height="48dp"
+        android:layout_weight="1"
+        android:layout_marginStart="8dp"
+        android:text="@string/theme_apply"
+        android:textAllCaps="false"
+        android:textSize="15sp"
+        android:textColor="@color/settings_on_primary"
+        app:backgroundTint="@color/settings_primary"
+        app:cornerRadius="24dp"/>
+  </LinearLayout>
+</LinearLayout>

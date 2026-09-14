@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+  <item
+      android:id="@+id/action_appearance_settings"
+      android:icon="@drawable/ic_tune"
+      android:title="@string/pref_category_style"
+      app:iconTint="@color/settings_on_surface"
+      app:showAsAction="always"/>
+</menu>

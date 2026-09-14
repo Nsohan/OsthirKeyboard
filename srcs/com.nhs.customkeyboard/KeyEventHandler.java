@@ -823,14 +823,31 @@ public final class KeyEventHandler
 
   void handle_stateful(KeyValue.Stateful st)
   {
-    switch (st)
+    String text = null;
+    if (_suggestions != null)
     {
-      case Complete_first:
-      case Complete_second:
-      case Complete_third:
-      case Complete_emoji:
-        suggestion_entered(st.toString());
-        break;
+      switch (st)
+      {
+        case Complete_first:
+          if (_suggestions.suggestions != null && _suggestions.suggestions.length > 0)
+            text = _suggestions.suggestions[0];
+          break;
+        case Complete_second:
+          if (_suggestions.suggestions != null && _suggestions.suggestions.length > 1)
+            text = _suggestions.suggestions[1];
+          break;
+        case Complete_third:
+          if (_suggestions.suggestions != null && _suggestions.suggestions.length > 2)
+            text = _suggestions.suggestions[2];
+          break;
+        case Complete_emoji:
+          text = _suggestions.emoji_suggestion;
+          break;
+      }
+    }
+    if (text != null && !text.isEmpty())
+    {
+      suggestion_entered(text);
     }
   }
 

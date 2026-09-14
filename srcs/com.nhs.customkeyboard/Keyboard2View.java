@@ -77,10 +77,41 @@ public class Keyboard2View extends View
   private boolean _previewIsVerticalScroll = false;
   private int _touchSlop = 0;
 
+  private boolean _themePreviewMode = false;
+  private android.graphics.Bitmap _customBgBitmap = null;
+  private float _customBgDarkness = 0.3f;
+  private Paint _customBgDarknessPaint = null;
+
   public void setPreviewMode(boolean preview)
   {
     _previewMode = preview;
     requestLayout();
+    invalidate();
+  }
+
+  public void setThemePreviewMode(boolean themePreview)
+  {
+    _themePreviewMode = themePreview;
+    _previewMode = themePreview;
+    if (themePreview)
+    {
+      _highlightedKey = null;
+      setOnTouchListener(null);
+      setClickable(false);
+      setFocusable(false);
+    }
+    else
+    {
+      setOnTouchListener(this);
+    }
+    requestLayout();
+    invalidate();
+  }
+
+  public void setCustomBackgroundBitmap(android.graphics.Bitmap bmp, float darkness)
+  {
+    _customBgBitmap = bmp;
+    _customBgDarkness = darkness;
     invalidate();
   }
 
@@ -91,6 +122,7 @@ public class Keyboard2View extends View
 
   public void setHighlightedKey(KeyboardData.Key key)
   {
+    if (_themePreviewMode) return;
     if (_highlightedKey != key)
     {
       _highlightedKey = key;
@@ -185,7 +217,7 @@ public class Keyboard2View extends View
     _compose_key = _keyboard.findKeyWithValue(KeyValue.COMPOSE);
     KeyModifier.set_modmap(_keyboard.modmap);
     reset();
-    if (prevLine >= 0)
+    if (!_themePreviewMode && prevLine >= 0)
       _highlightedKey = findKeyByLine(prevLine);
   }
 
@@ -272,8 +304,26 @@ public class Keyboard2View extends View
   }
 
   @Override
+  public boolean dispatchTouchEvent(MotionEvent event)
+  {
+    if (_themePreviewMode)
+      return false;
+    return super.dispatchTouchEvent(event);
+  }
+
+  @Override
+  public boolean onTouchEvent(MotionEvent event)
+  {
+    if (_themePreviewMode)
+      return false;
+    return super.onTouchEvent(event);
+  }
+
+  @Override
   public boolean onTouch(View v, MotionEvent event)
   {
+    if (_themePreviewMode)
+      return false;
     if (_previewMode)
     {
       switch (event.getActionMasked())
@@ -410,6 +460,29 @@ public class Keyboard2View extends View
       DisplayMetrics dm = getContext().getResources().getDisplayMetrics();
       width = dm.widthPixels;
     }
+    if (_themePreviewMode)
+    {
+      _marginLeft = dp(2f);
+      _marginRight = dp(2f);
+      _marginBottom = 0f;
+      _keyWidth = (width - _marginLeft - _marginRight) / _keyboard.keysWidth;
+      _tc = new Theme.Computed(_theme, _config, _keyWidth, _keyboard);
+      _tc.horizontal_margin = dp(3.5f);
+      _tc.vertical_margin = dp(3.5f);
+      _tc.margin_left = dp(1f);
+      _tc.margin_top = dp(2f);
+      _tc.row_height = Math.round(_keyWidth * 1.25f);
+      float labelBaseSize = Math.min(
+              _tc.row_height - _tc.vertical_margin,
+              (width / 10 - _tc.horizontal_margin) * 3/2
+      ) * _config.characterSize;
+      _mainLabelSize = labelBaseSize * _config.labelTextSize;
+      _subLabelSize = labelBaseSize * _config.sublabelTextSize;
+      int height = (int)(_tc.row_height * _keyboard.keysHeight + _tc.margin_top + dp(2f));
+      setMeasuredDimension(width, height);
+      return;
+    }
+
     _marginLeft = Math.max(_config.horizontal_margin, _insets_left);
     _marginRight = Math.max(_config.horizontal_margin, _insets_right);
     _marginBottom = _config.margin_bottom + _insets_bottom;
@@ -521,6 +594,22 @@ public class Keyboard2View extends View
   {
     if (_keyboard == null || _tc == null)
       return;
+    if (_customBgBitmap != null && !_customBgBitmap.isRecycled())
+    {
+      _tmpRect.set(0, 0, getWidth(), getHeight());
+      canvas.drawBitmap(_customBgBitmap, null, _tmpRect, null);
+      if (_customBgDarkness > 0f)
+      {
+        if (_customBgDarknessPaint == null)
+        {
+          _customBgDarknessPaint = new Paint();
+          _customBgDarknessPaint.setStyle(Paint.Style.FILL);
+          _customBgDarknessPaint.setColor(Color.BLACK);
+        }
+        _customBgDarknessPaint.setAlpha((int)(Math.min(0.9f, Math.max(0f, _customBgDarkness)) * 255));
+        canvas.drawRect(0, 0, getWidth(), getHeight(), _customBgDarknessPaint);
+      }
+    }
     float y = _tc.margin_top;
     for (KeyboardData.Row row : _keyboard.rows)
     {
@@ -532,7 +621,7 @@ public class Keyboard2View extends View
         x += k.shift * _keyWidth;
         float keyW = _keyWidth * k.width - _tc.horizontal_margin;
         boolean isKeyDown = _pointers.isKeyDown(k);
-        boolean isHighlighted = (_previewMode && _highlightedKey != null &&
+        boolean isHighlighted = (!_themePreviewMode && _previewMode && _highlightedKey != null &&
             (k == _highlightedKey || (k.sourceLineNumber >= 0 && k.sourceLineNumber == _highlightedKey.sourceLineNumber)));
         Theme.Computed.Key tc_key;
         boolean isAction = isActionKey(k) || (k != null && k.role == KeyboardData.Key.Role.Action);
@@ -582,7 +671,7 @@ public class Keyboard2View extends View
     float padding = (w > 0 ? w : (_previewMode ? dp(0.5f) : 0)) / 2.f;
     _tmpRect.set(x + padding, y + padding, x + keyW - padding, y + keyH - padding);
 
-    if (_previewMode)
+    if (_previewMode && !_themePreviewMode)
     {
       if (_previewFallbackBgPaint == null)
       {
@@ -598,10 +687,11 @@ public class Keyboard2View extends View
     }
     else
     {
-      canvas.drawRoundRect(_tmpRect, r, r, tc.bg_paint);
+      if (tc.bg_paint.getColor() != 0 && Color.alpha(tc.bg_paint.getColor()) > 0)
+        canvas.drawRoundRect(_tmpRect, r, r, tc.bg_paint);
     }
 
-    if (isHighlighted)
+    if (!_themePreviewMode && isHighlighted)
     {
       if (_previewHighlightPaint == null)
       {
@@ -628,7 +718,7 @@ public class Keyboard2View extends View
       drawBorder(canvas, x, y, x + keyW, y + overlap, tc.border_top_paint, tc);
       drawBorder(canvas, x, y + keyH - overlap, x + keyW, y + keyH, tc.border_bottom_paint, tc);
     }
-    else if (_previewMode && !isHighlighted)
+    else if (_previewMode && !_themePreviewMode && !isHighlighted)
     {
       if (_previewBorderPaint == null)
       {

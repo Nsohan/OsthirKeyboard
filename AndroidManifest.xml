@@ -44,6 +44,19 @@
     </activity>
 
     <activity
+        android:name=".theme.ThemeActivity"
+        android:label="@string/pref_theme"
+        android:theme="@style/settingsTheme"
+        android:exported="true"
+        android:directBootAware="true" />
+
+    <activity
+        android:name=".theme.ThemeCropActivity"
+        android:label="@string/theme_custom_theme_title"
+        android:theme="@style/settingsTheme"
+        android:exported="false" />
+
+    <activity
         android:name=".KeymapBuilderActivity"
         android:label="@string/keymap_builder_activity_title"
         android:windowSoftInputMode="adjustResize"

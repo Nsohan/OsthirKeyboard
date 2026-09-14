@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/theme_root_layout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/settings_background"
+    android:fitsSystemWindows="true">
+
+  <com.google.android.material.appbar.AppBarLayout
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:background="@color/settings_background"
+      app:elevation="0dp">
+
+    <com.google.android.material.appbar.MaterialToolbar
+        android:id="@+id/theme_toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        app:title="@string/pref_theme"
+        app:titleTextColor="@color/settings_on_surface"
+        app:navigationIcon="@drawable/ic_arrow_back"
+        app:navigationIconTint="@color/settings_on_surface"
+        app:titleTextAppearance="@style/TextAppearance.MaterialComponents.Headline6"/>
+  </com.google.android.material.appbar.AppBarLayout>
+
+  <androidx.core.widget.NestedScrollView
+      android:layout_width="match_parent"
+      android:layout_height="match_parent"
+      android:fillViewport="true"
+      android:clipToPadding="false"
+      android:paddingBottom="32dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingHorizontal="16dp"
+        android:paddingTop="8dp">
+
+      <!-- Section: My themes -->
+      <TextView
+          android:id="@+id/header_my_themes"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:text="@string/theme_section_my_themes"
+          android:textSize="14.5sp"
+          android:textStyle="bold"
+          android:textColor="@color/settings_on_surface_variant"
+          android:layout_marginTop="8dp"
+          android:layout_marginBottom="10dp"/>
+
+      <androidx.recyclerview.widget.RecyclerView
+          android:id="@+id/recycler_my_themes"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:nestedScrollingEnabled="false"
+          android:overScrollMode="never"/>
+
+      <!-- Section: Default -->
+      <TextView
+          android:id="@+id/header_default"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:text="@string/theme_section_default"
+          android:textSize="14.5sp"
+          android:textStyle="bold"
+          android:textColor="@color/settings_on_surface_variant"
+          android:layout_marginTop="20dp"
+          android:layout_marginBottom="10dp"/>
+
+      <androidx.recyclerview.widget.RecyclerView
+          android:id="@+id/recycler_default"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:nestedScrollingEnabled="false"
+          android:overScrollMode="never"/>
+
+      <!-- Section: Colors -->
+      <LinearLayout
+          android:id="@+id/header_colors_container"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:orientation="horizontal"
+          android:gravity="center_vertical"
+          android:paddingVertical="4dp"
+          android:layout_marginTop="20dp"
+          android:layout_marginBottom="10dp"
+          android:clickable="true"
+          android:focusable="true">
+
+        <TextView
+            android:id="@+id/header_colors"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/theme_section_colors"
+            android:textSize="14.5sp"
+            android:textStyle="bold"
+            android:textColor="@color/settings_on_surface_variant"/>
+
+        <ImageView
+            android:id="@+id/chevron_colors"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:src="@drawable/ic_chevron_down"
+            app:tint="@color/settings_on_surface_variant"
+            android:contentDescription="@string/theme_section_colors"/>
+      </LinearLayout>
+
+      <androidx.recyclerview.widget.RecyclerView
+          android:id="@+id/recycler_colors"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:nestedScrollingEnabled="false"
+          android:overScrollMode="never"/>
+    </LinearLayout>
+  </androidx.core.widget.NestedScrollView>
+</LinearLayout>

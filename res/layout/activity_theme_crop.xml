@@ -1,0 +1,242 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/crop_root_layout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#121316"
+    android:fitsSystemWindows="true">
+
+  <!-- ================= STEP 1: CROP & POSITION ================= -->
+  <LinearLayout
+      android:id="@+id/layout_step_crop"
+      android:layout_width="match_parent"
+      android:layout_height="match_parent"
+      android:orientation="vertical"
+      android:visibility="visible">
+
+    <!-- Top Bar with Back Button and Title -->
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:paddingHorizontal="16dp">
+
+      <ImageView
+          android:id="@+id/btn_crop_back"
+          android:layout_width="40dp"
+          android:layout_height="40dp"
+          android:layout_gravity="start|center_vertical"
+          android:padding="8dp"
+          android:src="@drawable/ic_arrow_back"
+          app:tint="#FFFFFF"
+          android:background="?attr/selectableItemBackgroundBorderless"
+          android:contentDescription="@string/theme_cancel"/>
+
+      <TextView
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:layout_gravity="center"
+          android:text="@string/theme_pinch_drag"
+          android:textColor="#FFFFFF"
+          android:textSize="16sp"/>
+    </FrameLayout>
+
+    <!-- Interactive Crop Area -->
+    <com.nhs.customkeyboard.theme.CropImageView
+        android:id="@+id/crop_image_view"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"/>
+
+    <!-- Bottom Next Button -->
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingVertical="28dp">
+
+      <com.google.android.material.button.MaterialButton
+          android:id="@+id/btn_crop_next"
+          style="@style/Widget.MaterialComponents.Button"
+          android:layout_width="140dp"
+          android:layout_height="48dp"
+          android:layout_gravity="center"
+          android:text="Next"
+          android:textAllCaps="false"
+          android:textSize="15sp"
+          android:textColor="@color/settings_on_primary"
+          app:backgroundTint="@color/settings_primary"
+          app:cornerRadius="24dp"/>
+    </FrameLayout>
+  </LinearLayout>
+
+  <!-- ================= STEP 2: ADJUST BRIGHTNESS ================= -->
+  <LinearLayout
+      android:id="@+id/layout_step_brightness"
+      android:layout_width="match_parent"
+      android:layout_height="match_parent"
+      android:orientation="vertical"
+      android:visibility="gone">
+
+    <!-- Top Bar with Back Button and Title -->
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:paddingHorizontal="16dp">
+
+      <ImageView
+          android:id="@+id/btn_brightness_back"
+          android:layout_width="40dp"
+          android:layout_height="40dp"
+          android:layout_gravity="start|center_vertical"
+          android:padding="8dp"
+          android:src="@drawable/ic_arrow_back"
+          app:tint="#FFFFFF"
+          android:background="?attr/selectableItemBackgroundBorderless"
+          android:contentDescription="@string/theme_cancel"/>
+
+      <TextView
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:layout_gravity="center"
+          android:text="@string/theme_adjust_brightness"
+          android:textColor="#FFFFFF"
+          android:textSize="18sp"/>
+    </FrameLayout>
+
+    <!-- Brightness Slider Row -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingHorizontal="24dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="16dp">
+
+      <com.google.android.material.slider.Slider
+          android:id="@+id/slider_brightness"
+          android:layout_width="0dp"
+          android:layout_height="wrap_content"
+          android:layout_weight="1"
+          android:valueFrom="0.0"
+          android:valueTo="100.0"
+          android:stepSize="1.0"
+          android:value="80.0"/>
+
+      <TextView
+          android:id="@+id/tv_brightness_value"
+          android:layout_width="48dp"
+          android:layout_height="wrap_content"
+          android:gravity="end"
+          android:text="80%"
+          android:textSize="16sp"
+          android:textColor="#FFFFFF"
+          android:layout_marginStart="8dp"/>
+    </LinearLayout>
+
+    <!-- Center Preview Card -->
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:gravity="center"
+        android:paddingHorizontal="24dp">
+
+      <androidx.cardview.widget.CardView
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:layout_gravity="center"
+          app:cardCornerRadius="18dp"
+          app:cardElevation="6dp"
+          app:cardBackgroundColor="#1E1F22">
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+          <!-- Cropped Image Background -->
+          <ImageView
+              android:id="@+id/iv_cropped_preview"
+              android:layout_width="match_parent"
+              android:layout_height="0dp"
+              android:layout_alignTop="@+id/layout_card_content"
+              android:layout_alignBottom="@+id/layout_card_content"
+              android:scaleType="centerCrop"
+              android:contentDescription="@null"/>
+
+          <!-- Live Darkness Overlay -->
+          <View
+              android:id="@+id/brightness_darkness_overlay"
+              android:layout_width="match_parent"
+              android:layout_height="0dp"
+              android:layout_alignTop="@+id/layout_card_content"
+              android:layout_alignBottom="@+id/layout_card_content"
+              android:background="#000000"/>
+
+          <!-- Superimposed Keyboard & Toolbar -->
+          <LinearLayout
+              android:id="@+id/layout_card_content"
+              android:layout_width="match_parent"
+              android:layout_height="wrap_content"
+              android:orientation="vertical"
+              android:padding="4dp">
+
+            <!-- Simulated Toolbar -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="24dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingHorizontal="10dp">
+
+              <ImageView
+                  android:layout_width="18dp"
+                  android:layout_height="18dp"
+                  android:src="@drawable/ic_grid_menu"
+                  app:tint="#E3E3E3"
+                  android:contentDescription="@null"/>
+
+              <View
+                  android:layout_width="0dp"
+                  android:layout_height="match_parent"
+                  android:layout_weight="1"/>
+
+              <ImageView
+                  android:layout_width="18dp"
+                  android:layout_height="18dp"
+                  android:src="@drawable/ic_mic"
+                  app:tint="#E3E3E3"
+                  android:contentDescription="@null"/>
+            </LinearLayout>
+
+            <!-- Keyboard Layout -->
+            <FrameLayout
+                android:id="@+id/brightness_keyboard_holder"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"/>
+          </LinearLayout>
+        </RelativeLayout>
+      </androidx.cardview.widget.CardView>
+    </FrameLayout>
+
+    <!-- Bottom Done Button -->
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingVertical="28dp">
+
+      <com.google.android.material.button.MaterialButton
+          android:id="@+id/btn_brightness_done"
+          style="@style/Widget.MaterialComponents.Button"
+          android:layout_width="140dp"
+          android:layout_height="48dp"
+          android:layout_gravity="center"
+          android:text="Done"
+          android:textAllCaps="false"
+          android:textSize="15sp"
+          android:textColor="@color/settings_on_primary"
+          app:backgroundTint="@color/settings_primary"
+          app:cornerRadius="24dp"/>
+    </FrameLayout>
+  </LinearLayout>
+</FrameLayout>

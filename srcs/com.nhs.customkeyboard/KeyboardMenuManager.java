@@ -266,8 +266,7 @@ public class KeyboardMenuManager
     // Page 1 - Row 1: Theme & Text edit
     list.add(new MenuItemInfo("theme", R.string.menu_item_theme, R.drawable.ic_palette, () -> {
       _keyboardService.set_menu_panel_visible(false);
-      Intent intent = new Intent(_keyboardService, SettingsActivity.class);
-      intent.putExtra(SettingsActivity.EXTRA_START_SCREEN, "screen_theme");
+      Intent intent = new Intent(_keyboardService, com.nhs.customkeyboard.theme.ThemeActivity.class);
       intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
       _keyboardService.startActivity(intent);
     }));
