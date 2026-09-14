@@ -8,6 +8,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.preference.Preference;
@@ -126,6 +127,12 @@ public class SettingsActivity extends AppCompatActivity
     fragment.setArguments(args);
     getSupportFragmentManager()
       .beginTransaction()
+      .setCustomAnimations(
+          R.anim.settings_slide_in_right,
+          R.anim.settings_slide_out_left,
+          R.anim.settings_slide_in_left,
+          R.anim.settings_slide_out_right
+      )
       .replace(R.id.settings_container, fragment, pref.getKey())
       .addToBackStack(pref.getKey())
       .commit();
@@ -283,6 +290,7 @@ public class SettingsActivity extends AppCompatActivity
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState)
     {
       super.onViewCreated(view, savedInstanceState);
+      view.setBackgroundColor(ContextCompat.getColor(requireContext(), R.color.settings_background));
       setDivider(null);
       setDividerHeight(0);
       RecyclerView rv = getListView();
