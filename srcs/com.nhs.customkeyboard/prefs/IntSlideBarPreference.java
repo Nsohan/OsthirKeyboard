@@ -62,10 +62,36 @@ public class IntSlideBarPreference extends DialogPreference
     return getPersistedInt(_min);
   }
 
+  public String formatValue(int value)
+  {
+    String key = getKey();
+    if ("suggestion_tool_icon_size".equals(key))
+    {
+      String label;
+      if (value <= 65) label = "Extra Small";
+      else if (value <= 85) label = "Small";
+      else if (value <= 115) label = "Normal";
+      else if (value <= 135) label = "Big";
+      else label = "Extra Big";
+      return label + " (" + value + "%)";
+    }
+    else if ("suggestion_tool_gap".equals(key))
+    {
+      String label;
+      if (value == 0) label = "None";
+      else if (value <= 4) label = "Compact";
+      else if (value <= 10) label = "Normal";
+      else if (value <= 16) label = "Wide";
+      else label = "Extra Wide";
+      return label + " (" + value + "dp)";
+    }
+    return String.format(_initialSummary, value);
+  }
+
   /** Persists [value] and refreshes the summary shown in the list. */
   public void setValue(int value)
   {
     persistInt(value);
-    setSummary(String.format(_initialSummary, value));
+    setSummary(formatValue(value));
   }
 }

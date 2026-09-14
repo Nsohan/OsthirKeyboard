@@ -54,9 +54,14 @@
     <string name="pref_space_bar_auto_complete_title">Autocomplete with the space bar</string>
     <string name="pref_space_bar_auto_complete_summary">Enter the best suggestion by pressing space</string>
     <string name="pref_suggestion_tools_title" translatable="false">Suggestion Bar Tools</string>
-    <string name="pref_suggestion_tools_summary" translatable="false">Arrange and choose items shown when no words are suggested</string>
+    <string name="pref_suggestion_tools_summary" translatable="false">Icon size, spacing, order, and available actions</string>
     <string name="pref_suggestion_tools_tip" translatable="false">Drag ☰ on the left to reorder items. Toggle the switch to show or hide items in the suggestion bar.</string>
     <string name="pref_suggestion_tools_reset" translatable="false">Reset to default</string>
+    <string name="pref_suggestion_tool_icon_size_title" translatable="false">Tools Icon Size</string>
+    <string name="pref_suggestion_tool_gap_title" translatable="false">Gap Between Tools</string>
+    <string name="pref_category_tools_appearance" translatable="false">Tools Appearance</string>
+    <string name="pref_category_tools_items" translatable="false">Active Tools</string>
+    <string name="pref_suggestion_preview_title" translatable="false">Toolbar Preview</string>
     <string name="tool_paste" translatable="false">Paste</string>
     <string name="tool_copy" translatable="false">Copy</string>
     <string name="tool_cut" translatable="false">Cut</string>

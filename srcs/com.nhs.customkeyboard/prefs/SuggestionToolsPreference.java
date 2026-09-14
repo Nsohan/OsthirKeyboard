@@ -12,6 +12,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.appcompat.widget.SwitchCompat;
@@ -32,6 +33,9 @@ public class SuggestionToolsPreference extends Preference
 {
   private List<SuggestionToolItem> _tools;
   private ToolsAdapter _adapter;
+  private LinearLayout _previewToolsContainer;
+  private ImageView _previewMenuButton;
+  private ImageView _previewVoiceButton;
 
   public SuggestionToolsPreference(Context context, AttributeSet attrs)
   {
@@ -48,11 +52,16 @@ public class SuggestionToolsPreference extends Preference
     SharedPreferences prefs = getSharedPreferences();
     _tools = SuggestionToolItem.loadFromPrefs(getContext(), prefs);
 
+    _previewToolsContainer = (LinearLayout) holder.findViewById(R.id.preview_tools_container);
+    _previewMenuButton = (ImageView) holder.findViewById(R.id.preview_menu_button);
+    _previewVoiceButton = (ImageView) holder.findViewById(R.id.preview_voice_button);
+    updatePreview(prefs);
+
     RecyclerView rv = (RecyclerView) holder.findViewById(R.id.tools_recycler_view);
     if (rv != null)
     {
       rv.setLayoutManager(new LinearLayoutManager(getContext()));
-      _adapter = new ToolsAdapter(_tools, prefs);
+      _adapter = new ToolsAdapter(_tools, prefs, () -> updatePreview(prefs));
       rv.setAdapter(_adapter);
 
       ItemTouchHelper.SimpleCallback callback = new ItemTouchHelper.SimpleCallback(
@@ -89,6 +98,7 @@ public class SuggestionToolsPreference extends Preference
           {
             Config.globalConfig().suggestion_tools = _tools;
           }
+          updatePreview(prefs);
         }
 
         @Override
@@ -110,14 +120,21 @@ public class SuggestionToolsPreference extends Preference
         _tools.clear();
         _tools.addAll(SuggestionToolItem.getDefaultTools());
         SuggestionToolItem.saveToPrefs(prefs, _tools);
+        prefs.edit()
+            .putInt("suggestion_tool_icon_size", 100)
+            .putInt("suggestion_tool_gap", 8)
+            .apply();
         if (Config.globalConfig() != null)
         {
           Config.globalConfig().suggestion_tools = _tools;
+          Config.globalConfig().suggestion_tool_icon_size = 100;
+          Config.globalConfig().suggestion_tool_gap = 8;
         }
         if (_adapter != null)
         {
           _adapter.notifyDataSetChanged();
         }
+        updatePreview(prefs);
       });
     }
 
@@ -248,18 +265,86 @@ public class SuggestionToolsPreference extends Preference
     {
       rv.smoothScrollToPosition(_tools.size() - 1);
     }
+    updatePreview(prefs);
+  }
+
+  private void updatePreview(SharedPreferences prefs)
+  {
+    if (_previewToolsContainer == null || getContext() == null) return;
+    _previewToolsContainer.removeAllViews();
+
+    int iconSizePercent = prefs.getInt("suggestion_tool_icon_size", 100);
+    int gapDp = prefs.getInt("suggestion_tool_gap", 8);
+
+    float density = getContext().getResources().getDisplayMetrics().density;
+    float scale = Math.max(0.5f, Math.min(1.6f, iconSizePercent / 100.0f));
+    float targetIconSize = 20.0f * scale * density;
+    int btnWidth = (int) Math.max(24 * density, 32 * scale * density);
+    int padX = Math.max(0, (int) ((btnWidth - targetIconSize) / 2.0f));
+    int padY = Math.max(0, (int) ((38 * density - targetIconSize) / 2.0f));
+    int margin = (int) ((gapDp / 2.0f) * density);
+
+    TypedValue tv = new TypedValue();
+    getContext().getTheme().resolveAttribute(android.R.attr.textColorPrimary, tv, true);
+    int iconColor = tv.data;
+
+    if (_previewMenuButton != null)
+    {
+      _previewMenuButton.setPadding(padX, padY, padX, padY);
+      ViewGroup.LayoutParams lp = _previewMenuButton.getLayoutParams();
+      if (lp instanceof ViewGroup.MarginLayoutParams)
+      {
+        ((ViewGroup.MarginLayoutParams) lp).width = btnWidth;
+        ((ViewGroup.MarginLayoutParams) lp).rightMargin = margin;
+        _previewMenuButton.setLayoutParams(lp);
+      }
+    }
+
+    if (_previewVoiceButton != null)
+    {
+      int voiceSize = (int) Math.max(22 * density, Math.min(38 * density, 28 * scale * density));
+      ViewGroup.LayoutParams lp = _previewVoiceButton.getLayoutParams();
+      if (lp instanceof ViewGroup.MarginLayoutParams)
+      {
+        lp.width = voiceSize;
+        lp.height = voiceSize;
+        ((ViewGroup.MarginLayoutParams) lp).leftMargin = Math.max((int)(2 * density), margin);
+        _previewVoiceButton.setLayoutParams(lp);
+      }
+      int voicePad = (int) Math.max(2 * density, 5 * scale * density);
+      _previewVoiceButton.setPadding(voicePad, voicePad, voicePad, voicePad);
+    }
+
+    if (_tools != null)
+    {
+      for (SuggestionToolItem item : _tools)
+      {
+        if (!item.enabled) continue;
+        ImageView iv = new ImageView(getContext());
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(btnWidth, ViewGroup.LayoutParams.MATCH_PARENT);
+        lp.setMargins(margin, 0, margin, 0);
+        iv.setLayoutParams(lp);
+        iv.setScaleType(ImageView.ScaleType.FIT_CENTER);
+        iv.setPadding(padX, padY, padX, padY);
+        iv.setImageResource(item.getIconRes());
+        iv.setColorFilter(iconColor);
+        _previewToolsContainer.addView(iv);
+      }
+    }
   }
 
   private static class ToolsAdapter extends RecyclerView.Adapter<ToolsAdapter.ViewHolder>
   {
     private final List<SuggestionToolItem> _items;
     private final SharedPreferences _prefs;
+    private final Runnable _onToolsChanged;
     private ItemTouchHelper _itemTouchHelper;
 
-    public ToolsAdapter(List<SuggestionToolItem> items, SharedPreferences prefs)
+    public ToolsAdapter(List<SuggestionToolItem> items, SharedPreferences prefs, Runnable onToolsChanged)
     {
       _items = items;
       _prefs = prefs;
+      _onToolsChanged = onToolsChanged;
     }
 
     public void setItemTouchHelper(ItemTouchHelper touchHelper)
@@ -273,6 +358,10 @@ public class SuggestionToolsPreference extends Preference
       if (Config.globalConfig() != null)
       {
         Config.globalConfig().suggestion_tools = _items;
+      }
+      if (_onToolsChanged != null)
+      {
+        _onToolsChanged.run();
       }
     }
 

@@ -49,6 +49,8 @@ public final class Config
   public boolean user_learning_enabled;
   public boolean show_toolbar;
   public java.util.List<com.nhs.customkeyboard.suggestions.SuggestionToolItem> suggestion_tools;
+  public int suggestion_tool_icon_size = 100;
+  public int suggestion_tool_gap = 8;
   public boolean show_voice_typing = true;
   public boolean show_dictionary_switch = false;
   public boolean period_key_bottom_row = true;
@@ -175,6 +177,8 @@ public final class Config
     }
     show_toolbar = _prefs.getBoolean("show_toolbar", true);
     suggestion_tools = com.nhs.customkeyboard.suggestions.SuggestionToolItem.loadFromPrefs(_prefs);
+    suggestion_tool_icon_size = _prefs.getInt("suggestion_tool_icon_size", 100);
+    suggestion_tool_gap = _prefs.getInt("suggestion_tool_gap", 8);
     show_voice_typing = _prefs.getBoolean("show_voice_typing", true);
     show_dictionary_switch = _prefs.getBoolean("show_dictionary_switch", false);
     period_key_bottom_row = _prefs.getBoolean("period_key_bottom_row", true);

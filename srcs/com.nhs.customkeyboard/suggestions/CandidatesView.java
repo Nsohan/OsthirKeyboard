@@ -631,8 +631,24 @@ public class CandidatesView extends LinearLayout
       TypedValue outValue = new TypedValue();
       getContext().getTheme().resolveAttribute(android.R.attr.selectableItemBackgroundBorderless, outValue, true);
       _tools_menu_button.setBackgroundResource(outValue.resourceId);
-      int pad = (int)(7 * getResources().getDisplayMetrics().density);
-      _tools_menu_button.setPadding(pad, pad, pad, pad);
+      int iconSizePercent = (Config.globalConfig() != null)
+          ? Config.globalConfig().suggestion_tool_icon_size
+          : PreferenceManager.getDefaultSharedPreferences(getContext()).getInt("suggestion_tool_icon_size", 100);
+      float scale = Math.max(0.5f, Math.min(1.6f, iconSizePercent / 100.0f));
+      float density = getResources().getDisplayMetrics().density;
+      float targetIconSize = 24.0f * scale * density;
+      int menuWidth = (int) Math.max(28 * density, 38 * scale * density);
+      int padX = Math.max(0, (int) ((menuWidth - targetIconSize) / 2.0f));
+      float rowHeight = (Config.globalConfig() != null && Config.globalConfig().keyboard_rows_height_pixels > 0)
+          ? Config.globalConfig().keyboard_rows_height_pixels * (1 - Config.globalConfig().key_vertical_margin) * 0.75f * Config.globalConfig().suggestion_bar_scale
+          : 40 * density;
+      if (getLayoutParams() != null && getLayoutParams().height > 0)
+      {
+        rowHeight = getLayoutParams().height;
+      }
+      int padY = Math.max(0, (int) ((rowHeight - targetIconSize) / 2.0f));
+      _tools_menu_button.setScaleType(ImageView.ScaleType.FIT_CENTER);
+      _tools_menu_button.setPadding(padX, padY, padX, padY);
       TypedValue colorVal = new TypedValue();
       if (getContext().getTheme().resolveAttribute(R.attr.colorLabel, colorVal, true))
       {
@@ -792,9 +808,56 @@ public class CandidatesView extends LinearLayout
     }
 
     Context ctx = getContext();
-    int pad = (int) (7 * getResources().getDisplayMetrics().density);
-    int width = (int) (38 * getResources().getDisplayMetrics().density);
-    int margin = (int) (4 * getResources().getDisplayMetrics().density);
+    int iconSizePercent = (Config.globalConfig() != null)
+        ? Config.globalConfig().suggestion_tool_icon_size
+        : PreferenceManager.getDefaultSharedPreferences(ctx).getInt("suggestion_tool_icon_size", 100);
+    int gapDp = (Config.globalConfig() != null)
+        ? Config.globalConfig().suggestion_tool_gap
+        : PreferenceManager.getDefaultSharedPreferences(ctx).getInt("suggestion_tool_gap", 8);
+
+    float density = getResources().getDisplayMetrics().density;
+    float scale = Math.max(0.5f, Math.min(1.6f, iconSizePercent / 100.0f));
+
+    float targetIconSize = 24.0f * scale * density;
+    int width = (int) Math.max(28 * density, 38 * scale * density);
+    int padX = Math.max(0, (int) ((width - targetIconSize) / 2.0f));
+
+    float rowHeight = (Config.globalConfig() != null && Config.globalConfig().keyboard_rows_height_pixels > 0)
+        ? Config.globalConfig().keyboard_rows_height_pixels * (1 - Config.globalConfig().key_vertical_margin) * 0.75f * Config.globalConfig().suggestion_bar_scale
+        : 40 * density;
+    if (getLayoutParams() != null && getLayoutParams().height > 0)
+    {
+      rowHeight = getLayoutParams().height;
+    }
+    int padY = Math.max(0, (int) ((rowHeight - targetIconSize) / 2.0f));
+    int margin = (int) ((gapDp / 2.0f) * density);
+
+    if (_tools_menu_button != null)
+    {
+      _tools_menu_button.setScaleType(ImageView.ScaleType.FIT_CENTER);
+      _tools_menu_button.setPadding(padX, padY, padX, padY);
+      if (_tools_menu_button.getLayoutParams() instanceof MarginLayoutParams)
+      {
+        MarginLayoutParams mlp = (MarginLayoutParams) _tools_menu_button.getLayoutParams();
+        mlp.width = width;
+        mlp.leftMargin = Math.max((int)(2 * density), margin);
+        mlp.rightMargin = margin;
+        _tools_menu_button.setLayoutParams(mlp);
+      }
+    }
+
+    if (_voice_typing_button != null && _voice_typing_button.getLayoutParams() instanceof MarginLayoutParams)
+    {
+      MarginLayoutParams vlp = (MarginLayoutParams) _voice_typing_button.getLayoutParams();
+      int voiceSize = (int) Math.max(26 * density, Math.min(46 * density, 34 * scale * density));
+      vlp.width = voiceSize;
+      vlp.height = voiceSize;
+      vlp.leftMargin = Math.max((int)(2 * density), margin);
+      vlp.rightMargin = (int)(6 * density);
+      _voice_typing_button.setLayoutParams(vlp);
+      int voicePad = (int) Math.max(3 * density, 6 * scale * density);
+      _voice_typing_button.setPadding(voicePad, voicePad, voicePad, voicePad);
+    }
 
     TypedValue outValue = new TypedValue();
     ctx.getTheme().resolveAttribute(R.attr.colorLabel, outValue, true);
@@ -812,7 +875,8 @@ public class CandidatesView extends LinearLayout
       LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(width, ViewGroup.LayoutParams.MATCH_PARENT);
       lp.setMargins(margin, 0, margin, 0);
       btn.setLayoutParams(lp);
-      btn.setPadding(pad, pad, pad, pad);
+      btn.setScaleType(ImageView.ScaleType.FIT_CENTER);
+      btn.setPadding(padX, padY, padX, padY);
       btn.setImageResource(item.getIconRes());
       btn.setColorFilter(iconColor);
       String title = item.getTitle(ctx);
