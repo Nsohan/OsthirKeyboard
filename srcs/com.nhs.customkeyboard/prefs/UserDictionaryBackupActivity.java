@@ -4,18 +4,17 @@ import android.app.AlertDialog;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Environment;
-import android.widget.Button;
+import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import com.google.android.material.appbar.MaterialToolbar;
 import com.nhs.customkeyboard.Logs;
 import com.nhs.customkeyboard.R;
 import com.nhs.customkeyboard.suggestions.UserLearningDatabase;
 import com.nhs.customkeyboard.suggestions.UserLearningEngine;
 
-import java.io.File;
 import java.io.InputStream;
 
 public class UserDictionaryBackupActivity extends AppCompatActivity
@@ -32,23 +31,41 @@ public class UserDictionaryBackupActivity extends AppCompatActivity
   {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.activity_user_dictionary_backup);
+
+    MaterialToolbar toolbar = findViewById(R.id.backup_toolbar);
+    if (toolbar != null)
+    {
+      setSupportActionBar(toolbar);
+      if (getSupportActionBar() != null)
+      {
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+      }
+      toolbar.setNavigationOnClickListener(v -> finish());
+    }
     setTitle(R.string.pref_backup_restore_title);
 
     _db = UserLearningDatabase.getInstance(this);
     _engine = UserLearningEngine.getInstance(this);
 
     _tvStats = findViewById(R.id.tv_stats);
-    Button btnExport = findViewById(R.id.btn_export);
-    Button btnImport = findViewById(R.id.btn_import);
-    Button btnSync = findViewById(R.id.btn_sync_system);
-    Button btnClear = findViewById(R.id.btn_clear_history);
+    View btnExport = findViewById(R.id.btn_export);
+    View btnImport = findViewById(R.id.btn_import);
+    View btnSync = findViewById(R.id.btn_sync_system);
+    View btnClear = findViewById(R.id.btn_clear_history);
 
     updateStats();
 
-    btnExport.setOnClickListener(v -> exportBackup());
-    btnImport.setOnClickListener(v -> pickBackupFile());
-    btnSync.setOnClickListener(v -> syncSystemDictionary());
-    btnClear.setOnClickListener(v -> confirmClearHistory());
+    if (btnExport != null) btnExport.setOnClickListener(v -> exportBackup());
+    if (btnImport != null) btnImport.setOnClickListener(v -> pickBackupFile());
+    if (btnSync != null) btnSync.setOnClickListener(v -> syncSystemDictionary());
+    if (btnClear != null) btnClear.setOnClickListener(v -> confirmClearHistory());
+  }
+
+  @Override
+  public boolean onSupportNavigateUp()
+  {
+    finish();
+    return true;
   }
 
   private void updateStats()
