@@ -636,8 +636,8 @@ public class CandidatesView extends LinearLayout
           : PreferenceManager.getDefaultSharedPreferences(getContext()).getInt("suggestion_tool_icon_size", 100);
       float scale = Math.max(0.5f, Math.min(1.6f, iconSizePercent / 100.0f));
       float density = getResources().getDisplayMetrics().density;
-      float targetIconSize = 24.0f * scale * density;
-      int menuWidth = (int) Math.max(28 * density, 38 * scale * density);
+      float targetIconSize = 17.0f * scale * density;
+      int menuWidth = (int) Math.max(26 * density, 32 * scale * density);
       int padX = Math.max(0, (int) ((menuWidth - targetIconSize) / 2.0f));
       float rowHeight = (Config.globalConfig() != null && Config.globalConfig().keyboard_rows_height_pixels > 0)
           ? Config.globalConfig().keyboard_rows_height_pixels * (1 - Config.globalConfig().key_vertical_margin) * 0.75f * Config.globalConfig().suggestion_bar_scale
@@ -818,8 +818,8 @@ public class CandidatesView extends LinearLayout
     float density = getResources().getDisplayMetrics().density;
     float scale = Math.max(0.5f, Math.min(1.6f, iconSizePercent / 100.0f));
 
-    float targetIconSize = 24.0f * scale * density;
-    int width = (int) Math.max(28 * density, 38 * scale * density);
+    float targetIconSize = 17.0f * scale * density;
+    int width = (int) Math.max(26 * density, 32 * scale * density);
     int padX = Math.max(0, (int) ((width - targetIconSize) / 2.0f));
 
     float rowHeight = (Config.globalConfig() != null && Config.globalConfig().keyboard_rows_height_pixels > 0)

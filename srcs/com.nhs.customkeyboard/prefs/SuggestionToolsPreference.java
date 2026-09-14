@@ -13,6 +13,7 @@ import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.SeekBar;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.appcompat.widget.SwitchCompat;
@@ -36,6 +37,10 @@ public class SuggestionToolsPreference extends Preference
   private LinearLayout _previewToolsContainer;
   private ImageView _previewMenuButton;
   private ImageView _previewVoiceButton;
+  private SeekBar _seekBarIconSize;
+  private SeekBar _seekBarGap;
+  private TextView _tvIconSizeValue;
+  private TextView _tvGapValue;
 
   public SuggestionToolsPreference(Context context, AttributeSet attrs)
   {
@@ -55,13 +60,97 @@ public class SuggestionToolsPreference extends Preference
     _previewToolsContainer = (LinearLayout) holder.findViewById(R.id.preview_tools_container);
     _previewMenuButton = (ImageView) holder.findViewById(R.id.preview_menu_button);
     _previewVoiceButton = (ImageView) holder.findViewById(R.id.preview_voice_button);
-    updatePreview(prefs);
+
+    _tvIconSizeValue = (TextView) holder.findViewById(R.id.tv_icon_size_value);
+    _tvGapValue = (TextView) holder.findViewById(R.id.tv_gap_value);
+    _seekBarIconSize = (SeekBar) holder.findViewById(R.id.seekbar_icon_size);
+    _seekBarGap = (SeekBar) holder.findViewById(R.id.seekbar_gap);
+
+    int savedIconSize = prefs.getInt("suggestion_tool_icon_size", 100);
+    int savedGap = prefs.getInt("suggestion_tool_gap", 8);
+
+    if (_tvIconSizeValue != null)
+    {
+      _tvIconSizeValue.setText(savedIconSize + "%");
+    }
+    if (_tvGapValue != null)
+    {
+      _tvGapValue.setText(savedGap + "dp");
+    }
+
+    if (_seekBarIconSize != null)
+    {
+      _seekBarIconSize.setMax(100); // 50% to 150%
+      _seekBarIconSize.setProgress(Math.max(0, Math.min(100, savedIconSize - 50)));
+      _seekBarIconSize.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener()
+      {
+        @Override
+        public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser)
+        {
+          int val = progress + 50;
+          if (_tvIconSizeValue != null)
+          {
+            _tvIconSizeValue.setText(val + "%");
+          }
+          int curGap = (_seekBarGap != null) ? _seekBarGap.getProgress() : prefs.getInt("suggestion_tool_gap", 8);
+          updatePreview(val, curGap);
+          prefs.edit().putInt("suggestion_tool_icon_size", val).apply();
+          if (Config.globalConfig() != null)
+          {
+            Config.globalConfig().suggestion_tool_icon_size = val;
+          }
+        }
+
+        @Override
+        public void onStartTrackingTouch(SeekBar seekBar) {}
+
+        @Override
+        public void onStopTrackingTouch(SeekBar seekBar) {}
+      });
+    }
+
+    if (_seekBarGap != null)
+    {
+      _seekBarGap.setMax(20); // 0dp to 20dp
+      _seekBarGap.setProgress(Math.max(0, Math.min(20, savedGap)));
+      _seekBarGap.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener()
+      {
+        @Override
+        public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser)
+        {
+          int val = progress;
+          if (_tvGapValue != null)
+          {
+            _tvGapValue.setText(val + "dp");
+          }
+          int curSize = (_seekBarIconSize != null) ? (_seekBarIconSize.getProgress() + 50) : prefs.getInt("suggestion_tool_icon_size", 100);
+          updatePreview(curSize, val);
+          prefs.edit().putInt("suggestion_tool_gap", val).apply();
+          if (Config.globalConfig() != null)
+          {
+            Config.globalConfig().suggestion_tool_gap = val;
+          }
+        }
+
+        @Override
+        public void onStartTrackingTouch(SeekBar seekBar) {}
+
+        @Override
+        public void onStopTrackingTouch(SeekBar seekBar) {}
+      });
+    }
+
+    updatePreview(savedIconSize, savedGap);
 
     RecyclerView rv = (RecyclerView) holder.findViewById(R.id.tools_recycler_view);
     if (rv != null)
     {
       rv.setLayoutManager(new LinearLayoutManager(getContext()));
-      _adapter = new ToolsAdapter(_tools, prefs, () -> updatePreview(prefs));
+      _adapter = new ToolsAdapter(_tools, prefs, () -> {
+        int curSize = (_seekBarIconSize != null) ? (_seekBarIconSize.getProgress() + 50) : prefs.getInt("suggestion_tool_icon_size", 100);
+        int curGap = (_seekBarGap != null) ? _seekBarGap.getProgress() : prefs.getInt("suggestion_tool_gap", 8);
+        updatePreview(curSize, curGap);
+      });
       rv.setAdapter(_adapter);
 
       ItemTouchHelper.SimpleCallback callback = new ItemTouchHelper.SimpleCallback(
@@ -134,7 +223,11 @@ public class SuggestionToolsPreference extends Preference
         {
           _adapter.notifyDataSetChanged();
         }
-        updatePreview(prefs);
+        if (_seekBarIconSize != null) _seekBarIconSize.setProgress(50);
+        if (_tvIconSizeValue != null) _tvIconSizeValue.setText("100%");
+        if (_seekBarGap != null) _seekBarGap.setProgress(8);
+        if (_tvGapValue != null) _tvGapValue.setText("8dp");
+        updatePreview(100, 8);
       });
     }
 
@@ -268,20 +361,19 @@ public class SuggestionToolsPreference extends Preference
     updatePreview(prefs);
   }
 
-  private void updatePreview(SharedPreferences prefs)
+  private void updatePreview(int iconSizePercent, int gapDp)
   {
     if (_previewToolsContainer == null || getContext() == null) return;
     _previewToolsContainer.removeAllViews();
 
-    int iconSizePercent = prefs.getInt("suggestion_tool_icon_size", 100);
-    int gapDp = prefs.getInt("suggestion_tool_gap", 8);
-
     float density = getContext().getResources().getDisplayMetrics().density;
     float scale = Math.max(0.5f, Math.min(1.6f, iconSizePercent / 100.0f));
-    float targetIconSize = 20.0f * scale * density;
-    int btnWidth = (int) Math.max(24 * density, 32 * scale * density);
+
+    // Base icon size: 17dp (70% of previous 24dp baseline, now defined as 100%)
+    float targetIconSize = 17.0f * scale * density;
+    int btnWidth = (int) Math.max(24 * density, 30 * scale * density);
     int padX = Math.max(0, (int) ((btnWidth - targetIconSize) / 2.0f));
-    int padY = Math.max(0, (int) ((38 * density - targetIconSize) / 2.0f));
+    int padY = Math.max(0, (int) ((44 * density - targetIconSize) / 2.0f));
     int margin = (int) ((gapDp / 2.0f) * density);
 
     TypedValue tv = new TypedValue();
@@ -290,6 +382,7 @@ public class SuggestionToolsPreference extends Preference
 
     if (_previewMenuButton != null)
     {
+      _previewMenuButton.setScaleType(ImageView.ScaleType.FIT_CENTER);
       _previewMenuButton.setPadding(padX, padY, padX, padY);
       ViewGroup.LayoutParams lp = _previewMenuButton.getLayoutParams();
       if (lp instanceof ViewGroup.MarginLayoutParams)
@@ -302,7 +395,7 @@ public class SuggestionToolsPreference extends Preference
 
     if (_previewVoiceButton != null)
     {
-      int voiceSize = (int) Math.max(22 * density, Math.min(38 * density, 28 * scale * density));
+      int voiceSize = (int) Math.max(22 * density, Math.min(36 * density, 28 * scale * density));
       ViewGroup.LayoutParams lp = _previewVoiceButton.getLayoutParams();
       if (lp instanceof ViewGroup.MarginLayoutParams)
       {
@@ -331,6 +424,13 @@ public class SuggestionToolsPreference extends Preference
         _previewToolsContainer.addView(iv);
       }
     }
+  }
+
+  private void updatePreview(SharedPreferences prefs)
+  {
+    int iconSize = (prefs != null) ? prefs.getInt("suggestion_tool_icon_size", 100) : 100;
+    int gap = (prefs != null) ? prefs.getInt("suggestion_tool_gap", 8) : 8;
+    updatePreview(iconSize, gap);
   }
 
   private static class ToolsAdapter extends RecyclerView.Adapter<ToolsAdapter.ViewHolder>
