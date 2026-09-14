@@ -39,11 +39,18 @@ public final class EditorConfig
   /** Suggestions. */
   // Doesn't override [_config.suggestions_enabled].
   public boolean should_show_candidates_view;
+  public int input_type = 0;
+  public boolean is_email_field = false;
 
   public EditorConfig() {}
 
   public void refresh(EditorInfo info, Resources res)
   {
+    input_type = info != null ? info.inputType : 0;
+    int var = input_type & InputType.TYPE_MASK_VARIATION;
+    is_email_field = (var == InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS
+        || var == InputType.TYPE_TEXT_VARIATION_WEB_EMAIL_ADDRESS);
+
     int inputType = info.inputType & InputType.TYPE_MASK_CLASS;
     int options = info.imeOptions;
     /* Selection mode.

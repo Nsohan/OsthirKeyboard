@@ -21,6 +21,7 @@ import java.io.InputStream;
 public class UserDictionaryBackupActivity extends AppCompatActivity
 {
   private static final int REQUEST_CODE_IMPORT = 1001;
+  private static final int REQUEST_CODE_EXPORT = 1002;
 
   private UserLearningDatabase _db;
   private UserLearningEngine _engine;
@@ -54,26 +55,24 @@ public class UserDictionaryBackupActivity extends AppCompatActivity
   {
     int words = _db.getLearnedWordCount();
     int bigrams = _db.getLearnedBigramCount();
-    _tvStats.setText(getString(R.string.user_dict_stats_format, words, bigrams));
+    int emails = _db.getLearnedEmailCount();
+    String text = getString(R.string.user_dict_stats_format, words, bigrams);
+    if (emails > 0)
+    {
+      text += "\nLearned Emails: " + emails;
+    }
+    _tvStats.setText(text);
   }
 
   private void exportBackup()
   {
     try
     {
-      File downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
-      if (!downloadsDir.exists()) downloadsDir.mkdirs();
-      File backupFile = new File(downloadsDir, "OsthirKeyboard_User_Dictionary_Backup.json");
-
-      boolean success = _db.exportToJson(backupFile);
-      if (success)
-      {
-        Toast.makeText(this, "Exported successfully to:\n" + backupFile.getAbsolutePath(), Toast.LENGTH_LONG).show();
-      }
-      else
-      {
-        Toast.makeText(this, "Export failed.", Toast.LENGTH_SHORT).show();
-      }
+      Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
+      intent.addCategory(Intent.CATEGORY_OPENABLE);
+      intent.setType("application/json");
+      intent.putExtra(Intent.EXTRA_TITLE, "OsthirKeyboard_User_Dictionary_Backup.json");
+      startActivityForResult(intent, REQUEST_CODE_EXPORT);
     }
     catch (Exception e)
     {
@@ -94,13 +93,41 @@ public class UserDictionaryBackupActivity extends AppCompatActivity
   protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data)
   {
     super.onActivityResult(requestCode, resultCode, data);
-    if (requestCode == REQUEST_CODE_IMPORT && resultCode == RESULT_OK && data != null)
+    if (resultCode == RESULT_OK && data != null && data.getData() != null)
     {
       Uri uri = data.getData();
-      if (uri != null)
+      if (requestCode == REQUEST_CODE_EXPORT)
+      {
+        exportToUri(uri);
+      }
+      else if (requestCode == REQUEST_CODE_IMPORT)
       {
         importFromUri(uri);
       }
+    }
+  }
+
+  private void exportToUri(Uri uri)
+  {
+    try (java.io.OutputStream os = getContentResolver().openOutputStream(uri))
+    {
+      if (os != null)
+      {
+        boolean success = _db.exportToJson(os);
+        if (success)
+        {
+          Toast.makeText(this, "Backup exported successfully!", Toast.LENGTH_LONG).show();
+        }
+        else
+        {
+          Toast.makeText(this, "Export failed.", Toast.LENGTH_SHORT).show();
+        }
+      }
+    }
+    catch (Exception e)
+    {
+      Logs.exn("UserDictBackup", e);
+      Toast.makeText(this, "Export error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
     }
   }
 

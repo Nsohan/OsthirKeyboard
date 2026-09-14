@@ -10,6 +10,9 @@ import android.view.inputmethod.ExtractedText;
 import android.view.inputmethod.ExtractedTextRequest;
 import android.view.inputmethod.InputConnection;
 import java.util.Iterator;
+import java.util.Locale;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import com.nhs.customkeyboard.suggestions.NextWordPredictor;
 import com.nhs.customkeyboard.suggestions.Suggestions;
@@ -28,6 +31,37 @@ public final class KeyEventHandler
   Suggestions _suggestions;
   CurrentlyTypedWord _typedword;
   private String _last_word = null;
+
+  public static final Pattern EMAIL_PATTERN =
+      Pattern.compile("\\b[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}\\b");
+
+  public void check_and_learn_email_from_cursor()
+  {
+    if (_recv == null || _recv.getContext() == null) return;
+    Config conf = Config.globalConfig();
+    if (conf == null || !conf.user_learning_enabled) return;
+
+    InputConnection conn = _recv.getCurrentInputConnection();
+    if (conn == null) return;
+
+    try
+    {
+      CharSequence before = conn.getTextBeforeCursor(150, 0);
+      if (before == null || before.length() < 5) return;
+      Matcher m = EMAIL_PATTERN.matcher(before);
+      String lastEmail = null;
+      while (m.find())
+      {
+        lastEmail = m.group();
+      }
+      if (lastEmail != null)
+      {
+        UserLearningEngine engine = UserLearningEngine.getInstance(_recv.getContext());
+        engine.record_email(lastEmail);
+      }
+    }
+    catch (Exception ignored) {}
+  }
 
   /** Keeps CurrentlyTypedWord in sync with the edits KeymapEngine makes,
    so suggestions are queried against the actual (e.g. Tamil) text on
@@ -298,12 +332,50 @@ public final class KeyEventHandler
     try
     {
       int cur_rel = _typedword.cursor_relative();
-      replace_surrounding_text(old.length() + cur_rel, -cur_rel, text);
+      int replace_len = old.length() + cur_rel;
+
+      String cleanChosen = text != null ? text.trim() : "";
+      if (cleanChosen.contains("@") && cleanChosen.contains("."))
+      {
+        InputConnection conn = _recv != null ? _recv.getCurrentInputConnection() : null;
+        if (conn != null)
+        {
+          CharSequence before = conn.getTextBeforeCursor(150, 0);
+          if (before != null && before.length() > 0)
+          {
+            String beforeStr = before.toString();
+            String cleanLower = cleanChosen.toLowerCase(Locale.ROOT);
+            for (int len = Math.min(beforeStr.length(), cleanChosen.length()); len >= 1; len--)
+            {
+              String sub = beforeStr.substring(beforeStr.length() - len).toLowerCase(Locale.ROOT);
+              if (cleanLower.startsWith(sub))
+              {
+                replace_len = len;
+                break;
+              }
+            }
+          }
+        }
+      }
+
+      replace_surrounding_text(replace_len, -cur_rel, text);
       last_replaced_word = old;
       last_replacement_word_len = text != null ? text.length() : 0;
       _next_last_action = LastAction.SUGGESTION_ENTERED;
 
-      String cleanChosen = text != null ? text.trim() : "";
+      if (cleanChosen.contains("@") && cleanChosen.contains("."))
+      {
+        if (_recv != null && _recv.getContext() != null)
+        {
+          Config conf = Config.globalConfig();
+          if (conf != null && conf.user_learning_enabled)
+          {
+            UserLearningEngine engine = UserLearningEngine.getInstance(_recv.getContext());
+            engine.record_email(cleanChosen);
+          }
+        }
+      }
+
       boolean isWord = false;
       for (int i = 0; i < cleanChosen.length(); i++)
       {
@@ -499,6 +571,10 @@ public final class KeyEventHandler
    dispatched and applied. */
   void send_key_down_up_checking_expand(int keyCode)
   {
+    if (keyCode == KeyEvent.KEYCODE_ENTER || keyCode == KeyEvent.KEYCODE_NUMPAD_ENTER)
+    {
+      check_and_learn_email_from_cursor();
+    }
     if (is_translation_active() && (keyCode == KeyEvent.KEYCODE_ENTER || keyCode == KeyEvent.KEYCODE_NUMPAD_ENTER))
     {
       _translation_interceptor.onEnter();
@@ -974,6 +1050,7 @@ public final class KeyEventHandler
   /** Implement autocorrect when enabled in the settings. */
   void handle_space_bar()
   {
+    check_and_learn_email_from_cursor();
     if (AvroEngine.get().is_active())
     {
       AvroEngine.get().reset();

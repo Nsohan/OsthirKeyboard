@@ -21,9 +21,26 @@ public final class UserLearningEngine
   private final UserLearningDatabase _db;
   private final ExecutorService _executor = Executors.newSingleThreadExecutor();
 
+  public static final class LearnedEmail
+  {
+    public final String email;
+    public final String username;
+    public final String domain;
+    public int frequency;
+
+    public LearnedEmail(String email, String username, String domain, int frequency)
+    {
+      this.email = email;
+      this.username = username;
+      this.domain = domain;
+      this.frequency = frequency;
+    }
+  }
+
   // In-memory caches for microsecond lookups
   private final Map<String, Integer> _wordFrequencyCache = new ConcurrentHashMap<>();
   private final Map<String, Map<String, Integer>> _bigramCache = new ConcurrentHashMap<>();
+  private final List<LearnedEmail> _emailCache = new java.util.concurrent.CopyOnWriteArrayList<>();
   private boolean _initialized = false;
 
   public static UserLearningEngine getInstance(Context context)
@@ -53,11 +70,19 @@ public final class UserLearningEngine
     _executor.execute(() -> {
       try
       {
-        // Load frequent words into memory
-        List<String> topWords = _db.getTopWords(500);
-        for (String w : topWords)
+        _db.cleanupCorruptedUserWords();
+
+        // Load frequent words into memory with real frequencies
+        List<String[]> topWords = _db.getTopWordsWithFrequency(1000);
+        for (String[] row : topWords)
         {
-          _wordFrequencyCache.put(w, 1);
+          try
+          {
+            String w = row[0];
+            int freq = Integer.parseInt(row[1]);
+            _wordFrequencyCache.put(w, freq);
+          }
+          catch (Exception ignored) {}
         }
 
         // Load frequent bigrams into memory
@@ -74,8 +99,20 @@ public final class UserLearningEngine
           catch (Exception ignored) {}
         }
 
+        // Load frequent emails into memory
+        List<String[]> topEmails = _db.getTopEmails(100);
+        for (String[] row : topEmails)
+        {
+          try
+          {
+            int freq = Integer.parseInt(row[3]);
+            _emailCache.add(new LearnedEmail(row[0], row[1], row[2], freq));
+          }
+          catch (Exception ignored) {}
+        }
+
         _initialized = true;
-        Log.i(TAG, "UserLearningEngine cache warmed up with " + topWords.size() + " words and " + topBigrams.size() + " bigrams.");
+        Log.i(TAG, "UserLearningEngine cache warmed up with " + topWords.size() + " words, " + topBigrams.size() + " bigrams, and " + topEmails.size() + " emails.");
       }
       catch (Exception e)
       {
@@ -85,11 +122,46 @@ public final class UserLearningEngine
   }
 
   /**
+   * Learns a newly typed or selected email address.
+   */
+  public void record_email(String email)
+  {
+    if (email == null) return;
+    String clean = email.trim();
+    int atIdx = clean.indexOf('@');
+    if (atIdx <= 0 || atIdx >= clean.length() - 1) return;
+    String username = clean.substring(0, atIdx).trim();
+    String domain = clean.substring(atIdx).trim();
+    if (username.isEmpty() || !domain.contains(".")) return;
+
+    // Update memory cache immediately
+    boolean found = false;
+    for (LearnedEmail le : _emailCache)
+    {
+      if (le.email.equalsIgnoreCase(clean))
+      {
+        le.frequency++;
+        found = true;
+        break;
+      }
+    }
+    if (!found)
+    {
+      _emailCache.add(0, new LearnedEmail(clean, username, domain, 1));
+    }
+
+    // Queue asynchronous DB write
+    _executor.execute(() -> {
+      _db.recordEmail(clean);
+    });
+  }
+
+  /**
    * Learns a newly typed or selected word.
    */
   public void record_word(String word)
   {
-    if (word == null || word.length() < 2) return;
+    if (word == null || word.length() < 2 || word.contains("@")) return;
     String clean = word.trim();
     if (clean.isEmpty()) return;
 
@@ -161,24 +233,70 @@ public final class UserLearningEngine
     if (p.isEmpty()) return Collections.emptyList();
 
     String pLower = p.toLowerCase(Locale.ROOT);
-    List<String> matches = new ArrayList<>();
-    for (String w : _wordFrequencyCache.keySet())
+    List<Map.Entry<String, Integer>> candidates = new ArrayList<>();
+    for (Map.Entry<String, Integer> entry : _wordFrequencyCache.entrySet())
     {
+      String w = entry.getKey();
+      if (w.contains("@")) continue;
       if (w.toLowerCase(Locale.ROOT).startsWith(pLower))
       {
-        matches.add(w);
-        if (matches.size() >= maxCount) break;
+        candidates.add(entry);
       }
     }
-    if (!matches.isEmpty()) return matches;
+
+    if (!candidates.isEmpty())
+    {
+      // Sort: exact match first, then frequency DESC, then shorter length
+      candidates.sort((a, b) -> {
+        boolean aExact = a.getKey().equalsIgnoreCase(p);
+        boolean bExact = b.getKey().equalsIgnoreCase(p);
+        if (aExact != bExact) return aExact ? -1 : 1;
+        int cmp = Integer.compare(b.getValue(), a.getValue());
+        if (cmp != 0) return cmp;
+        return Integer.compare(a.getKey().length(), b.getKey().length());
+      });
+
+      List<String> res = new ArrayList<>();
+      for (int i = 0; i < Math.min(maxCount, candidates.size()); i++)
+      {
+        res.add(candidates.get(i).getKey());
+      }
+      return res;
+    }
 
     return _db.getWordCompletions(p, maxCount);
+  }
+
+  /**
+   * Gets personalized learned email suggestions matching prefix.
+   */
+  public List<String> get_matching_emails(String prefix, int maxCount)
+  {
+    if (prefix == null || prefix.isEmpty()) return Collections.emptyList();
+    String p = prefix.trim().toLowerCase(Locale.ROOT);
+    if (p.isEmpty()) return Collections.emptyList();
+
+    List<String> res = new ArrayList<>();
+    for (LearnedEmail le : _emailCache)
+    {
+      String u = le.username.toLowerCase(Locale.ROOT);
+      String em = le.email.toLowerCase(Locale.ROOT);
+      if (u.startsWith(p) || em.startsWith(p))
+      {
+        res.add(le.email);
+        if (res.size() >= maxCount) return res;
+      }
+    }
+    if (!res.isEmpty()) return res;
+
+    return _db.getMatchingEmails(prefix, maxCount);
   }
 
   public void clearAll()
   {
     _wordFrequencyCache.clear();
     _bigramCache.clear();
+    _emailCache.clear();
     _executor.execute(_db::clearAllLearnedData);
   }
 }

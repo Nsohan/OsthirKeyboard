@@ -5,6 +5,10 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Build.VERSION;
 import android.text.InputType;
+import android.text.SpannableStringBuilder;
+import android.text.Spanned;
+import android.text.style.ForegroundColorSpan;
+import android.text.style.RelativeSizeSpan;
 import android.util.AttributeSet;
 import android.util.TypedValue;
 import android.view.Gravity;
@@ -325,13 +329,47 @@ public class CandidatesView extends LinearLayout
         if (word == null) continue;
 
         TextView v = get_or_create_item_view(i);
-        v.setText(word);
+        final boolean isEmail = is_email_string(word);
+        if (isEmail)
+        {
+          int at = word.indexOf('@');
+          String user = word.substring(0, at);
+          String domain = word.substring(at);
+
+          SpannableStringBuilder ssb = new SpannableStringBuilder();
+          ssb.append(user);
+          ssb.append("\n");
+          int domainStart = ssb.length();
+          ssb.append(domain);
+
+          ssb.setSpan(new RelativeSizeSpan(0.80f), domainStart, ssb.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+          int curColor = v.getCurrentTextColor();
+          int secondaryColor = (curColor & 0x00FFFFFF) | 0x99000000;
+          ssb.setSpan(new ForegroundColorSpan(secondaryColor), domainStart, ssb.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+
+          v.setMaxLines(2);
+          v.setLineSpacing(0, 0.92f);
+          v.setText(ssb);
+        }
+        else
+        {
+          v.setMaxLines(1);
+          v.setText(word);
+        }
+
         v.setOnClickListener(new OnClickListener()
         {
           @Override
           public void onClick(View _v)
           {
-            Config.globalConfig().handler.suggestion_entered(word + " ");
+            boolean isEmailField = false;
+            Config conf = Config.globalConfig();
+            if (conf != null && conf.editor_config != null)
+            {
+              isEmailField = conf.editor_config.is_email_field;
+            }
+            String insertion = (isEmail && isEmailField) ? word : (word + " ");
+            Config.globalConfig().handler.suggestion_entered(insertion);
           }
         });
         _container.addView(v);
@@ -1382,6 +1420,13 @@ public class CandidatesView extends LinearLayout
             }
           });
     }
+  }
+
+  private static boolean is_email_string(String str)
+  {
+    if (str == null) return false;
+    int at = str.indexOf('@');
+    return at > 0 && at < str.length() - 1 && str.indexOf('.', at) > at;
   }
 
   public static boolean should_show(EditorInfo info)

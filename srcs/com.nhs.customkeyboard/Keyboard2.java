@@ -946,6 +946,10 @@ public class Keyboard2 extends InputMethodService
   @Override
   public void onFinishInputView(boolean finishingInput)
   {
+    if (_keyeventhandler != null)
+    {
+      _keyeventhandler.check_and_learn_email_from_cursor();
+    }
     super.onFinishInputView(finishingInput);
     if (_voiceTypingController != null && _voiceTypingController.isVoiceTypingActive())
     {
@@ -1121,7 +1125,13 @@ public class Keyboard2 extends InputMethodService
           }
           InputConnection conn = getCurrentInputConnection();
           if (conn != null)
+          {
+            if (_keyeventhandler != null)
+            {
+              _keyeventhandler.check_and_learn_email_from_cursor();
+            }
             conn.performEditorAction(_config.editor_config.actionId);
+          }
           break;
 
         case SWITCH_FORWARD:

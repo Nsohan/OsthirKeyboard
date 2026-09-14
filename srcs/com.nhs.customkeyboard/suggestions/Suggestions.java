@@ -98,7 +98,7 @@ public final class Suggestions
   {
     if (!_enabled)
       return;
-    if (word == null || word.isEmpty() || _config.current_dictionary == null)
+    if (word == null || word.isEmpty())
     {
       // If next-word predictions are active for a word, do not wipe them out
       // merely because the active typing buffer is empty (e.g. cursor is in whitespace after a word).
@@ -215,7 +215,7 @@ public final class Suggestions
     word = apply_substitutions(word);
     int i = 0;
 
-    // Priority 1: Check user's learned custom words matching prefix
+    // Priority 1: Check user's learned custom words matching prefix (frequency-ranked)
     if (_config.user_learning_enabled && _context != null)
     {
       UserLearningEngine engine = UserLearningEngine.getInstance(_context);
@@ -230,44 +230,96 @@ public final class Suggestions
           }
         }
       }
-    }
 
-    // Priority 2: Static dictionary exact match and suffixes
-    Cdict.Result r = dict.find(word);
-    if (r.found && !contains(suggestions, i, dict.word(r.index)))
-      suggestions[i++] = dict.word(r.index);
+      // Priority 2: Check matching emails (if email field, or if prefix >= 3 chars / has '@')
+      boolean isEmailField = (_config.editor_config != null && _config.editor_config.is_email_field);
+      boolean shouldQueryEmails = isEmailField ? (word.length() >= 2) : (word.length() >= 3 || word.contains("@"));
 
-    int[] suffixes = dict.suffixes(r, MAX_COUNT);
-    int[] dist = (word.length() < 3) ? NO_RESULTS :
-      dict.distance(word, 1, MAX_COUNT);
-
-    for (int j = 0; j < suffixes.length && i < MAX_COUNT; j++)
-    {
-      String w = dict.word(suffixes[j]);
-      if (!contains(suggestions, i, w))
-        suggestions[i++] = w;
-    }
-    for (int j = 0; j < dist.length && i < MAX_COUNT; j++)
-    {
-      String w = dict.word(dist[j]);
-      if (!contains(suggestions, i, w))
-        suggestions[i++] = w;
-    }
-
-    // If first character is uppercase, also query lowercase in dictionary
-    if (first_char_upper && i < MAX_COUNT)
-    {
-      String lower = word.toLowerCase(java.util.Locale.ROOT);
-      if (!lower.equals(word))
+      if (shouldQueryEmails)
       {
-        Cdict.Result rLower = dict.find(lower);
-        if (rLower.found && !contains(suggestions, i, dict.word(rLower.index)))
-          suggestions[i++] = dict.word(rLower.index);
-
-        int[] suffixesLower = dict.suffixes(rLower, MAX_COUNT);
-        for (int j = 0; j < suffixesLower.length && i < MAX_COUNT; j++)
+        List<String> matchingEmails = engine.get_matching_emails(word, 1);
+        if (matchingEmails != null && !matchingEmails.isEmpty())
         {
-          String w = dict.word(suffixesLower[j]);
+          String em = matchingEmails.get(0);
+          if (!contains(suggestions, i, em))
+          {
+            if (isEmailField || i == 0)
+            {
+              // In email field or if no words matched, put email at top
+              for (int k = Math.min(i, MAX_COUNT - 1); k > 0; k--)
+              {
+                suggestions[k] = suggestions[k - 1];
+              }
+              suggestions[0] = em;
+              if (i < MAX_COUNT) i++;
+            }
+            else
+            {
+              // In normal text field, place email at Slot 1 (center chip) so Slot 0 stays your top word!
+              if (i >= 1)
+              {
+                for (int k = Math.min(i, MAX_COUNT - 1); k > 1; k--)
+                {
+                  suggestions[k] = suggestions[k - 1];
+                }
+                suggestions[1] = em;
+                if (i < MAX_COUNT) i++;
+              }
+              else if (i < MAX_COUNT)
+              {
+                suggestions[i++] = em;
+              }
+            }
+          }
+        }
+      }
+    }
+
+    if (dict != null)
+    {
+      // Priority 2: Static dictionary exact match and suffixes
+      Cdict.Result r = dict.find(word);
+      if (r.found && !contains(suggestions, i, dict.word(r.index)))
+        suggestions[i++] = dict.word(r.index);
+
+      int[] suffixes = dict.suffixes(r, MAX_COUNT);
+      int[] dist = (word.length() < 3) ? NO_RESULTS :
+        dict.distance(word, 1, MAX_COUNT);
+
+      for (int j = 0; j < suffixes.length && i < MAX_COUNT; j++)
+      {
+        String w = dict.word(suffixes[j]);
+        if (!contains(suggestions, i, w))
+          suggestions[i++] = w;
+      }
+      for (int j = 0; j < dist.length && i < MAX_COUNT; j++)
+      {
+        String w = dict.word(dist[j]);
+        if (!contains(suggestions, i, w))
+          suggestions[i++] = w;
+      }
+
+      // If first character is uppercase, also query lowercase in dictionary
+      if (first_char_upper && i < MAX_COUNT)
+      {
+        String lower = word.toLowerCase(java.util.Locale.ROOT);
+        r = dict.find(lower);
+        if (r.found && !contains(suggestions, i, dict.word(r.index)))
+          suggestions[i++] = dict.word(r.index);
+
+        suffixes = dict.suffixes(r, MAX_COUNT);
+        dist = (lower.length() < 3) ? NO_RESULTS :
+          dict.distance(lower, 1, MAX_COUNT);
+
+        for (int j = 0; j < suffixes.length && i < MAX_COUNT; j++)
+        {
+          String w = dict.word(suffixes[j]);
+          if (!contains(suggestions, i, w))
+            suggestions[i++] = w;
+        }
+        for (int j = 0; j < dist.length && i < MAX_COUNT; j++)
+        {
+          String w = dict.word(dist[j]);
           if (!contains(suggestions, i, w))
             suggestions[i++] = w;
         }

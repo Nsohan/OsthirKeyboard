@@ -27,7 +27,7 @@ public final class UserLearningDatabase extends SQLiteOpenHelper
 {
   private static final String TAG = "UserLearningDB";
   private static final String DB_NAME = "UserLearning.db";
-  private static final int DB_VERSION = 1;
+  private static final int DB_VERSION = 2;
 
   private static volatile UserLearningDatabase sInstance;
 
@@ -70,19 +70,42 @@ public final class UserLearningDatabase extends SQLiteOpenHelper
         + "UNIQUE(w1, w2)"
         + ");");
 
+    db.execSQL("CREATE TABLE IF NOT EXISTS user_emails ("
+        + "id INTEGER PRIMARY KEY AUTOINCREMENT, "
+        + "email TEXT UNIQUE NOT NULL, "
+        + "username TEXT NOT NULL, "
+        + "domain TEXT NOT NULL, "
+        + "frequency INTEGER DEFAULT 1, "
+        + "last_used INTEGER"
+        + ");");
+
     db.execSQL("CREATE INDEX IF NOT EXISTS idx_user_words_word ON user_words(word);");
     db.execSQL("CREATE INDEX IF NOT EXISTS idx_user_bigrams_w1 ON user_bigrams(w1);");
+    db.execSQL("CREATE INDEX IF NOT EXISTS idx_user_emails_username ON user_emails(username);");
+    db.execSQL("CREATE INDEX IF NOT EXISTS idx_user_emails_email ON user_emails(email);");
   }
 
   @Override
   public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion)
   {
-    // Schema version 1
+    if (oldVersion < 2)
+    {
+      db.execSQL("CREATE TABLE IF NOT EXISTS user_emails ("
+          + "id INTEGER PRIMARY KEY AUTOINCREMENT, "
+          + "email TEXT UNIQUE NOT NULL, "
+          + "username TEXT NOT NULL, "
+          + "domain TEXT NOT NULL, "
+          + "frequency INTEGER DEFAULT 1, "
+          + "last_used INTEGER"
+          + ");");
+      db.execSQL("CREATE INDEX IF NOT EXISTS idx_user_emails_username ON user_emails(username);");
+      db.execSQL("CREATE INDEX IF NOT EXISTS idx_user_emails_email ON user_emails(email);");
+    }
   }
 
   public synchronized void recordWord(String word)
   {
-    if (word == null || word.length() < 2) return;
+    if (word == null || word.length() < 2 || word.contains("@")) return;
     long now = System.currentTimeMillis();
     SQLiteDatabase db = getWritableDatabase();
     try
@@ -116,17 +139,50 @@ public final class UserLearningDatabase extends SQLiteOpenHelper
     }
   }
 
+  public synchronized void cleanupCorruptedUserWords()
+  {
+    try
+    {
+      SQLiteDatabase db = getWritableDatabase();
+      db.execSQL("DELETE FROM user_words WHERE word LIKE '%@%';");
+    }
+    catch (Exception e)
+    {
+      Logs.exn(TAG, e);
+    }
+  }
+
   public synchronized List<String> getTopWords(int limit)
   {
     List<String> list = new ArrayList<>();
     SQLiteDatabase db = getReadableDatabase();
     try (Cursor c = db.rawQuery(
-        "SELECT word FROM user_words ORDER BY frequency DESC, last_used DESC LIMIT ?",
+        "SELECT word FROM user_words WHERE word NOT LIKE '%@%' ORDER BY frequency DESC, last_used DESC LIMIT ?",
         new String[]{String.valueOf(limit)}))
     {
       while (c.moveToNext())
       {
         list.add(c.getString(0));
+      }
+    }
+    catch (Exception e)
+    {
+      Logs.exn(TAG, e);
+    }
+    return list;
+  }
+
+  public synchronized List<String[]> getTopWordsWithFrequency(int limit)
+  {
+    List<String[]> list = new ArrayList<>();
+    SQLiteDatabase db = getReadableDatabase();
+    try (Cursor c = db.rawQuery(
+        "SELECT word, frequency FROM user_words WHERE word NOT LIKE '%@%' ORDER BY frequency DESC, last_used DESC LIMIT ?",
+        new String[]{String.valueOf(limit)}))
+    {
+      while (c.moveToNext())
+      {
+        list.add(new String[]{c.getString(0), String.valueOf(c.getInt(1))});
       }
     }
     catch (Exception e)
@@ -162,7 +218,7 @@ public final class UserLearningDatabase extends SQLiteOpenHelper
     if (prefix == null || prefix.isEmpty()) return list;
     SQLiteDatabase db = getReadableDatabase();
     try (Cursor c = db.rawQuery(
-        "SELECT word FROM user_words WHERE word LIKE ? ORDER BY frequency DESC, last_used DESC LIMIT ?",
+        "SELECT word FROM user_words WHERE word NOT LIKE '%@%' AND word LIKE ? ORDER BY frequency DESC, last_used DESC LIMIT ?",
         new String[]{prefix + "%", String.valueOf(limit)}))
     {
       while (c.moveToNext())
@@ -198,6 +254,73 @@ public final class UserLearningDatabase extends SQLiteOpenHelper
     return list;
   }
 
+  public synchronized void recordEmail(String email)
+  {
+    if (email == null) return;
+    String clean = email.trim();
+    int atIdx = clean.indexOf('@');
+    if (atIdx <= 0 || atIdx >= clean.length() - 1) return;
+    String username = clean.substring(0, atIdx).trim();
+    String domain = clean.substring(atIdx).trim();
+    if (username.isEmpty() || !domain.contains(".")) return;
+
+    long now = System.currentTimeMillis();
+    SQLiteDatabase db = getWritableDatabase();
+    try
+    {
+      db.execSQL("INSERT OR IGNORE INTO user_emails (email, username, domain, frequency, last_used) VALUES (?, ?, ?, 0, ?);",
+          new Object[]{clean, username, domain, now});
+      db.execSQL("UPDATE user_emails SET frequency = frequency + 1, last_used = ? WHERE email = ?;",
+          new Object[]{now, clean});
+    }
+    catch (Exception e)
+    {
+      Logs.exn(TAG, e);
+    }
+  }
+
+  public synchronized List<String[]> getTopEmails(int limit)
+  {
+    List<String[]> res = new ArrayList<>();
+    SQLiteDatabase db = getReadableDatabase();
+    try (Cursor c = db.rawQuery("SELECT email, username, domain, frequency FROM user_emails ORDER BY frequency DESC, last_used DESC LIMIT ?",
+        new String[]{String.valueOf(limit)}))
+    {
+      while (c.moveToNext())
+      {
+        res.add(new String[]{c.getString(0), c.getString(1), c.getString(2), String.valueOf(c.getInt(3))});
+      }
+    }
+    catch (Exception e)
+    {
+      Logs.exn(TAG, e);
+    }
+    return res;
+  }
+
+  public synchronized List<String> getMatchingEmails(String prefix, int limit)
+  {
+    List<String> res = new ArrayList<>();
+    if (prefix == null || prefix.isEmpty()) return res;
+    String p = prefix.trim();
+    if (p.isEmpty()) return res;
+
+    SQLiteDatabase db = getReadableDatabase();
+    try (Cursor c = db.rawQuery("SELECT email FROM user_emails WHERE username LIKE ? OR email LIKE ? ORDER BY frequency DESC, last_used DESC LIMIT ?",
+        new String[]{p + "%", p + "%", String.valueOf(limit)}))
+    {
+      while (c.moveToNext())
+      {
+        res.add(c.getString(0));
+      }
+    }
+    catch (Exception e)
+    {
+      Logs.exn(TAG, e);
+    }
+    return res;
+  }
+
   public synchronized void clearAllLearnedData()
   {
     SQLiteDatabase db = getWritableDatabase();
@@ -205,8 +328,9 @@ public final class UserLearningDatabase extends SQLiteOpenHelper
     {
       db.execSQL("DELETE FROM user_words;");
       db.execSQL("DELETE FROM user_bigrams;");
+      db.execSQL("DELETE FROM user_emails;");
       db.execSQL("VACUUM;");
-      Log.i(TAG, "Cleared all user learned words and transitions.");
+      Log.i(TAG, "Cleared all user learned words, transitions, and emails.");
     }
     catch (Exception e)
     {
@@ -242,36 +366,46 @@ public final class UserLearningDatabase extends SQLiteOpenHelper
     return 0;
   }
 
-  /**
-   * Exports learned words and transitions into a JSON file for backup.
-   */
-  public synchronized boolean exportToJson(File destFile)
+  public synchronized int getLearnedEmailCount()
+  {
+    SQLiteDatabase db = getReadableDatabase();
+    try (Cursor c = db.rawQuery("SELECT COUNT(*) FROM user_emails", null))
+    {
+      if (c.moveToFirst()) return c.getInt(0);
+    }
+    catch (Exception e)
+    {
+      Logs.exn(TAG, e);
+    }
+    return 0;
+  }
+
+  public synchronized boolean exportToJson(OutputStream outputStream)
   {
     try
     {
       JSONObject root = new JSONObject();
-      root.put("version", 1);
+      root.put("version", 2);
       root.put("timestamp", System.currentTimeMillis());
 
-      // Export Words
+      // Export Words (sorted by frequency DESC)
       JSONArray wordsArray = new JSONArray();
       SQLiteDatabase db = getReadableDatabase();
-      try (Cursor c = db.rawQuery("SELECT word, frequency, last_used FROM user_words", null))
+      try (Cursor c = db.rawQuery("SELECT word, frequency FROM user_words WHERE word NOT LIKE '%@%' ORDER BY frequency DESC, last_used DESC", null))
       {
         while (c.moveToNext())
         {
           JSONObject obj = new JSONObject();
           obj.put("word", c.getString(0));
           obj.put("frequency", c.getInt(1));
-          obj.put("last_used", c.getLong(2));
           wordsArray.put(obj);
         }
       }
       root.put("user_words", wordsArray);
 
-      // Export Bigrams
+      // Export Bigrams (sorted by frequency DESC)
       JSONArray bigramsArray = new JSONArray();
-      try (Cursor c = db.rawQuery("SELECT w1, w2, frequency, last_used FROM user_bigrams", null))
+      try (Cursor c = db.rawQuery("SELECT w1, w2, frequency FROM user_bigrams ORDER BY frequency DESC, last_used DESC", null))
       {
         while (c.moveToNext())
         {
@@ -279,18 +413,44 @@ public final class UserLearningDatabase extends SQLiteOpenHelper
           obj.put("w1", c.getString(0));
           obj.put("w2", c.getString(1));
           obj.put("frequency", c.getInt(2));
-          obj.put("last_used", c.getLong(3));
           bigramsArray.put(obj);
         }
       }
       root.put("user_bigrams", bigramsArray);
 
-      try (FileOutputStream fos = new FileOutputStream(destFile);
-           OutputStreamWriter writer = new OutputStreamWriter(fos, StandardCharsets.UTF_8))
+      // Export Emails (sorted by frequency DESC)
+      JSONArray emailsArray = new JSONArray();
+      try (Cursor c = db.rawQuery("SELECT email, frequency FROM user_emails ORDER BY frequency DESC, last_used DESC", null))
+      {
+        while (c.moveToNext())
+        {
+          JSONObject obj = new JSONObject();
+          obj.put("email", c.getString(0));
+          obj.put("frequency", c.getInt(1));
+          emailsArray.put(obj);
+        }
+      }
+      root.put("user_emails", emailsArray);
+
+      try (OutputStreamWriter writer = new OutputStreamWriter(outputStream, StandardCharsets.UTF_8))
       {
         writer.write(root.toString(2));
+        writer.flush();
       }
       return true;
+    }
+    catch (Exception e)
+    {
+      Logs.exn(TAG, e);
+      return false;
+    }
+  }
+
+  public synchronized boolean exportToJson(File destFile)
+  {
+    try (FileOutputStream fos = new FileOutputStream(destFile))
+    {
+      return exportToJson(fos);
     }
     catch (Exception e)
     {
@@ -351,6 +511,28 @@ public final class UserLearningDatabase extends SQLiteOpenHelper
                 new Object[]{w1, w2, freq, lastUsed});
             db.execSQL("UPDATE user_bigrams SET frequency = MAX(frequency, ?), last_used = MAX(last_used, ?) WHERE w1 = ? AND w2 = ?;",
                 new Object[]{freq, lastUsed, w1, w2});
+          }
+        }
+
+        if (root.has("user_emails"))
+        {
+          JSONArray emails = root.getJSONArray("user_emails");
+          for (int i = 0; i < emails.length(); i++)
+          {
+            JSONObject obj = emails.getJSONObject(i);
+            String email = obj.getString("email");
+            int freq = obj.optInt("frequency", 1);
+            long lastUsed = obj.optLong("last_used", System.currentTimeMillis());
+            int atIdx = email.indexOf('@');
+            if (atIdx > 0 && atIdx < email.length() - 1)
+            {
+              String username = email.substring(0, atIdx).trim();
+              String domain = email.substring(atIdx).trim();
+              db.execSQL("INSERT OR IGNORE INTO user_emails (email, username, domain, frequency, last_used) VALUES (?, ?, ?, ?, ?);",
+                  new Object[]{email, username, domain, freq, lastUsed});
+              db.execSQL("UPDATE user_emails SET frequency = MAX(frequency, ?), last_used = MAX(last_used, ?) WHERE email = ?;",
+                  new Object[]{freq, lastUsed, email});
+            }
           }
         }
         db.setTransactionSuccessful();
