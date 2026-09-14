@@ -217,6 +217,14 @@ public final class ExpandedCandidatesPopup
     }
     _popup.setOnDismissListener(() -> {
       resetDragState();
+      if (_binZone != null)
+      {
+        _binZone.animate().cancel();
+        _binZone.animate().setListener(null);
+        _binZone.setVisibility(View.INVISIBLE);
+        _binZone.setAlpha(0f);
+      }
+      hideFloatingChip();
     });
   }
 
@@ -358,6 +366,14 @@ public final class ExpandedCandidatesPopup
       catch (Exception ignored) {}
     }
     resetDragState();
+    if (_binZone != null)
+    {
+      _binZone.animate().cancel();
+      _binZone.animate().setListener(null);
+      _binZone.setVisibility(View.INVISIBLE);
+      _binZone.setAlpha(0f);
+    }
+    hideFloatingChip();
   }
 
   public void show(Suggestions s, View anchorView)
@@ -380,6 +396,16 @@ public final class ExpandedCandidatesPopup
     if (_currentWords.isEmpty())
     {
       return;
+    }
+
+    if (_binZone != null)
+    {
+      _binZone.animate().cancel();
+      _binZone.animate().setListener(null);
+      _binZone.setVisibility(View.INVISIBLE);
+      _binZone.setAlpha(0f);
+      _binZone.setScaleX(0.8f);
+      _binZone.setScaleY(0.8f);
     }
 
     resolveAndApplyTheme();
@@ -448,6 +474,20 @@ public final class ExpandedCandidatesPopup
 
     int count = _currentWords.size();
     int rows = (int) Math.ceil(count / 3.0);
+    int maxScrollHeight = (int)(155 * density);
+    LinearLayout.LayoutParams slp = (LinearLayout.LayoutParams) _scrollView.getLayoutParams();
+    if (slp != null)
+    {
+      if (rows > 4)
+      {
+        slp.height = maxScrollHeight;
+      }
+      else
+      {
+        slp.height = ViewGroup.LayoutParams.WRAP_CONTENT;
+      }
+      _scrollView.setLayoutParams(slp);
+    }
 
     for (int r = 0; r < rows; r++)
     {
@@ -495,6 +535,11 @@ public final class ExpandedCandidatesPopup
       }
 
       _gridContainer.addView(rowLayout);
+    }
+
+    if (_popup != null && _popup.isShowing())
+    {
+      _popup.update();
     }
   }
 
@@ -547,6 +592,7 @@ public final class ExpandedCandidatesPopup
         _binZone.setVisibility(View.VISIBLE);
         _binZone.animate().cancel();
         _binZone.animate()
+            .setListener(null)
             .alpha(1f)
             .scaleX(1.0f)
             .scaleY(1.0f)
@@ -678,6 +724,7 @@ public final class ExpandedCandidatesPopup
         _binContainer.setBackground(_hoveredBinBg);
         _binContainer.animate().cancel();
         _binContainer.animate()
+            .setListener(null)
             .scaleX(1.12f)
             .scaleY(1.12f)
             .setDuration(120)
@@ -694,6 +741,7 @@ public final class ExpandedCandidatesPopup
         _binContainer.setBackground(_normalBinBg);
         _binContainer.animate().cancel();
         _binContainer.animate()
+            .setListener(null)
             .scaleX(1.0f)
             .scaleY(1.0f)
             .setDuration(120)
@@ -743,7 +791,8 @@ public final class ExpandedCandidatesPopup
     if (_draggedSourceView != null)
     {
       _draggedSourceView.setVisibility(View.VISIBLE);
-      _draggedSourceView.animate().alpha(1.0f).setDuration(150).start();
+      _draggedSourceView.animate().cancel();
+      _draggedSourceView.animate().setListener(null).alpha(1.0f).setDuration(150).start();
     }
     resetDragState();
   }
@@ -754,9 +803,10 @@ public final class ExpandedCandidatesPopup
     {
       _binZone.animate().cancel();
       _binZone.animate()
+          .setListener(null)
           .alpha(0f)
-          .scaleX(0.5f)
-          .scaleY(0.5f)
+          .scaleX(0.8f)
+          .scaleY(0.8f)
           .setDuration(160)
           .setInterpolator(new DecelerateInterpolator())
           .setListener(new AnimatorListenerAdapter()
@@ -764,7 +814,11 @@ public final class ExpandedCandidatesPopup
             @Override
             public void onAnimationEnd(Animator animation)
             {
-              if (_binZone != null) _binZone.setVisibility(View.INVISIBLE);
+              if (_binZone != null)
+              {
+                _binZone.setVisibility(View.INVISIBLE);
+                _binZone.animate().setListener(null);
+              }
               if (_binContainer != null)
               {
                 _binContainer.setBackground(_normalBinBg);
@@ -797,6 +851,8 @@ public final class ExpandedCandidatesPopup
     }
     if (_binContainer != null)
     {
+      _binContainer.animate().cancel();
+      _binContainer.animate().setListener(null);
       _binContainer.setBackground(_normalBinBg);
       _binContainer.setScaleX(1.0f);
       _binContainer.setScaleY(1.0f);
