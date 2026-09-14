@@ -370,14 +370,18 @@ public class CandidatesView extends LinearLayout
     }
 
     _tools_menu_button.animate().cancel();
-    _tools_menu_button.setPivotX(_tools_menu_button.getWidth() > 0 ? _tools_menu_button.getWidth() / 2f : 0f);
-    _tools_menu_button.setPivotY(_tools_menu_button.getHeight() > 0 ? _tools_menu_button.getHeight() / 2f : 0f);
+    _tools_menu_button.setRotation(0f);
+    float pivotX = _tools_menu_button.getWidth() > 0 ? _tools_menu_button.getWidth() / 2f : 0f;
+    float pivotY = _tools_menu_button.getHeight() > 0 ? _tools_menu_button.getHeight() / 2f : 0f;
+    _tools_menu_button.setPivotX(pivotX);
+    _tools_menu_button.setPivotY(pivotY);
+
+    // Tactile bounce button press: compress down smoothly, swap icon, then pop/overshoot back up
     _tools_menu_button.animate()
-        .rotation(90f)
-        .scaleX(0.78f)
-        .scaleY(0.78f)
-        .alpha(0.25f)
-        .setDuration(200)
+        .scaleX(0.70f)
+        .scaleY(0.70f)
+        .alpha(0.55f)
+        .setDuration(110)
         .setInterpolator(new AccelerateInterpolator())
         .withEndAction(new Runnable()
         {
@@ -387,14 +391,13 @@ public class CandidatesView extends LinearLayout
             if (_tools_menu_button != null)
             {
               _tools_menu_button.setImageResource(resId);
-              _tools_menu_button.setRotation(-90f);
+              _tools_menu_button.setRotation(0f);
               _tools_menu_button.animate()
-                  .rotation(0f)
-                  .scaleX(1f)
-                  .scaleY(1f)
-                  .alpha(1f)
-                  .setDuration(200)
-                  .setInterpolator(new OvershootInterpolator(1.2f))
+                  .scaleX(1.0f)
+                  .scaleY(1.0f)
+                  .alpha(1.0f)
+                  .setDuration(220)
+                  .setInterpolator(new OvershootInterpolator(2.2f))
                   .start();
             }
           }
