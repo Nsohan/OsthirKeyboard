@@ -1,19 +1,14 @@
 package com.nhs.customkeyboard.prefs;
 
-import android.app.AlertDialog;
 import android.content.Context;
-import android.graphics.Color;
 import android.util.AttributeSet;
-import android.widget.ScrollView;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.preference.Preference;
 
-import com.nhs.customkeyboard.DialogUtils;
 import com.nhs.customkeyboard.R;
 import com.nhs.customkeyboard.UpdateChecker;
-import com.nhs.customkeyboard.UpdateInstaller;
+import com.nhs.customkeyboard.UpdateDialog;
 
 /** Settings row (placed in its own "About" category, at the very
  bottom of the settings screen) that checks
@@ -66,28 +61,6 @@ public class CheckUpdatePreference extends Preference
 
     private void show_update_dialog(final Context ctx, final UpdateChecker.ReleaseInfo latest)
     {
-        String version_line = ctx.getString(R.string.update_dialog_version_line,
-                UpdateChecker.current_version_name(ctx), latest.version_name());
-        String notes = latest.release_notes == null || latest.release_notes.trim().isEmpty()
-                ? ctx.getString(R.string.update_dialog_no_notes)
-                : latest.release_notes.trim();
-
-        int pad = DialogUtils.dp(ctx, 20);
-        TextView body = new TextView(ctx);
-        body.setText(ctx.getString(R.string.update_dialog_message) + "\n\n" + version_line + "\n\n" + notes);
-        body.setTextColor(Color.BLACK);
-        body.setTextSize(14f);
-        body.setPadding(pad, DialogUtils.dp(ctx, 12), pad, DialogUtils.dp(ctx, 4));
-        ScrollView scroll = new ScrollView(ctx);
-        scroll.addView(body, new ScrollView.LayoutParams(
-                ScrollView.LayoutParams.MATCH_PARENT, ScrollView.LayoutParams.WRAP_CONTENT));
-
-        AlertDialog dialog = new AlertDialog.Builder(ctx)
-                .setTitle(R.string.update_dialog_title)
-                .setView(scroll)
-                .setPositiveButton(R.string.update_dialog_download_now, (d, w) -> UpdateInstaller.start(ctx, latest))
-                .setNegativeButton(R.string.update_dialog_later, null)
-                .show();
-        DialogUtils.apply_modern_style(dialog, ctx);
+        UpdateDialog.show(ctx, latest);
     }
 }

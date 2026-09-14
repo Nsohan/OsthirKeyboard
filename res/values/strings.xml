@@ -421,6 +421,7 @@
     <string name="pref_about_license_title">License</string>
     <string name="pref_about_license_summary">Open source under Apache License 2.0</string>
     <string name="update_dialog_title">Update available</string>
+    <string name="update_dialog_whats_new_label">What\'s new in this version</string>
     <string name="update_dialog_message">A new version of Osthir Keyboard is available.</string>
     <string name="update_dialog_version_line">%1$s → %2$s</string>
     <string name="update_dialog_no_notes">No release notes provided.</string>

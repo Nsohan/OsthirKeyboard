@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@drawable/bg_update_dialog"
+    android:paddingStart="20dp"
+    android:paddingEnd="20dp"
+    android:paddingTop="12dp"
+    android:paddingBottom="24dp">
+
+    <!-- Top Drag Handle Indicator -->
+    <View
+        android:layout_width="38dp"
+        android:layout_height="4dp"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginBottom="16dp"
+        android:background="@drawable/bg_update_drag_handle" />
+
+    <!-- Header: Icon + Title + Version Badges -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <!-- Icon Container -->
+        <FrameLayout
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:background="@drawable/bg_update_icon_container">
+
+            <ImageView
+                android:layout_width="26dp"
+                android:layout_height="26dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_system_update"
+                app:tint="@color/settings_primary"
+                android:contentDescription="@string/update_dialog_title" />
+        </FrameLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginStart="14dp"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/update_dialog_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/update_dialog_title"
+                android:textColor="@color/settings_on_surface"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
+            <!-- Version Transition Badge Row -->
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="5dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <TextView
+                    android:id="@+id/update_current_version_badge"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/bg_update_badge_old"
+                    android:paddingStart="9dp"
+                    android:paddingEnd="9dp"
+                    android:paddingTop="2dp"
+                    android:paddingBottom="2dp"
+                    android:text="v0.0.01"
+                    android:textColor="@color/settings_on_surface_variant"
+                    android:textSize="11.5sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="6dp"
+                    android:layout_marginEnd="6dp"
+                    android:text="➔"
+                    android:textColor="@color/settings_primary"
+                    android:textSize="12sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/update_new_version_badge"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/bg_update_badge_new"
+                    android:paddingStart="9dp"
+                    android:paddingEnd="9dp"
+                    android:paddingTop="2dp"
+                    android:paddingBottom="2dp"
+                    android:text="v0.0.02"
+                    android:textColor="@color/settings_on_primary"
+                    android:textSize="11.5sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- Subtitle / What's New Section Label -->
+    <TextView
+        android:id="@+id/update_changelog_label"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:layout_marginBottom="8dp"
+        android:text="@string/update_dialog_whats_new_label"
+        android:textColor="@color/settings_on_surface_variant"
+        android:textSize="11.5sp"
+        android:textStyle="bold"
+        android:letterSpacing="0.04"
+        android:textAllCaps="true" />
+
+    <!-- Changelog Container Card -->
+    <FrameLayout
+        android:id="@+id/update_changelog_card"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/bg_update_changelog_card">
+
+        <androidx.core.widget.NestedScrollView
+            android:id="@+id/update_changelog_scroll"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:clipToPadding="false"
+            android:paddingStart="14dp"
+            android:paddingEnd="14dp"
+            android:paddingTop="12dp"
+            android:paddingBottom="12dp"
+            android:scrollbars="vertical"
+            android:fadeScrollbars="false">
+
+            <LinearLayout
+                android:id="@+id/update_changelog_container"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical" />
+        </androidx.core.widget.NestedScrollView>
+    </FrameLayout>
+
+    <!-- Action Buttons -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="18dp"
+        android:orientation="vertical"
+        android:gravity="center_horizontal">
+
+        <!-- Primary Download Button -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_update_download"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:text="@string/update_dialog_download_now"
+            android:textColor="@color/settings_on_primary"
+            app:backgroundTint="@color/settings_primary"
+            app:cornerRadius="14dp"
+            app:icon="@drawable/ic_download"
+            app:iconGravity="textStart"
+            app:iconPadding="8dp"
+            app:iconTint="@color/settings_on_primary"
+            android:textSize="15sp"
+            android:textStyle="bold"
+            app:elevation="0dp" />
+
+        <!-- Secondary Later Button -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_update_later"
+            style="@style/Widget.MaterialComponents.Button.TextButton"
+            android:layout_width="wrap_content"
+            android:layout_height="40dp"
+            android:layout_marginTop="4dp"
+            android:text="@string/update_dialog_later"
+            android:textColor="@color/settings_on_surface_variant"
+            android:textSize="13.5sp"
+            android:textStyle="bold" />
+    </LinearLayout>
+
+</LinearLayout>
