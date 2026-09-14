@@ -214,6 +214,14 @@
     <item name="android:navigationBarColor">@color/settings_background</item>
     <item name="preferenceTheme">@style/settingsPreferenceTheme</item>
     <item name="colorLabel">@color/settings_icon_tint</item>
+    <item name="android:windowAnimationStyle">@style/settingsWindowAnimation</item>
+  </style>
+
+  <style name="settingsWindowAnimation" parent="@android:style/Animation.Activity">
+    <item name="android:activityOpenEnterAnimation">@anim/settings_slide_in_right</item>
+    <item name="android:activityOpenExitAnimation">@anim/settings_slide_out_left</item>
+    <item name="android:activityCloseEnterAnimation">@anim/settings_slide_in_left</item>
+    <item name="android:activityCloseExitAnimation">@anim/settings_slide_out_right</item>
   </style>
 
   <!-- Nicer spacing/typography for preference rows and category headers, and
