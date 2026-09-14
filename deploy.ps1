@@ -24,6 +24,10 @@ if (-not $env:JAVA_HOME -or -not (Test-Path "$env:JAVA_HOME\bin\java.exe")) {
 # 1. Check for connected ADB device
 $devices = adb devices | Select-String -Pattern "\b(device)\b"
 if (-not $devices) {
+    adb connect 192.168.1.4:38457 | Out-Null
+    $devices = adb devices | Select-String -Pattern "\b(device)\b"
+}
+if (-not $devices) {
     Write-Host "No device connected via ADB." -ForegroundColor Red
     Write-Host "Please connect your phone via Wi-Fi ADB first:" -ForegroundColor Yellow
     Write-Host "  adb connect <YOUR_PHONE_IP>:<PORT>" -ForegroundColor White

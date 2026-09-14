@@ -338,6 +338,8 @@ public class CandidatesView extends LinearLayout
     }
 
     _tools_menu_button.animate().cancel();
+    _tools_menu_button.setPivotX(_tools_menu_button.getWidth() > 0 ? _tools_menu_button.getWidth() / 2f : 0f);
+    _tools_menu_button.setPivotY(_tools_menu_button.getHeight() > 0 ? _tools_menu_button.getHeight() / 2f : 0f);
     _tools_menu_button.animate()
         .rotation(90f)
         .scaleX(0.78f)
@@ -368,6 +370,99 @@ public class CandidatesView extends LinearLayout
         .start();
   }
 
+  private void animate_menu_button_squeeze(final boolean collapsing)
+  {
+    if (_tools_menu_button == null || !_tools_menu_button.isAttachedToWindow() || _tools_menu_button.getVisibility() != View.VISIBLE)
+    {
+      return;
+    }
+
+    _tools_menu_button.animate().cancel();
+    _tools_menu_button.setRotation(0f);
+    _tools_menu_button.setAlpha(1f);
+    // Anchor left edge so horizontal squeeze force appears from the right side
+    _tools_menu_button.setPivotX(0f);
+    _tools_menu_button.setPivotY(_tools_menu_button.getHeight() > 0 ? _tools_menu_button.getHeight() / 2f : 0f);
+
+    if (collapsing)
+    {
+      // Tools rush in from the right and squeeze the menu icon from right side against the left wall
+      _tools_menu_button.animate()
+          .scaleX(0.65f)
+          .scaleY(1.10f)
+          .setDuration(110)
+          .setStartDelay(60) // wait as tools slide inward from right
+          .setInterpolator(new AccelerateInterpolator())
+          .withEndAction(new Runnable()
+          {
+            @Override
+            public void run()
+            {
+              if (_tools_menu_button != null)
+              {
+                _tools_menu_button.animate()
+                    .scaleX(1.0f)
+                    .scaleY(1.0f)
+                    .setDuration(220)
+                    .setInterpolator(new OvershootInterpolator(2.4f))
+                    .withEndAction(new Runnable()
+                    {
+                      @Override
+                      public void run()
+                      {
+                        if (_tools_menu_button != null)
+                        {
+                          _tools_menu_button.setPivotX(_tools_menu_button.getWidth() / 2f);
+                          _tools_menu_button.setPivotY(_tools_menu_button.getHeight() / 2f);
+                        }
+                      }
+                    })
+                    .start();
+              }
+            }
+          })
+          .start();
+    }
+    else
+    {
+      // Expanding: tools push off from the menu icon towards the right
+      _tools_menu_button.animate()
+          .scaleX(0.70f)
+          .scaleY(1.08f)
+          .setDuration(90)
+          .setInterpolator(new AccelerateInterpolator())
+          .withEndAction(new Runnable()
+          {
+            @Override
+            public void run()
+            {
+              if (_tools_menu_button != null)
+              {
+                _tools_menu_button.animate()
+                    .scaleX(1.0f)
+                    .scaleY(1.0f)
+                    .setDuration(220)
+                    .setInterpolator(new OvershootInterpolator(2.2f))
+                    .withEndAction(new Runnable()
+                    {
+                      @Override
+                      public void run()
+                      {
+                        if (_tools_menu_button != null)
+                        {
+                          _tools_menu_button.setPivotX(_tools_menu_button.getWidth() / 2f);
+                          _tools_menu_button.setPivotY(_tools_menu_button.getHeight() / 2f);
+                        }
+                      }
+                    })
+                    .start();
+              }
+            }
+          })
+          .start();
+    }
+  }
+
   private void animate_collapse_tools_into_menu()
   {
     if (_tools_action_scroll == null) return;
@@ -375,7 +470,12 @@ public class CandidatesView extends LinearLayout
     final float distance = get_anim_distance();
     _is_animating = true;
 
-    update_menu_button_icon(R.drawable.ic_grid_menu, true);
+    if (_tools_menu_button != null)
+    {
+      _tools_menu_button.setImageResource(R.drawable.ic_grid_menu);
+      _tools_menu_button.setRotation(0f);
+      animate_menu_button_squeeze(true);
+    }
 
     if (_candidates_words_layout != null)
     {
@@ -428,7 +528,12 @@ public class CandidatesView extends LinearLayout
     _is_animating = true;
 
     int iconRes = _has_suggestions ? R.drawable.ic_arrow_back : R.drawable.ic_grid_menu;
-    update_menu_button_icon(iconRes, true);
+    if (_tools_menu_button != null)
+    {
+      _tools_menu_button.setImageResource(iconRes);
+      _tools_menu_button.setRotation(0f);
+      animate_menu_button_squeeze(false);
+    }
 
     if (_candidates_words_layout != null)
     {
