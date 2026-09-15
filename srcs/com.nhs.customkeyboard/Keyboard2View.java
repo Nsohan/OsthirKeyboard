@@ -1038,10 +1038,10 @@ public class Keyboard2View extends View
     float textSize = scaleTextSize(kv, false);
     Paint p = tc.sublabel_paint(kv.hasFlagsAny(KeyValue.FLAG_KEY_FONT), labelColor(key, kv, isKeyDown, true), textSize, a);
     float r = (tc != null && tc.border_radius > 0) ? tc.border_radius : (_previewMode ? dp(6) : 0f);
-    float basePad = Math.max(dp(2.8f), _config.keyPadding * 1.4f);
+    float basePad = Math.max(dp(2.5f), _config.keyPadding * 1.2f);
     boolean isCorner = (a != Paint.Align.CENTER && v != Vertical.CENTER);
-    float padH = basePad + (isCorner ? r * 0.12f : 0f);
-    float padV = basePad + (isCorner ? r * 0.12f : (v != Vertical.CENTER ? r * 0.05f : 0f));
+    float padH = basePad + (isCorner ? r * 0.10f : 0f);
+    float padV = basePad + (isCorner ? r * 0.10f : (v != Vertical.CENTER ? r * 0.04f : 0f));
 
     if (v == Vertical.CENTER)
       y += (keyH - p.ascent() - p.descent()) / 2f;

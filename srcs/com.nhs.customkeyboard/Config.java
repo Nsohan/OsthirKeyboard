@@ -214,7 +214,7 @@ public final class Config
     longpress_custom_char_enabled = _prefs.getBoolean("longpress_custom_char_enabled", true);
     margin_bottom = get_dip_pref_oriented(dm, "margin_bottom", 7, 3);
     key_vertical_margin = get_dip_pref(dm, "key_vertical_margin", 3.0f) / 100;
-    key_horizontal_margin = get_dip_pref(dm, "key_horizontal_margin", 2) / 100;
+    key_horizontal_margin = get_dip_pref(dm, "key_horizontal_margin", 3.0f) / 100;
     // Label brightness is used as the alpha channel
     labelBrightness = _prefs.getInt("label_brightness", 100) * 255 / 100;
     secondaryLabelBrightness = _prefs.getInt("secondary_label_brightness", 80) * 255 / 100;
