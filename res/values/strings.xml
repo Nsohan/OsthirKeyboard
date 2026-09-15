@@ -12,6 +12,7 @@
     <string name="pref_category_layout">Active Layouts</string>
     <string name="pref_category_layout_options">Layout Options</string>
     <string name="pref_label_brightness">Adjust label brightness</string>
+    <string name="pref_secondary_label_brightness">Adjust secondary label brightness</string>
     <string name="pref_key_brightness">Adjust key brightness</string>
     <string name="pref_keyboard_opacity">Adjust keyboard background opacity</string>
     <string name="pref_key_opacity">Adjust key opacity</string>
@@ -124,6 +125,8 @@
     <string name="pref_horizontal_margin_title">Horizontal margin</string>
     <string name="pref_character_size_title">Label size</string>
     <string name="pref_character_size_summary">Size of characters displayed on the keyboard (%.2fx)</string>
+    <string name="pref_secondary_character_size_title">Secondary label size</string>
+    <string name="pref_secondary_character_size_summary">Size of secondary characters displayed on the keyboard (%.2fx)</string>
     <string name="pref_theme">Theme</string>
     <string name="pref_theme_e_system">System settings</string>
     <string name="pref_theme_e_dark">Dark</string>
@@ -168,6 +171,7 @@
     <string name="theme_brightness" translatable="false">Brightness</string>
     <string name="theme_key_opacity" translatable="false">Key opacity</string>
     <string name="theme_blur" translatable="false">Background blur</string>
+    <string name="theme_key_shadow" translatable="false">Key shadow</string>
     <string name="theme_custom_theme_title" translatable="false">Custom Theme</string>
     <string name="theme_delete_confirm" translatable="false">Delete this custom theme?</string>
     <string name="theme_btn_delete" translatable="false">Delete</string>

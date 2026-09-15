@@ -24,12 +24,13 @@ public class ThemeModel
   public final float darknessOverlay;
   public final float keyOpacity;
   public final float blur;
+  public final float keyShadow;
 
   public ThemeModel(String id, int category, int titleRes, int themeResId,
                     int themeNightResId, int previewBgColor, int previewKeyColor,
                     int previewAccentColor, boolean isDynamicColor,
                     boolean isSystemAuto, boolean isCustomPhoto,
-                    String imagePath, float darknessOverlay, float keyOpacity, float blur)
+                    String imagePath, float darknessOverlay, float keyOpacity, float blur, float keyShadow)
   {
     this.id = id;
     this.category = category;
@@ -47,6 +48,18 @@ public class ThemeModel
     this.darknessOverlay = darknessOverlay;
     this.keyOpacity = keyOpacity;
     this.blur = blur;
+    this.keyShadow = keyShadow;
+  }
+
+  public ThemeModel(String id, int category, int titleRes, int themeResId,
+                    int themeNightResId, int previewBgColor, int previewKeyColor,
+                    int previewAccentColor, boolean isDynamicColor,
+                    boolean isSystemAuto, boolean isCustomPhoto,
+                    String imagePath, float darknessOverlay, float keyOpacity, float blur)
+  {
+    this(id, category, titleRes, themeResId, themeNightResId, previewBgColor,
+        previewKeyColor, previewAccentColor, isDynamicColor, isSystemAuto,
+        isCustomPhoto, imagePath, darknessOverlay, keyOpacity, blur, 0.0f);
   }
 
   public ThemeModel(String id, int category, int titleRes, int themeResId,
@@ -57,7 +70,7 @@ public class ThemeModel
   {
     this(id, category, titleRes, themeResId, themeNightResId, previewBgColor,
         previewKeyColor, previewAccentColor, isDynamicColor, isSystemAuto,
-        isCustomPhoto, imagePath, darknessOverlay, keyOpacity, 0f);
+        isCustomPhoto, imagePath, darknessOverlay, keyOpacity, 0f, 0.0f);
   }
 
   public ThemeModel(String id, int category, int titleRes, int themeResId,
@@ -68,10 +81,10 @@ public class ThemeModel
   {
     this(id, category, titleRes, themeResId, themeNightResId, previewBgColor,
         previewKeyColor, previewAccentColor, isDynamicColor, isSystemAuto,
-        isCustomPhoto, imagePath, darknessOverlay, 1.0f, 0f);
+        isCustomPhoto, imagePath, darknessOverlay, 1.0f, 0f, 0.0f);
   }
 
-  public ThemeModel(String id, String customTitle, String imagePath, float darknessOverlay, float keyOpacity, float blur)
+  public ThemeModel(String id, String customTitle, String imagePath, float darknessOverlay, float keyOpacity, float blur, float keyShadow)
   {
     this.id = id;
     this.category = CATEGORY_MY_THEMES;
@@ -89,15 +102,21 @@ public class ThemeModel
     this.darknessOverlay = darknessOverlay;
     this.keyOpacity = keyOpacity;
     this.blur = blur;
+    this.keyShadow = keyShadow;
+  }
+
+  public ThemeModel(String id, String customTitle, String imagePath, float darknessOverlay, float keyOpacity, float blur)
+  {
+    this(id, customTitle, imagePath, darknessOverlay, keyOpacity, blur, 0.0f);
   }
 
   public ThemeModel(String id, String customTitle, String imagePath, float darknessOverlay, float keyOpacity)
   {
-    this(id, customTitle, imagePath, darknessOverlay, keyOpacity, 0f);
+    this(id, customTitle, imagePath, darknessOverlay, keyOpacity, 0f, 0.0f);
   }
 
   public ThemeModel(String id, String customTitle, String imagePath, float darknessOverlay)
   {
-    this(id, customTitle, imagePath, darknessOverlay, 1.0f, 0f);
+    this(id, customTitle, imagePath, darknessOverlay, 1.0f, 0f, 0.0f);
   }
 }

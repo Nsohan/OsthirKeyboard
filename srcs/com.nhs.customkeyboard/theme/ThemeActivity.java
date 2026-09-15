@@ -212,6 +212,7 @@ public class ThemeActivity extends AppCompatActivity
         intent.putExtra(ThemeCropActivity.EXTRA_INITIAL_DARKNESS, model.darknessOverlay);
         intent.putExtra(ThemeCropActivity.EXTRA_INITIAL_KEY_OPACITY, model.keyOpacity);
         intent.putExtra(ThemeCropActivity.EXTRA_INITIAL_BLUR, model.blur);
+        intent.putExtra(ThemeCropActivity.EXTRA_INITIAL_KEY_SHADOW, model.keyShadow);
         _cropLauncher.launch(intent);
       }
 

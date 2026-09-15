@@ -304,6 +304,41 @@
             android:textColor="#FFFFFF"
             android:layout_marginStart="4dp"/>
       </LinearLayout>
+
+      <!-- Key Shadow Row -->
+      <LinearLayout
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:orientation="horizontal"
+          android:gravity="center_vertical"
+          android:layout_marginTop="2dp">
+
+        <TextView
+            android:layout_width="100dp"
+            android:layout_height="wrap_content"
+            android:text="@string/theme_key_shadow"
+            android:textSize="14sp"
+            android:textColor="#B0BEC5"/>
+
+        <com.google.android.material.slider.Slider
+            android:id="@+id/slider_key_shadow"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:valueFrom="0.0"
+            android:valueTo="6.0"
+            android:value="0.0"/>
+
+        <TextView
+            android:id="@+id/tv_key_shadow_value"
+            android:layout_width="48dp"
+            android:layout_height="wrap_content"
+            android:gravity="end"
+            android:text="0.0dp"
+            android:textSize="14sp"
+            android:textColor="#FFFFFF"
+            android:layout_marginStart="4dp"/>
+      </LinearLayout>
     </LinearLayout>
 
     <!-- Bottom Done Button -->

@@ -180,9 +180,10 @@ public class ThemeRepository
           double darkness = obj.optDouble("darkness", 0.3);
           double keyOpacity = obj.optDouble("key_opacity", 1.0);
           double blur = obj.optDouble("blur", 0.0);
+          double keyShadow = obj.optDouble("key_shadow", 0.0);
           if (new File(path).exists())
           {
-            list.add(new ThemeModel(id, title, path, (float) darkness, (float) keyOpacity, (float) blur));
+            list.add(new ThemeModel(id, title, path, (float) darkness, (float) keyOpacity, (float) blur, (float) keyShadow));
           }
         }
       }
@@ -248,6 +249,7 @@ public class ThemeRepository
         obj.put("darkness", m.darknessOverlay);
         obj.put("key_opacity", m.keyOpacity);
         obj.put("blur", m.blur);
+        obj.put("key_shadow", m.keyShadow);
         arr.put(obj);
       }
       PreferenceManager.getDefaultSharedPreferences(context)

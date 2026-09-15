@@ -150,7 +150,8 @@ public class Theme
       key_action_activated = new Key(theme, config, keyWidth, true, KeyboardData.Key.Role.Action);
       key_suggestion = new Key(theme, config, keyWidth, false, KeyboardData.Key.Role.Suggestion);
       indication_paint = init_label_paint(config, null);
-      indication_paint.setColor(theme.subLabelColor);
+      int subAlpha = (config.secondaryLabelBrightness & 0xFF) << 24;
+      indication_paint.setColor((theme.subLabelColor & 0x00FFFFFF) | subAlpha);
     }
 
     public static final class Key
@@ -167,6 +168,7 @@ public class Theme
       final Paint _sublabel_paint;
       final Paint _special_sublabel_paint;
       final int _label_alpha_bits;
+      final int _sublabel_alpha_bits;
 
       public Key(Theme theme, Config config, float keyWidth, boolean activated,
           KeyboardData.Key.Role role)
@@ -213,6 +215,7 @@ public class Theme
         _sublabel_paint = init_label_paint(config, null);
         _special_sublabel_paint = init_label_paint(config, _key_font);
         _label_alpha_bits = (config.labelBrightness & 0xFF) << 24;
+        _sublabel_alpha_bits = (config.secondaryLabelBrightness & 0xFF) << 24;
       }
 
       public Paint label_paint(boolean special_font, int color, float text_size)
@@ -226,7 +229,7 @@ public class Theme
       public Paint sublabel_paint(boolean special_font, int color, float text_size, Paint.Align align)
       {
         Paint p = special_font ? _special_sublabel_paint : _sublabel_paint;
-        p.setColor((color & 0x00FFFFFF) | _label_alpha_bits);
+        p.setColor((color & 0x00FFFFFF) | _sublabel_alpha_bits);
         p.setTextSize(text_size);
         p.setTextAlign(align);
         return p;

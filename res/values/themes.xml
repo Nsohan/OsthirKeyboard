@@ -234,8 +234,8 @@
     <item name="navigationBarColor">?attr/colorKeyboard</item>
     <item name="windowLightNavigationBar">true</item>
     <item name="suggestions_background">@android:color/transparent</item>
-    <item name="emoji_button_bg">?colorKeyAction</item>
-    <item name="emoji_color">?colorLabelAction</item>
+    <item name="emoji_button_bg">?colorKeyboard</item>
+    <item name="emoji_color">?colorLabel</item>
   </style>
   <style name="MonetDark" parent="@style/BaseTheme">
     <item name="android:isLightTheme">false</item>
@@ -255,8 +255,8 @@
     <item name="navigationBarColor">?attr/colorKeyboard</item>
     <item name="windowLightNavigationBar">false</item>
     <item name="suggestions_background">@android:color/transparent</item>
-    <item name="emoji_button_bg">?colorKeyAction</item>
-    <item name="emoji_color">?colorLabelAction</item>
+    <item name="emoji_button_bg">?colorKeyboard</item>
+    <item name="emoji_color">?colorLabel</item>
   </style>
   <style name="RosePine" parent="BaseTheme">
     <item name="android:isLightTheme">false</item>
@@ -371,8 +371,8 @@
     <item name="keyBorderWidth">0dp</item>
     <item name="navigationBarColor">?attr/colorKeyboard</item>
     <item name="windowLightNavigationBar">false</item>
-    <item name="emoji_button_bg">?colorKeyAction</item>
-    <item name="emoji_color">?colorLabelAction</item>
+    <item name="emoji_button_bg">?colorKeyboard</item>
+    <item name="emoji_color">?colorLabel</item>
   </style>
 
   <style name="ThemeGreen" parent="BaseTheme">
@@ -392,8 +392,8 @@
     <item name="keyBorderWidth">0dp</item>
     <item name="navigationBarColor">?attr/colorKeyboard</item>
     <item name="windowLightNavigationBar">false</item>
-    <item name="emoji_button_bg">?colorKeyAction</item>
-    <item name="emoji_color">?colorLabelAction</item>
+    <item name="emoji_button_bg">?colorKeyboard</item>
+    <item name="emoji_color">?colorLabel</item>
   </style>
 
   <style name="ThemeBlue" parent="BaseTheme">
@@ -413,8 +413,8 @@
     <item name="keyBorderWidth">0dp</item>
     <item name="navigationBarColor">?attr/colorKeyboard</item>
     <item name="windowLightNavigationBar">false</item>
-    <item name="emoji_button_bg">?colorKeyAction</item>
-    <item name="emoji_color">?colorLabelAction</item>
+    <item name="emoji_button_bg">?colorKeyboard</item>
+    <item name="emoji_color">?colorLabel</item>
   </style>
 
   <style name="ThemeCyan" parent="BaseTheme">
@@ -434,8 +434,8 @@
     <item name="keyBorderWidth">0dp</item>
     <item name="navigationBarColor">?attr/colorKeyboard</item>
     <item name="windowLightNavigationBar">false</item>
-    <item name="emoji_button_bg">?colorKeyAction</item>
-    <item name="emoji_color">?colorLabelAction</item>
+    <item name="emoji_button_bg">?colorKeyboard</item>
+    <item name="emoji_color">?colorLabel</item>
   </style>
 
   <style name="ThemeAmber" parent="BaseTheme">
@@ -455,8 +455,8 @@
     <item name="keyBorderWidth">0dp</item>
     <item name="navigationBarColor">?attr/colorKeyboard</item>
     <item name="windowLightNavigationBar">false</item>
-    <item name="emoji_button_bg">?colorKeyAction</item>
-    <item name="emoji_color">?colorLabelAction</item>
+    <item name="emoji_button_bg">?colorKeyboard</item>
+    <item name="emoji_color">?colorLabel</item>
   </style>
 
   <style name="ThemePurple" parent="BaseTheme">
@@ -476,8 +476,8 @@
     <item name="keyBorderWidth">0dp</item>
     <item name="navigationBarColor">?attr/colorKeyboard</item>
     <item name="windowLightNavigationBar">false</item>
-    <item name="emoji_button_bg">?colorKeyAction</item>
-    <item name="emoji_color">?colorLabelAction</item>
+    <item name="emoji_button_bg">?colorKeyboard</item>
+    <item name="emoji_color">?colorLabel</item>
   </style>
 
   <style name="ThemePink" parent="BaseTheme">
@@ -497,8 +497,8 @@
     <item name="keyBorderWidth">0dp</item>
     <item name="navigationBarColor">?attr/colorKeyboard</item>
     <item name="windowLightNavigationBar">false</item>
-    <item name="emoji_button_bg">?colorKeyAction</item>
-    <item name="emoji_color">?colorLabelAction</item>
+    <item name="emoji_button_bg">?colorKeyboard</item>
+    <item name="emoji_color">?colorLabel</item>
   </style>
 
   <style name="ThemeDarkTeal" parent="BaseTheme">
@@ -518,8 +518,8 @@
     <item name="keyBorderWidth">0dp</item>
     <item name="navigationBarColor">?attr/colorKeyboard</item>
     <item name="windowLightNavigationBar">false</item>
-    <item name="emoji_button_bg">?colorKeyAction</item>
-    <item name="emoji_color">?colorLabelAction</item>
+    <item name="emoji_button_bg">?colorKeyboard</item>
+    <item name="emoji_color">?colorLabel</item>
   </style>
 
   <style name="ThemeDarkBlue" parent="BaseTheme">
@@ -539,8 +539,8 @@
     <item name="keyBorderWidth">0dp</item>
     <item name="navigationBarColor">?attr/colorKeyboard</item>
     <item name="windowLightNavigationBar">false</item>
-    <item name="emoji_button_bg">?colorKeyAction</item>
-    <item name="emoji_color">?colorLabelAction</item>
+    <item name="emoji_button_bg">?colorKeyboard</item>
+    <item name="emoji_color">?colorLabel</item>
   </style>
 
   <style name="ThemeMintLight" parent="BaseTheme">
@@ -560,8 +560,8 @@
     <item name="keyBorderWidth">0dp</item>
     <item name="navigationBarColor">?attr/colorKeyboard</item>
     <item name="windowLightNavigationBar">true</item>
-    <item name="emoji_button_bg">?colorKeyAction</item>
-    <item name="emoji_color">?colorLabelAction</item>
+    <item name="emoji_button_bg">?colorKeyboard</item>
+    <item name="emoji_color">?colorLabel</item>
   </style>
 
   <style name="CustomImageTheme" parent="BaseTheme">

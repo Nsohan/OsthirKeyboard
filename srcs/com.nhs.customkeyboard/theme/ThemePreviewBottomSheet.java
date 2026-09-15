@@ -299,11 +299,13 @@ public class ThemePreviewBottomSheet extends BottomSheetDialogFragment
       if (_model.isCustomPhoto)
       {
         Config.globalConfig().keyOpacity = Math.max(0, Math.min(255, Math.round(_model.keyOpacity * 255)));
+        Config.globalConfig().keyShadow = dp(_model.keyShadow);
       }
       else
       {
         SharedPreferences p = PreferenceManager.getDefaultSharedPreferences(requireContext());
         Config.globalConfig().keyOpacity = p.getInt("key_opacity", 100) * 255 / 100;
+        Config.globalConfig().keyShadow = dp(p.getFloat("key_shadow", 3.0f));
       }
     }
     _singleKeyboardView = new Keyboard2View(themeContext);
@@ -425,6 +427,7 @@ public class ThemePreviewBottomSheet extends BottomSheetDialogFragment
       editor.putString("custom_theme_image_path", _model.imagePath);
       editor.putFloat("custom_theme_darkness", _model.darknessOverlay);
       editor.putFloat("custom_theme_key_opacity", _model.keyOpacity);
+      editor.putFloat("custom_theme_key_shadow", _model.keyShadow);
       editor.putInt("key_opacity", Math.round(_model.keyOpacity * 100));
     }
 

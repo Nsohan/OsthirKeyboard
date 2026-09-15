@@ -481,7 +481,7 @@ public class Keyboard2View extends View
               (width / 10 - _tc.horizontal_margin) * 3/2
       ) * _config.characterSize;
       _mainLabelSize = labelBaseSize * _config.labelTextSize;
-      _subLabelSize = labelBaseSize * _config.sublabelTextSize;
+      _subLabelSize = labelBaseSize * _config.sublabelTextSize * _config.secondaryCharacterSize;
       int height = (int)(_tc.row_height * _keyboard.keysHeight + _tc.margin_top + dp(2f));
       setMeasuredDimension(width, height);
       return;
@@ -509,7 +509,7 @@ public class Keyboard2View extends View
             (width / 10 - _tc.horizontal_margin) * 3/2
     ) * _config.characterSize;
     _mainLabelSize = labelBaseSize * _config.labelTextSize;
-    _subLabelSize = labelBaseSize * _config.sublabelTextSize;
+    _subLabelSize = labelBaseSize * _config.sublabelTextSize * _config.secondaryCharacterSize;
     int height =
             (int)(_tc.row_height * _keyboard.keysHeight
                     + _config.marginTop + _marginBottom);
@@ -941,7 +941,14 @@ public class Keyboard2View extends View
     if (kv == null)
       return;
 
+    boolean is_space_bar =
+            key.role == KeyboardData.Key.Role.Space_bar
+                    || (kv.getKind() == KeyValue.Kind.Editing
+                    && kv.getEditing() == KeyValue.Editing.SPACE_BAR);
+
     float textSize = scaleTextSize(kv, true);
+    if (is_space_bar)
+      textSize /= 1.3f;
 
     Paint p = tc.label_paint(
             kv.hasFlagsAny(KeyValue.FLAG_KEY_FONT),
@@ -965,16 +972,6 @@ public class Keyboard2View extends View
     }
 
     String text;
-
-    // Show the current layout's name on the space bar instead of the
-    // space glyph. Detected either via the key's declared role
-    // (role="space_bar" in XML) or via the resolved KeyValue itself
-    // (c="space", i.e. Editing.SPACE_BAR) - the latter covers manual
-    // bottom rows that never set role="space_bar" explicitly.
-    boolean is_space_bar =
-            key.role == KeyboardData.Key.Role.Space_bar
-                    || (kv.getKind() == KeyValue.Kind.Editing
-                    && kv.getEditing() == KeyValue.Editing.SPACE_BAR);
 
     if (is_space_bar
             && _keyboard.name != null

@@ -27,9 +27,11 @@ import com.nhs.customkeyboard.KeyboardData;
 import com.nhs.customkeyboard.LayoutModifier;
 import com.nhs.customkeyboard.R;
 
+import android.util.TypedValue;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
+import java.util.Locale;
 import java.util.UUID;
 
 public class ThemeCropActivity extends AppCompatActivity
@@ -40,6 +42,7 @@ public class ThemeCropActivity extends AppCompatActivity
   public static final String EXTRA_INITIAL_DARKNESS = "extra_initial_darkness";
   public static final String EXTRA_INITIAL_KEY_OPACITY = "extra_initial_key_opacity";
   public static final String EXTRA_INITIAL_BLUR = "extra_initial_blur";
+  public static final String EXTRA_INITIAL_KEY_SHADOW = "extra_initial_key_shadow";
   public static final String EXTRA_RESULT_THEME_ID = "extra_result_theme_id";
 
   private View _layoutStepCrop;
@@ -56,6 +59,8 @@ public class ThemeCropActivity extends AppCompatActivity
   private TextView _tvKeyOpacityValue;
   private Slider _sliderBlur;
   private TextView _tvBlurValue;
+  private Slider _sliderKeyShadow;
+  private TextView _tvKeyShadowValue;
   private ImageView _ivCroppedPreview;
   private View _darknessOverlay;
   private FrameLayout _keyboardHolder;
@@ -69,6 +74,7 @@ public class ThemeCropActivity extends AppCompatActivity
   private int _brightnessPercent = 80;
   private int _keyOpacityPercent = 100;
   private int _blurPercent = 0;
+  private float _keyShadowDp = 0.0f;
 
   @Override
   protected void onCreate(@Nullable Bundle savedInstanceState)
@@ -116,6 +122,8 @@ public class ThemeCropActivity extends AppCompatActivity
     _tvKeyOpacityValue = findViewById(R.id.tv_key_opacity_value);
     _sliderBlur = findViewById(R.id.slider_blur);
     _tvBlurValue = findViewById(R.id.tv_blur_value);
+    _sliderKeyShadow = findViewById(R.id.slider_key_shadow);
+    _tvKeyShadowValue = findViewById(R.id.tv_key_shadow_value);
     _ivCroppedPreview = findViewById(R.id.iv_cropped_preview);
     _darknessOverlay = findViewById(R.id.brightness_darkness_overlay);
     _keyboardHolder = findViewById(R.id.brightness_keyboard_holder);
@@ -128,6 +136,8 @@ public class ThemeCropActivity extends AppCompatActivity
     _keyOpacityPercent = Math.max(0, Math.min(100, Math.round(initialKeyOpacity * 100f)));
     float initialBlur = getIntent().getFloatExtra(EXTRA_INITIAL_BLUR, 0.0f);
     _blurPercent = Math.max(0, Math.min(100, Math.round(initialBlur * 100f)));
+    float initialKeyShadow = getIntent().getFloatExtra(EXTRA_INITIAL_KEY_SHADOW, 0.0f);
+    _keyShadowDp = Math.max(0.0f, Math.min(6.0f, Math.round(initialKeyShadow * 10.0f) / 10.0f));
 
     _btnCropBack.setOnClickListener(v -> finish());
     _btnCropNext.setOnClickListener(v -> goToBrightnessStep());
@@ -138,6 +148,7 @@ public class ThemeCropActivity extends AppCompatActivity
     setupBrightnessSlider();
     setupKeyOpacitySlider();
     setupBlurSlider();
+    setupKeyShadowSlider();
     loadInputBitmap();
   }
 
@@ -201,6 +212,7 @@ public class ThemeCropActivity extends AppCompatActivity
       applyBlurAndPreview();
       updateBrightnessDisplay(_brightnessPercent);
       updateKeyOpacityDisplay(_keyOpacityPercent);
+      updateKeyShadowDisplay(_keyShadowDp);
       setupSuperimposedKeyboard();
       _layoutStepCrop.setVisibility(View.GONE);
       _layoutStepBrightness.setVisibility(View.VISIBLE);
@@ -260,6 +272,7 @@ public class ThemeCropActivity extends AppCompatActivity
     applyBlurAndPreview();
     updateBrightnessDisplay(_brightnessPercent);
     updateKeyOpacityDisplay(_keyOpacityPercent);
+    updateKeyShadowDisplay(_keyShadowDp);
     setupSuperimposedKeyboard();
 
     _layoutStepCrop.setVisibility(View.GONE);
@@ -341,6 +354,36 @@ public class ThemeCropActivity extends AppCompatActivity
     applyBlurAndPreview();
   }
 
+  private void setupKeyShadowSlider()
+  {
+    if (_sliderKeyShadow != null)
+    {
+      float valToSet = Math.max(0.0f, Math.min(6.0f, _keyShadowDp));
+      _sliderKeyShadow.setValue(valToSet);
+      _sliderKeyShadow.addOnChangeListener((slider, value, fromUser) -> {
+        updateKeyShadowDisplay(value);
+      });
+    }
+  }
+
+  private void updateKeyShadowDisplay(float shadowDp)
+  {
+    _keyShadowDp = Math.max(0.0f, Math.min(6.0f, Math.round(shadowDp * 10.0f) / 10.0f));
+    if (_tvKeyShadowValue != null)
+    {
+      _tvKeyShadowValue.setText(String.format(Locale.US, "%.1fdp", _keyShadowDp));
+    }
+    if (Config.globalConfig() != null)
+    {
+      float px = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, _keyShadowDp, getResources().getDisplayMetrics());
+      Config.globalConfig().keyShadow = px;
+    }
+    if (_previewKeyboardView != null)
+    {
+      _previewKeyboardView.invalidate();
+    }
+  }
+
   private void applyBlurAndPreview()
   {
     if (_baseCroppedBitmap == null || _baseCroppedBitmap.isRecycled()) return;
@@ -364,6 +407,7 @@ public class ThemeCropActivity extends AppCompatActivity
     if (Config.globalConfig() != null)
     {
       Config.globalConfig().keyOpacity = Math.max(0, Math.min(255, Math.round(_keyOpacityPercent * 255 / 100f)));
+      Config.globalConfig().keyShadow = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, _keyShadowDp, getResources().getDisplayMetrics());
     }
     Context themeContext = new ContextThemeWrapper(this, R.style.CustomImageTheme);
     _previewKeyboardView = new Keyboard2View(themeContext);
@@ -425,7 +469,7 @@ public class ThemeCropActivity extends AppCompatActivity
       float darkness = (100f - _brightnessPercent) / 100f;
       float keyOpacity = _keyOpacityPercent / 100f;
       float blur = _blurPercent / 100f;
-      ThemeModel model = new ThemeModel(themeId, getString(R.string.theme_custom_theme_title), destFile.getAbsolutePath(), darkness, keyOpacity, blur);
+      ThemeModel model = new ThemeModel(themeId, getString(R.string.theme_custom_theme_title), destFile.getAbsolutePath(), darkness, keyOpacity, blur, _keyShadowDp);
       ThemeRepository.saveCustomTheme(this, model);
 
       Intent resultIntent = new Intent();

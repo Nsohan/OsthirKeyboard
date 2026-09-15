@@ -69,6 +69,7 @@ public final class Config
   public float key_vertical_margin;
   public float key_horizontal_margin;
   public int labelBrightness; // 0 - 255
+  public int secondaryLabelBrightness; // 0 - 255
   public float keyBrightness; // 0.5 - 2.0 multiplier
   public int keyboardOpacity; // 0 - 255
   public float customBorderRadius; // 0 - 1
@@ -78,6 +79,7 @@ public final class Config
   public int keyActivatedOpacity; // 0 - 255
   public boolean double_tap_lock_shift;
   public float characterSize; // Ratio
+  public float secondaryCharacterSize; // Ratio
   public int theme; // Values are R.style.*
   public boolean autocapitalisation;
   public KeyValue change_method_key_replacement;
@@ -88,6 +90,7 @@ public final class Config
   public String customThemeImagePath = null;
   public float customThemeDarkness = 0.3f;
   public float customThemeKeyOpacity = 1.0f;
+  public float customThemeKeyShadow = 0.0f;
   public int circle_sensitivity;
   public boolean clipboard_history_enabled;
   public int clipboard_history_duration;
@@ -210,10 +213,11 @@ public final class Config
     keyrepeat_enabled = _prefs.getBoolean("keyrepeat_enabled", true);
     longpress_custom_char_enabled = _prefs.getBoolean("longpress_custom_char_enabled", true);
     margin_bottom = get_dip_pref_oriented(dm, "margin_bottom", 7, 3);
-    key_vertical_margin = get_dip_pref(dm, "key_vertical_margin", 1.5f) / 100;
+    key_vertical_margin = get_dip_pref(dm, "key_vertical_margin", 3.0f) / 100;
     key_horizontal_margin = get_dip_pref(dm, "key_horizontal_margin", 2) / 100;
     // Label brightness is used as the alpha channel
     labelBrightness = _prefs.getInt("label_brightness", 100) * 255 / 100;
+    secondaryLabelBrightness = _prefs.getInt("secondary_label_brightness", 80) * 255 / 100;
     keyBrightness = _prefs.getInt("key_brightness", 100) / 100.f;
     // Keyboard opacity
     keyboardOpacity = _prefs.getInt("keyboard_opacity", 100) * 255 / 100;
@@ -239,14 +243,17 @@ public final class Config
     characterSize =
       _prefs.getFloat("character_size", 1.15f)
       * characterSizeScale;
+    secondaryCharacterSize = _prefs.getFloat("secondary_character_size", 1.0f);
     keyBorders = _prefs.getBoolean("key_borders", true);
     themeName = _prefs.getString("theme", "monet");
     customThemeImagePath = _prefs.getString("custom_theme_image_path", null);
     customThemeDarkness = _prefs.getFloat("custom_theme_darkness", 0.3f);
     customThemeKeyOpacity = _prefs.getFloat("custom_theme_key_opacity", 1.0f);
+    customThemeKeyShadow = _prefs.getFloat("custom_theme_key_shadow", 0.0f);
     if (themeName != null && themeName.startsWith("custom_"))
     {
       keyOpacity = Math.max(0, Math.min(255, Math.round(customThemeKeyOpacity * 255)));
+      keyShadow = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, customThemeKeyShadow, dm);
     }
     theme = getThemeId(res, themeName);
     autocapitalisation = _prefs.getBoolean("autocapitalisation", true);
