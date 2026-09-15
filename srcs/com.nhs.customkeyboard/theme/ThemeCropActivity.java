@@ -150,11 +150,39 @@ public class ThemeCropActivity extends AppCompatActivity
   {
     _cropImageView.setOnCropRectChangedListener(rect -> {
       if (rect == null || rect.isEmpty() || _cropKeyboardOverlay == null) return;
-      FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams((int) rect.width(), (int) rect.height());
-      lp.leftMargin = (int) rect.left;
-      lp.topMargin = (int) rect.top;
+      int cropWidth = Math.round(rect.width());
+      int cropHeight = Math.round(rect.height());
+      int leftMargin = Math.round(rect.left);
+      int topMargin = Math.round(rect.top);
+
+      FrameLayout.LayoutParams lp = (FrameLayout.LayoutParams) _cropKeyboardOverlay.getLayoutParams();
+      if (lp == null)
+      {
+        lp = new FrameLayout.LayoutParams(cropWidth, cropHeight);
+      }
+      else
+      {
+        lp.width = cropWidth;
+        lp.height = cropHeight;
+      }
+      lp.leftMargin = leftMargin;
+      lp.topMargin = topMargin;
       _cropKeyboardOverlay.setLayoutParams(lp);
       _cropKeyboardOverlay.setVisibility(View.VISIBLE);
+
+      if (_previewKeyboardView != null)
+      {
+        _previewKeyboardView.reset();
+      }
+
+      _cropKeyboardOverlay.post(() -> {
+        if (_previewKeyboardView != null)
+        {
+          _previewKeyboardView.reset();
+          _previewKeyboardView.requestLayout();
+          _previewKeyboardView.invalidate();
+        }
+      });
     });
   }
 
