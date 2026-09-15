@@ -240,7 +240,7 @@ public final class Config
       _prefs.getFloat("character_size", 1.15f)
       * characterSizeScale;
     keyBorders = _prefs.getBoolean("key_borders", true);
-    themeName = _prefs.getString("theme", "system");
+    themeName = _prefs.getString("theme", "monet");
     customThemeImagePath = _prefs.getString("custom_theme_image_path", null);
     customThemeDarkness = _prefs.getFloat("custom_theme_darkness", 0.3f);
     customThemeKeyOpacity = _prefs.getFloat("custom_theme_key_opacity", 1.0f);

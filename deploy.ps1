@@ -22,25 +22,39 @@ if (-not $env:JAVA_HOME -or -not (Test-Path "$env:JAVA_HOME\bin\java.exe")) {
 }
 
 # 1. Check for connected ADB device
-$devices = adb devices | Select-String -Pattern "\b(device)\b"
-if (-not $devices) {
-    adb connect 192.168.1.4:38457 | Out-Null
-    $devices = adb devices | Select-String -Pattern "\b(device)\b"
+$deviceLines = adb devices | Select-String -Pattern "\b(device)\b"
+if (-not $deviceLines) {
+    adb connect 192.168.1.4:39435 | Out-Null
+    $deviceLines = adb devices | Select-String -Pattern "\b(device)\b"
 }
-if (-not $devices) {
+if (-not $deviceLines) {
     Write-Host "No device connected via ADB." -ForegroundColor Red
     Write-Host "Please connect your phone via Wi-Fi ADB first:" -ForegroundColor Yellow
     Write-Host "  adb connect <YOUR_PHONE_IP>:<PORT>" -ForegroundColor White
     exit 1
 }
 
-Write-Host "Found connected device. Building and installing debug APK..." -ForegroundColor Green
+$targetDevice = ($deviceLines | ForEach-Object { ($_ -split "`t")[0] })[0]
+Write-Host "Found connected device ($targetDevice). Building and installing debug APK..." -ForegroundColor Green
 
 # 2. Build and install to phone
-.\gradlew installDebug
+.\gradlew assembleDebug
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "Build failed. Check errors above." -ForegroundColor Red
+    exit $LASTEXITCODE
+}
+
+$apkPath = "build\outputs\apk\debug\OsthirKeyboard-debug.apk"
+Write-Host "Installing $apkPath to $targetDevice..." -ForegroundColor Cyan
+adb -s $targetDevice install -r $apkPath
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "Direct install failed (signature mismatch). Uninstalling existing package and reinstalling..." -ForegroundColor Yellow
+    adb -s $targetDevice uninstall com.nhs.customkeyboard.debug
+    adb -s $targetDevice install -r $apkPath
+}
 
 if ($LASTEXITCODE -ne 0) {
-    Write-Host "Build or installation failed. Check errors above." -ForegroundColor Red
+    Write-Host "Installation failed. Check errors above." -ForegroundColor Red
     exit $LASTEXITCODE
 }
 
@@ -48,7 +62,6 @@ Write-Host "Successfully installed!" -ForegroundColor Green
 
 # 3. Launch keyboard settings activity on phone
 Write-Host "Launching Keyboard Settings on phone..." -ForegroundColor Cyan
-$targetDevice = (adb devices | Select-String -Pattern "\b(device)\b" | ForEach-Object { ($_ -split "`t")[0] })[0]
 adb -s $targetDevice shell am start -n com.nhs.customkeyboard.debug/com.nhs.customkeyboard.SettingsActivity | Out-Null
 
 Write-Host "Done! Keyboard is ready on your device." -ForegroundColor Green

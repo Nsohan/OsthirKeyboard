@@ -31,7 +31,7 @@ import java.util.List;
 
 public class ThemeActivity extends AppCompatActivity
 {
-  private String _activeThemeId = "system";
+  private String _activeThemeId = "monet";
   private SharedPreferences _prefs;
 
   private ThemeAdapter _myThemesAdapter;
@@ -101,7 +101,7 @@ public class ThemeActivity extends AppCompatActivity
     toolbar.setNavigationOnClickListener(v -> finish());
 
     _prefs = PreferenceManager.getDefaultSharedPreferences(this);
-    _activeThemeId = _prefs.getString("theme", "system");
+    _activeThemeId = _prefs.getString("theme", "monet");
 
     setupMyThemes();
     setupDefaultThemes();
@@ -221,9 +221,9 @@ public class ThemeActivity extends AppCompatActivity
         ThemeRepository.deleteCustomTheme(ThemeActivity.this, model.id);
         if (model.id.equals(_activeThemeId))
         {
-          _activeThemeId = "system";
-          _prefs.edit().putString("theme", "system").apply();
-          if (_defaultThemesAdapter != null) _defaultThemesAdapter.setActiveThemeId("system");
+          _activeThemeId = "monet";
+          _prefs.edit().putString("theme", "monet").apply();
+          if (_defaultThemesAdapter != null) _defaultThemesAdapter.setActiveThemeId("monet");
         }
         refreshMyThemes();
       }
@@ -249,9 +249,9 @@ public class ThemeActivity extends AppCompatActivity
           ThemeRepository.deleteCustomTheme(ThemeActivity.this, model.id);
           if (model.id.equals(_activeThemeId))
           {
-            _activeThemeId = "system";
-            _prefs.edit().putString("theme", "system").apply();
-            if (_defaultThemesAdapter != null) _defaultThemesAdapter.setActiveThemeId("system");
+            _activeThemeId = "monet";
+            _prefs.edit().putString("theme", "monet").apply();
+            if (_defaultThemesAdapter != null) _defaultThemesAdapter.setActiveThemeId("monet");
           }
           refreshMyThemes();
         })
@@ -263,7 +263,7 @@ public class ThemeActivity extends AppCompatActivity
   protected void onResume()
   {
     super.onResume();
-    String current = _prefs.getString("theme", "system");
+    String current = _prefs.getString("theme", "monet");
     if (!current.equals(_activeThemeId))
     {
       _activeThemeId = current;

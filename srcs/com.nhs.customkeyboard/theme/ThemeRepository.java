@@ -260,7 +260,7 @@ public class ThemeRepository
 
   public static ThemeModel findThemeById(Context context, String id)
   {
-    if (id == null || id.isEmpty()) id = "system";
+    if (id == null || id.isEmpty()) id = "monet";
     for (ThemeModel m : getDefaultThemes())
     {
       if (m.id.equals(id)) return m;
@@ -273,6 +273,6 @@ public class ThemeRepository
     {
       if (m.id.equals(id)) return m;
     }
-    return getDefaultThemes().get(1); // fallback to system
+    return getDefaultThemes().get(0); // fallback to monet
   }
 }
