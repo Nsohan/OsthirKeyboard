@@ -377,8 +377,26 @@ public class SuggestionToolsPreference extends Preference
     int margin = (int) ((gapDp / 2.0f) * density);
 
     TypedValue tv = new TypedValue();
-    getContext().getTheme().resolveAttribute(android.R.attr.textColorPrimary, tv, true);
-    int iconColor = tv.data;
+    int iconColor;
+    if (getContext().getTheme().resolveAttribute(android.R.attr.textColorPrimary, tv, true))
+    {
+      if (tv.type >= TypedValue.TYPE_FIRST_COLOR_INT && tv.type <= TypedValue.TYPE_LAST_COLOR_INT)
+      {
+        iconColor = tv.data;
+      }
+      else if (tv.resourceId != 0)
+      {
+        iconColor = androidx.core.content.ContextCompat.getColor(getContext(), tv.resourceId);
+      }
+      else
+      {
+        iconColor = tv.data;
+      }
+    }
+    else
+    {
+      iconColor = 0xFF000000;
+    }
 
     if (_previewMenuButton != null)
     {
