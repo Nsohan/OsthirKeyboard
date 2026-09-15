@@ -282,6 +282,8 @@
     <string name="clipboard_remove_confirmed">Yes</string>
     <string name="toast_no_voice_input">No voice typing app installed</string>
     <string name="pref_category_clipboard">Clipboard</string>
+    <string name="pref_clipboard_history_enabled_title">Enable clipboard</string>
+    <string name="pref_clipboard_history_enabled_summary">Keep recently copied text in clipboard history</string>
     <string name="pref_clipboard_history_duration">Clipboard memory duration</string>
     <string name="pref_clipboard_history_duration_1">At most 1 minute</string>
     <string name="pref_clipboard_history_duration_5">At most 5 minutes</string>

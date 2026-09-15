@@ -174,7 +174,8 @@
         android:title="@string/pref_screen_clipboard_title"
         android:icon="@drawable/ic_clipboard_outline">
       <PreferenceCategory android:title="@string/pref_category_clipboard" android:layout="@layout/pref_category_settings">
-        <ListPreference android:key="clipboard_history_duration" android:icon="@drawable/ic_clipboard" android:title="@string/pref_clipboard_history_duration" android:summary="%s" android:defaultValue="5" android:entries="@array/pref_clipboard_duration_entries" android:entryValues="@array/pref_clipboard_duration_values"/>
+        <SwitchPreferenceCompat android:key="clipboard_history_enabled" android:icon="@drawable/ic_clipboard" android:title="@string/pref_clipboard_history_enabled_title" android:summary="@string/pref_clipboard_history_enabled_summary" android:defaultValue="true"/>
+        <ListPreference android:key="clipboard_history_duration" android:icon="@drawable/ic_clipboard" android:title="@string/pref_clipboard_history_duration" android:summary="%s" android:defaultValue="5" android:entries="@array/pref_clipboard_duration_entries" android:entryValues="@array/pref_clipboard_duration_values" android:dependency="clipboard_history_enabled"/>
       </PreferenceCategory>
     </PreferenceScreen>
 
