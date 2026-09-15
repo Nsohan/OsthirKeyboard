@@ -23,8 +23,11 @@ public class Theme
   public final int labelColor;
   public final int colorLabelAction;
   public final int subLabelColor;
+  public final int subLabelActionColor;
   public final int secondaryLabelColor;
+  public final int secondaryLabelActionColor;
   public final int greyedLabelColor;
+  public final int greyedLabelActionColor;
 
   // Key borders
   public final float keyBorderRadius;
@@ -58,10 +61,20 @@ public class Theme
     pressedColor = s.getColor(R.styleable.keyboard_colorLabelPressed, labelColor);
     lockedColor = s.getColor(R.styleable.keyboard_colorLabelLocked, 0);
     subLabelColor = s.getColor(R.styleable.keyboard_colorSubLabel, 0);
-    secondaryLabelColor = adjustLight(labelColor,
-        s.getFloat(R.styleable.keyboard_secondaryDimming, 0.25f));
-    greyedLabelColor = adjustLight(labelColor,
-        s.getFloat(R.styleable.keyboard_greyedDimming, 0.5f));
+    float secDimming = s.getFloat(R.styleable.keyboard_secondaryDimming, 0.25f);
+    float greyDimming = s.getFloat(R.styleable.keyboard_greyedDimming, 0.5f);
+    secondaryLabelColor = adjustLight(labelColor, secDimming);
+    secondaryLabelActionColor = adjustLight(colorLabelAction, secDimming);
+    greyedLabelColor = adjustLight(labelColor, greyDimming);
+    greyedLabelActionColor = adjustLight(colorLabelAction, greyDimming);
+    if (colorLabelAction != labelColor)
+    {
+      subLabelActionColor = adjustLight(colorLabelAction, 0.35f);
+    }
+    else
+    {
+      subLabelActionColor = (subLabelColor != 0) ? subLabelColor : adjustLight(colorLabelAction, 0.35f);
+    }
     keyBorderRadius = s.getDimension(R.styleable.keyboard_keyBorderRadius, 0);
     keyBorderWidth = s.getDimension(R.styleable.keyboard_keyBorderWidth, 0);
     keyBorderWidthActivated = s.getDimension(R.styleable.keyboard_keyBorderWidthActivated, 0);

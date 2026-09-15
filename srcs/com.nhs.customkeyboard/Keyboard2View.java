@@ -790,26 +790,31 @@ public class Keyboard2View extends View
 
   private int labelColor(KeyboardData.Key key, KeyValue k, boolean isKeyDown, boolean sublabel)
   {
+    boolean isAction = (key != null && (key.role == KeyboardData.Key.Role.Action || isActionKey(key)));
     if (isKeyDown)
     {
       int flags = _pointers.getKeyFlags(k);
       if (flags != -1)
       {
         if ((flags & Pointers.FLAG_P_LOCKED) != 0)
-          return _theme.lockedColor;
-        return _theme.activatedColor;
+          return (isAction && _theme.lockedColor == 0) ? _theme.colorLabelAction : _theme.lockedColor;
+        return (isAction && _theme.activatedColor == 0) ? _theme.colorLabelAction : _theme.activatedColor;
       }
-      return _theme.pressedColor;
+      return isAction ? _theme.colorLabelAction : _theme.pressedColor;
     }
-    if (k.hasFlagsAny(KeyValue.FLAG_SECONDARY | KeyValue.FLAG_GREYED))
+    if (k.hasFlagsAny(KeyValue.FLAG_GREYED))
     {
-      if (k.hasFlagsAny(KeyValue.FLAG_GREYED))
-        return _theme.greyedLabelColor;
-      return _theme.secondaryLabelColor;
+      return isAction ? _theme.greyedLabelActionColor : _theme.greyedLabelColor;
     }
-    if (!sublabel && (key != null && (key.role == KeyboardData.Key.Role.Action || isActionKey(key))))
+    if (isAction)
     {
+      if (sublabel)
+        return _theme.subLabelActionColor;
       return _theme.colorLabelAction;
+    }
+    if (k.hasFlagsAny(KeyValue.FLAG_SECONDARY))
+    {
+      return _theme.secondaryLabelColor;
     }
     return sublabel ? _theme.subLabelColor : _theme.labelColor;
   }
@@ -1094,6 +1099,8 @@ public class Keyboard2View extends View
       return;
     Paint p = tc.indication_paint;
     p.setTextSize(_subLabelSize);
+    boolean isAction = isActionKey(k) || (k != null && k.role == KeyboardData.Key.Role.Action);
+    p.setColor(isAction ? _theme.subLabelActionColor : _theme.subLabelColor);
     canvas.drawText(k.indication, 0, k.indication.length(),
             x + keyW / 2f, (keyH - p.ascent() - p.descent()) * 4/5 + y, p);
   }
