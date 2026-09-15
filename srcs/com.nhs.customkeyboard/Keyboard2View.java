@@ -81,6 +81,10 @@ public class Keyboard2View extends View
   private android.graphics.Bitmap _customBgBitmap = null;
   private float _customBgDarkness = 0.3f;
   private Paint _customBgDarknessPaint = null;
+  private final RectF _tmpShadowRect = new RectF();
+  private final RectF _tmpShadowAmbientRect = new RectF();
+  private Paint _keyShadowPaint = null;
+  private Paint _keyShadowAmbientPaint = null;
 
   public void setPreviewMode(boolean preview)
   {
@@ -637,7 +641,7 @@ public class Keyboard2View extends View
             default:
             case Normal: tc_key = _tc.key; break;
           }
-        drawKeyFrame(canvas, x, y, keyW, keyH, tc_key, isHighlighted);
+        drawKeyFrame(canvas, x, y, keyW, keyH, tc_key, isHighlighted, isKeyDown);
         if (k.keys[0] != null)
           drawLabel(canvas, k, k.keys[0], keyW / 2f + x, y, keyH, isKeyDown, tc_key);
         for (int i = 1; i < 9; i++)
@@ -662,14 +666,56 @@ public class Keyboard2View extends View
     super.onDetachedFromWindow();
   }
 
-  /** Draw borders and background of the key. */
+  /** Draw bottom drop shadow and background of the key button. */
   void drawKeyFrame(Canvas canvas, float x, float y, float keyW, float keyH,
-                    Theme.Computed.Key tc, boolean isHighlighted)
+                    Theme.Computed.Key tc, boolean isHighlighted, boolean isKeyDown)
   {
     float r = tc.border_radius > 0 ? tc.border_radius : (_previewMode ? dp(6) : 0);
-    float w = tc.border_width;
-    float padding = (w > 0 ? w : (_previewMode ? dp(0.5f) : 0)) / 2.f;
-    _tmpRect.set(x + padding, y + padding, x + keyW - padding, y + keyH - padding);
+    _tmpRect.set(x, y, x + keyW, y + keyH);
+
+    boolean hasBg = (tc.bg_paint.getColor() != 0 && Color.alpha(tc.bg_paint.getColor()) > 0);
+    float shadow = (_config != null) ? _config.keyShadow : dp(3.0f);
+
+    // Render soft drop shadow elevation under key buttons matching exact Figma spec:
+    // Layer 1: X: 0, Y: 1px, Blur: 1px, Color: #46301E (12%)
+    // Layer 2: X: 0, Y: 1.5px, Blur: 2px, Color: #46301E (8%)
+    if (hasBg && shadow > 0f)
+    {
+      float factor = (shadow / dp(3.0f)) * (isKeyDown ? 0.3f : 1.0f);
+      if (factor > 0.05f)
+      {
+        boolean isDark = (getContext().getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES;
+        int sr = isDark ? 0 : 70;
+        int sg = isDark ? 0 : 48;
+        int sb = isDark ? 0 : 30;
+
+        if (_keyShadowPaint == null)
+        {
+          _keyShadowPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+          _keyShadowPaint.setStyle(Paint.Style.FILL);
+        }
+
+        // Layer 2: Y: 1.5px, Blur: 2px, rgba(70, 48, 30, 0.08)
+        float dy2 = dp(1.5f) * factor;
+        float blur2 = Math.max(0.1f, dp(2.0f) * factor);
+        int a2 = Math.max(1, (int)(255 * (isDark ? 0.16f : 0.08f) * Math.min(1.5f, factor)));
+        int c2 = Color.argb(a2, sr, sg, sb);
+        _keyShadowPaint.setColor(c2);
+        _keyShadowPaint.setShadowLayer(blur2, 0f, dy2, c2);
+        _tmpShadowRect.set(x, y + dy2, x + keyW, y + keyH + dy2);
+        canvas.drawRoundRect(_tmpShadowRect, r, r, _keyShadowPaint);
+
+        // Layer 1: Y: 1px, Blur: 1px, rgba(70, 48, 30, 0.12)
+        float dy1 = dp(1.0f) * factor;
+        float blur1 = Math.max(0.1f, dp(1.0f) * factor);
+        int a1 = Math.max(1, (int)(255 * (isDark ? 0.22f : 0.12f) * Math.min(1.5f, factor)));
+        int c1 = Color.argb(a1, sr, sg, sb);
+        _keyShadowPaint.setColor(c1);
+        _keyShadowPaint.setShadowLayer(blur1, 0f, dy1, c1);
+        _tmpShadowRect.set(x, y + dy1, x + keyW, y + keyH + dy1);
+        canvas.drawRoundRect(_tmpShadowRect, r, r, _keyShadowPaint);
+      }
+    }
 
     if (_previewMode && !_themePreviewMode)
     {
@@ -687,7 +733,7 @@ public class Keyboard2View extends View
     }
     else
     {
-      if (tc.bg_paint.getColor() != 0 && Color.alpha(tc.bg_paint.getColor()) > 0)
+      if (hasBg)
         canvas.drawRoundRect(_tmpRect, r, r, tc.bg_paint);
     }
 
@@ -709,44 +755,11 @@ public class Keyboard2View extends View
       canvas.drawRoundRect(_tmpRect, r, r, _previewHighlightPaint);
       canvas.drawRoundRect(_tmpRect, r, r, _previewHighlightBorderPaint);
     }
-
-    if (w > 0.f)
-    {
-      float overlap = r - r * 0.85f + w; // sin(45°)
-      drawBorder(canvas, x, y, x + overlap, y + keyH, tc.border_left_paint, tc);
-      drawBorder(canvas, x + keyW - overlap, y, x + keyW, y + keyH, tc.border_right_paint, tc);
-      drawBorder(canvas, x, y, x + keyW, y + overlap, tc.border_top_paint, tc);
-      drawBorder(canvas, x, y + keyH - overlap, x + keyW, y + keyH, tc.border_bottom_paint, tc);
-    }
-    else if (_previewMode && !_themePreviewMode && !isHighlighted)
-    {
-      if (_previewBorderPaint == null)
-      {
-        _previewBorderPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        _previewBorderPaint.setStyle(Paint.Style.STROKE);
-        _previewBorderPaint.setStrokeWidth(dp(1));
-        boolean isDark = (getContext().getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES;
-        _previewBorderPaint.setColor(isDark ? Color.argb(70, 255, 255, 255) : Color.argb(55, 0, 0, 0));
-      }
-      canvas.drawRoundRect(_tmpRect, r, r, _previewBorderPaint);
-    }
   }
 
   private float dp(float val)
   {
     return TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, val, getResources().getDisplayMetrics());
-  }
-
-  /** Clip to draw a border at a time. This allows to call [drawRoundRect]
-   several time with the same parameters but a different Paint. */
-  void drawBorder(Canvas canvas, float clipl, float clipt, float clipr,
-                  float clipb, Paint paint, Theme.Computed.Key tc)
-  {
-    float r = tc.border_radius;
-    canvas.save();
-    canvas.clipRect(clipl, clipt, clipr, clipb);
-    canvas.drawRoundRect(_tmpRect, r, r, paint);
-    canvas.restore();
   }
 
   public boolean isActionKey(KeyboardData.Key k)

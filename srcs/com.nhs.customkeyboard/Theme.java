@@ -160,10 +160,10 @@ public class Theme
       {
         border_radius = config.borderConfig ? config.customBorderRadius * keyWidth : theme.keyBorderRadius;
         int bg_color;
+        border_width = 0;
         if (activated)
         {
           bg_color = (role == KeyboardData.Key.Role.Action) ? theme.colorKeyActionActivated : theme.colorKeyActivated;
-          border_width = (role == KeyboardData.Key.Role.Action) ? theme.keyBorderWidthAction : theme.keyBorderWidthActivated;
         }
         else
         {
@@ -171,19 +171,15 @@ public class Theme
           {
             case Action:
               bg_color = theme.colorKeyAction;
-              border_width = theme.keyBorderWidthAction;
               break;
             case Space_bar:
               bg_color = theme.colorKeySpaceBar;
-              border_width = theme.keyBorderWidthSpaceBar;
               break;
             case Suggestion:
               bg_color = 0;
-              border_width = 0;
               break;
             default:
               bg_color = config.keyBorders ? theme.colorKey : 0;
-              border_width = config.keyBorders ? (config.borderConfig ? config.customBorderLineWidth : theme.keyBorderWidth) : 0;
               break;
           }
         }

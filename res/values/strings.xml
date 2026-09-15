@@ -180,9 +180,12 @@
     <string name="pref_swipe_dist_e_very_far">Very far</string>
     <string name="pref_key_horizontal_space">Horizontal spacing between the keys</string>
     <string name="pref_key_vertical_space">Vertical spacing between the keys</string>
-    <string name="pref_border_config_title">Customize borders</string>
-    <string name="pref_border_width_title">Border Width</string>
-    <string name="pref_corners_radius_title">Corner radius</string>
+    <string name="pref_corners_radius_title">Keys corner radius</string>
+    <!-- Legacy unused preferences kept for translation compatibility -->
+    <string name="pref_border_config_title" translatable="false">Customize borders</string>
+    <string name="pref_border_width_title" translatable="false">Border Width</string>
+    <string name="pref_key_shadow_title">Key button shadow</string>
+    <string name="pref_key_shadow_summary">Adjust 3D drop shadow elevation under keys</string>
     <string name="pref_circle_sensitivity_title">Circle gesture sensitivity</string>
     <string name="pref_circle_sensitivity_e_high">High</string>
     <string name="pref_circle_sensitivity_e_medium">Medium</string>

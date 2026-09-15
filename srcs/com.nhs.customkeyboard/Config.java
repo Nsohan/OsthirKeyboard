@@ -73,6 +73,7 @@ public final class Config
   public int keyboardOpacity; // 0 - 255
   public float customBorderRadius; // 0 - 1
   public float customBorderLineWidth; // dp
+  public float keyShadow; // dp in pixels
   public int keyOpacity; // 0 - 255
   public int keyActivatedOpacity; // 0 - 255
   public boolean double_tap_lock_shift;
@@ -218,10 +219,14 @@ public final class Config
     keyboardOpacity = _prefs.getInt("keyboard_opacity", 100) * 255 / 100;
     keyOpacity = _prefs.getInt("key_opacity", 100) * 255 / 100;
     keyActivatedOpacity = _prefs.getInt("key_activated_opacity", 100) * 255 / 100;
-    // keyboard border settings
-    borderConfig = _prefs.getBoolean("border_config", false);
-    customBorderRadius = _prefs.getInt("custom_border_radius", 0) / 100.f;
-    customBorderLineWidth = get_dip_pref(dm, "custom_border_line_width", 0);
+    // keyboard corner radius settings (always enabled)
+    borderConfig = true;
+    int savedRadius = _prefs.getInt("custom_border_radius", 25);
+    if (savedRadius == 0 && !_prefs.getBoolean("border_config", false))
+      savedRadius = 25;
+    customBorderRadius = savedRadius / 100.f;
+    customBorderLineWidth = 0;
+    keyShadow = get_dip_pref(dm, "key_shadow", 3.0f);
     screenHeightPixels = dm.heightPixels;
     // Row height is proportional to the screen size.
     // The keyboard is keyboardHeightPercent of the screen height on 16/9

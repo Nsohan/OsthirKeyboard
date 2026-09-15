@@ -91,9 +91,8 @@
         <com.nhs.customkeyboard.prefs.SlideBarPreference android:key="character_size" android:icon="@drawable/ic_lable_size" android:title="@string/pref_character_size_title" android:summary="@string/pref_character_size_summary" android:defaultValue="1.15" min="0.75" max="1.5"/>
         <com.nhs.customkeyboard.prefs.SlideBarPreference android:key="key_vertical_margin" android:icon="@drawable/ic_vertical_spacing" android:title="@string/pref_key_vertical_space" android:summary="%s%%" android:defaultValue="1.5" min="0" max="5"/>
         <com.nhs.customkeyboard.prefs.SlideBarPreference android:key="key_horizontal_margin" android:icon="@drawable/ic_horizontal_spacing" android:title="@string/pref_key_horizontal_space" android:summary="%s%%" android:defaultValue="2" min="0" max="5"/>
-        <SwitchPreferenceCompat android:key="border_config" android:icon="@drawable/ic_border" android:title="@string/pref_border_config_title" android:defaultValue="false"/>
-        <com.nhs.customkeyboard.prefs.IntSlideBarPreference android:key="custom_border_radius" android:icon="@drawable/ic_radius" android:title="@string/pref_corners_radius_title" android:summary="%s%%" android:defaultValue="0" min="0" max="100" android:dependency="border_config"/>
-        <com.nhs.customkeyboard.prefs.SlideBarPreference android:key="custom_border_line_width" android:icon="@drawable/ic_border_width" android:title="@string/pref_border_width_title" android:summary="%sdp" android:defaultValue="0" min="0" max="5" android:dependency="border_config"/>
+        <com.nhs.customkeyboard.prefs.IntSlideBarPreference android:key="custom_border_radius" android:icon="@drawable/ic_radius" android:title="@string/pref_corners_radius_title" android:summary="%s%%" android:defaultValue="25" min="0" max="100"/>
+        <com.nhs.customkeyboard.prefs.SlideBarPreference android:key="key_shadow" android:icon="@drawable/ic_border_width" android:title="@string/pref_key_shadow_title" android:summary="%sdp" android:defaultValue="3" min="0" max="6"/>
       </PreferenceCategory>
       <PreferenceCategory android:title="@string/pref_category_gif" android:layout="@layout/pref_category_settings">
         <EditTextPreference
