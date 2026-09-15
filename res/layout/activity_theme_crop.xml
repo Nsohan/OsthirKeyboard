@@ -1,365 +1,277 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/crop_root_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:orientation="vertical"
     android:background="#121316"
     android:fitsSystemWindows="true">
 
-  <!-- ================= STEP 1: CROP & POSITION ================= -->
-  <LinearLayout
-      android:id="@+id/layout_step_crop"
+  <!-- Top Bar with Back Button and Title -->
+  <FrameLayout
       android:layout_width="match_parent"
-      android:layout_height="match_parent"
-      android:orientation="vertical"
-      android:visibility="visible">
+      android:layout_height="52dp"
+      android:paddingHorizontal="16dp">
 
-    <!-- Top Bar with Back Button and Title -->
-    <FrameLayout
-        android:layout_width="match_parent"
-        android:layout_height="56dp"
-        android:paddingHorizontal="16dp">
+    <ImageView
+        android:id="@+id/btn_crop_back"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_gravity="start|center_vertical"
+        android:padding="8dp"
+        android:src="@drawable/ic_arrow_back"
+        app:tint="#FFFFFF"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="@string/theme_cancel"/>
 
-      <ImageView
-          android:id="@+id/btn_crop_back"
-          android:layout_width="40dp"
-          android:layout_height="40dp"
-          android:layout_gravity="start|center_vertical"
-          android:padding="8dp"
-          android:src="@drawable/ic_arrow_back"
-          app:tint="#FFFFFF"
-          android:background="?attr/selectableItemBackgroundBorderless"
-          android:contentDescription="@string/theme_cancel"/>
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:text="@string/theme_custom_theme_title"
+        android:textColor="#FFFFFF"
+        android:textSize="17sp"
+        android:textStyle="bold"/>
+  </FrameLayout>
 
-      <TextView
-          android:layout_width="wrap_content"
-          android:layout_height="wrap_content"
-          android:layout_gravity="center"
-          android:text="@string/theme_pinch_drag"
-          android:textColor="#FFFFFF"
-          android:textSize="16sp"/>
-    </FrameLayout>
+  <!-- Interactive Crop + Superimposed Keyboard Container -->
+  <FrameLayout
+      android:id="@+id/crop_container_frame"
+      android:layout_width="match_parent"
+      android:layout_height="0dp"
+      android:layout_weight="1">
 
-    <!-- Interactive Crop Area -->
+    <!-- Interactive Crop Area (pinch to zoom, drag to move) -->
     <com.nhs.customkeyboard.theme.CropImageView
         android:id="@+id/crop_image_view"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"/>
+        android:layout_height="match_parent"/>
 
-    <!-- Bottom Next Button -->
+    <!-- Keyboard Overlay (positioned dynamically over _cropRect) -->
     <FrameLayout
-        android:layout_width="match_parent"
+        android:id="@+id/crop_keyboard_overlay"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:paddingVertical="28dp">
+        android:visibility="invisible">
 
-      <com.google.android.material.button.MaterialButton
-          android:id="@+id/btn_crop_next"
-          style="@style/Widget.MaterialComponents.Button"
-          android:layout_width="140dp"
-          android:layout_height="48dp"
-          android:layout_gravity="center"
-          android:text="Next"
-          android:textAllCaps="false"
-          android:textSize="15sp"
-          android:textColor="@color/settings_on_primary"
-          app:backgroundTint="@color/settings_primary"
-          app:cornerRadius="24dp"/>
-    </FrameLayout>
-  </LinearLayout>
-
-  <!-- ================= STEP 2: ADJUST BRIGHTNESS ================= -->
-  <LinearLayout
-      android:id="@+id/layout_step_brightness"
-      android:layout_width="match_parent"
-      android:layout_height="match_parent"
-      android:orientation="vertical"
-      android:visibility="gone">
-
-    <!-- Top Bar with Back Button and Title -->
-    <FrameLayout
-        android:layout_width="match_parent"
-        android:layout_height="56dp"
-        android:paddingHorizontal="16dp">
-
-      <ImageView
-          android:id="@+id/btn_brightness_back"
-          android:layout_width="40dp"
-          android:layout_height="40dp"
-          android:layout_gravity="start|center_vertical"
-          android:padding="8dp"
-          android:src="@drawable/ic_arrow_back"
-          app:tint="#FFFFFF"
-          android:background="?attr/selectableItemBackgroundBorderless"
-          android:contentDescription="@string/theme_cancel"/>
-
-      <TextView
-          android:layout_width="wrap_content"
-          android:layout_height="wrap_content"
-          android:layout_gravity="center"
-          android:text="@string/theme_adjust_brightness"
-          android:textColor="#FFFFFF"
-          android:textSize="18sp"/>
-    </FrameLayout>
-
-    <!-- Center Preview Card -->
-    <FrameLayout
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:gravity="center"
-        android:paddingHorizontal="24dp"
-        android:paddingVertical="8dp">
-
-      <androidx.cardview.widget.CardView
+      <LinearLayout
+          android:id="@+id/layout_card_content"
           android:layout_width="match_parent"
-          android:layout_height="wrap_content"
-          android:layout_gravity="center"
-          app:cardCornerRadius="18dp"
-          app:cardElevation="6dp"
-          app:cardBackgroundColor="#1E1F22">
+          android:layout_height="match_parent"
+          android:orientation="vertical">
 
-        <RelativeLayout
+        <!-- Simulated Toolbar Header -->
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+            android:layout_height="22dp"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:paddingHorizontal="8dp">
 
-          <!-- Cropped Image Background -->
           <ImageView
-              android:id="@+id/iv_cropped_preview"
-              android:layout_width="match_parent"
-              android:layout_height="0dp"
-              android:layout_alignTop="@+id/layout_card_content"
-              android:layout_alignBottom="@+id/layout_card_content"
-              android:scaleType="centerCrop"
+              android:layout_width="16dp"
+              android:layout_height="16dp"
+              android:src="@drawable/ic_grid_menu"
+              app:tint="#E3E3E3"
               android:contentDescription="@null"/>
 
-          <!-- Live Darkness Overlay -->
           <View
-              android:id="@+id/brightness_darkness_overlay"
-              android:layout_width="match_parent"
-              android:layout_height="0dp"
-              android:layout_alignTop="@+id/layout_card_content"
-              android:layout_alignBottom="@+id/layout_card_content"
-              android:background="#000000"/>
+              android:layout_width="0dp"
+              android:layout_height="match_parent"
+              android:layout_weight="1"/>
 
-          <!-- Superimposed Keyboard & Toolbar -->
-          <LinearLayout
-              android:id="@+id/layout_card_content"
-              android:layout_width="match_parent"
-              android:layout_height="wrap_content"
-              android:orientation="vertical"
-              android:padding="4dp">
+          <ImageView
+              android:layout_width="16dp"
+              android:layout_height="16dp"
+              android:src="@drawable/ic_mic"
+              app:tint="#E3E3E3"
+              android:contentDescription="@null"/>
+        </LinearLayout>
 
-            <!-- Simulated Toolbar -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="24dp"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:paddingHorizontal="10dp">
+        <!-- Live Superimposed Keyboard Keys Holder -->
+        <FrameLayout
+            android:id="@+id/brightness_keyboard_holder"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"/>
+      </LinearLayout>
 
-              <ImageView
-                  android:layout_width="18dp"
-                  android:layout_height="18dp"
-                  android:src="@drawable/ic_grid_menu"
-                  app:tint="#E3E3E3"
-                  android:contentDescription="@null"/>
-
-              <View
-                  android:layout_width="0dp"
-                  android:layout_height="match_parent"
-                  android:layout_weight="1"/>
-
-              <ImageView
-                  android:layout_width="18dp"
-                  android:layout_height="18dp"
-                  android:src="@drawable/ic_mic"
-                  app:tint="#E3E3E3"
-                  android:contentDescription="@null"/>
-            </LinearLayout>
-
-            <!-- Keyboard Layout -->
-            <FrameLayout
-                android:id="@+id/brightness_keyboard_holder"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"/>
-          </LinearLayout>
-        </RelativeLayout>
-      </androidx.cardview.widget.CardView>
+      <!-- Transparent touch forwarder to pass all gestures directly down to CropImageView -->
+      <View
+          android:id="@+id/crop_touch_interceptor"
+          android:layout_width="match_parent"
+          android:layout_height="match_parent"/>
     </FrameLayout>
+  </FrameLayout>
 
-    <!-- Controls Container (Bottom) -->
+  <!-- Controls Container (Sliders) -->
+  <LinearLayout
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:orientation="vertical"
+      android:paddingHorizontal="20dp"
+      android:paddingTop="6dp"
+      android:paddingBottom="2dp">
+
+    <!-- Brightness Row -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:paddingHorizontal="24dp"
-        android:layout_marginTop="2dp"
-        android:layout_marginBottom="4dp">
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
 
-      <!-- Brightness Row -->
-      <LinearLayout
-          android:layout_width="match_parent"
+      <TextView
+          android:layout_width="96dp"
           android:layout_height="wrap_content"
-          android:orientation="horizontal"
-          android:gravity="center_vertical">
+          android:text="@string/theme_brightness"
+          android:textSize="13sp"
+          android:textColor="#B0BEC5"/>
 
-        <TextView
-            android:layout_width="100dp"
-            android:layout_height="wrap_content"
-            android:text="@string/theme_brightness"
-            android:textSize="14sp"
-            android:textColor="#B0BEC5"/>
-
-        <com.google.android.material.slider.Slider
-            android:id="@+id/slider_brightness"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:valueFrom="0.0"
-            android:valueTo="100.0"
-            android:stepSize="1.0"
-            android:value="80.0"/>
-
-        <TextView
-            android:id="@+id/tv_brightness_value"
-            android:layout_width="48dp"
-            android:layout_height="wrap_content"
-            android:gravity="end"
-            android:text="80%"
-            android:textSize="14sp"
-            android:textColor="#FFFFFF"
-            android:layout_marginStart="4dp"/>
-      </LinearLayout>
-
-      <!-- Key Opacity Row -->
-      <LinearLayout
-          android:layout_width="match_parent"
+      <com.google.android.material.slider.Slider
+          android:id="@+id/slider_brightness"
+          android:layout_width="0dp"
           android:layout_height="wrap_content"
-          android:orientation="horizontal"
-          android:gravity="center_vertical"
-          android:layout_marginTop="2dp">
+          android:layout_weight="1"
+          android:valueFrom="0.0"
+          android:valueTo="100.0"
+          android:stepSize="1.0"
+          android:value="80.0"/>
 
-        <TextView
-            android:layout_width="100dp"
-            android:layout_height="wrap_content"
-            android:text="@string/theme_key_opacity"
-            android:textSize="14sp"
-            android:textColor="#B0BEC5"/>
-
-        <com.google.android.material.slider.Slider
-            android:id="@+id/slider_key_opacity"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:valueFrom="0.0"
-            android:valueTo="100.0"
-            android:stepSize="1.0"
-            android:value="100.0"/>
-
-        <TextView
-            android:id="@+id/tv_key_opacity_value"
-            android:layout_width="48dp"
-            android:layout_height="wrap_content"
-            android:gravity="end"
-            android:text="100%"
-            android:textSize="14sp"
-            android:textColor="#FFFFFF"
-            android:layout_marginStart="4dp"/>
-      </LinearLayout>
-
-      <!-- Blur Row -->
-      <LinearLayout
-          android:layout_width="match_parent"
+      <TextView
+          android:id="@+id/tv_brightness_value"
+          android:layout_width="44dp"
           android:layout_height="wrap_content"
-          android:orientation="horizontal"
-          android:gravity="center_vertical"
-          android:layout_marginTop="2dp">
-
-        <TextView
-            android:layout_width="100dp"
-            android:layout_height="wrap_content"
-            android:text="@string/theme_blur"
-            android:textSize="14sp"
-            android:textColor="#B0BEC5"/>
-
-        <com.google.android.material.slider.Slider
-            android:id="@+id/slider_blur"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:valueFrom="0.0"
-            android:valueTo="100.0"
-            android:stepSize="1.0"
-            android:value="0.0"/>
-
-        <TextView
-            android:id="@+id/tv_blur_value"
-            android:layout_width="48dp"
-            android:layout_height="wrap_content"
-            android:gravity="end"
-            android:text="0%"
-            android:textSize="14sp"
-            android:textColor="#FFFFFF"
-            android:layout_marginStart="4dp"/>
-      </LinearLayout>
-
-      <!-- Key Shadow Row -->
-      <LinearLayout
-          android:layout_width="match_parent"
-          android:layout_height="wrap_content"
-          android:orientation="horizontal"
-          android:gravity="center_vertical"
-          android:layout_marginTop="2dp">
-
-        <TextView
-            android:layout_width="100dp"
-            android:layout_height="wrap_content"
-            android:text="@string/theme_key_shadow"
-            android:textSize="14sp"
-            android:textColor="#B0BEC5"/>
-
-        <com.google.android.material.slider.Slider
-            android:id="@+id/slider_key_shadow"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:valueFrom="0.0"
-            android:valueTo="6.0"
-            android:value="0.0"/>
-
-        <TextView
-            android:id="@+id/tv_key_shadow_value"
-            android:layout_width="48dp"
-            android:layout_height="wrap_content"
-            android:gravity="end"
-            android:text="0.0dp"
-            android:textSize="14sp"
-            android:textColor="#FFFFFF"
-            android:layout_marginStart="4dp"/>
-      </LinearLayout>
+          android:gravity="end"
+          android:text="80%"
+          android:textSize="13sp"
+          android:textColor="#FFFFFF"
+          android:layout_marginStart="4dp"/>
     </LinearLayout>
 
-    <!-- Bottom Done Button -->
-    <FrameLayout
+    <!-- Key Opacity Row -->
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingTop="12dp"
-        android:paddingBottom="24dp">
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
 
-      <com.google.android.material.button.MaterialButton
-          android:id="@+id/btn_brightness_done"
-          style="@style/Widget.MaterialComponents.Button"
-          android:layout_width="140dp"
-          android:layout_height="48dp"
-          android:layout_gravity="center"
-          android:text="Done"
-          android:textAllCaps="false"
-          android:textSize="15sp"
-          android:textColor="@color/settings_on_primary"
-          app:backgroundTint="@color/settings_primary"
-          app:cornerRadius="24dp"/>
-    </FrameLayout>
+      <TextView
+          android:layout_width="96dp"
+          android:layout_height="wrap_content"
+          android:text="@string/theme_key_opacity"
+          android:textSize="13sp"
+          android:textColor="#B0BEC5"/>
+
+      <com.google.android.material.slider.Slider
+          android:id="@+id/slider_key_opacity"
+          android:layout_width="0dp"
+          android:layout_height="wrap_content"
+          android:layout_weight="1"
+          android:valueFrom="0.0"
+          android:valueTo="100.0"
+          android:stepSize="1.0"
+          android:value="100.0"/>
+
+      <TextView
+          android:id="@+id/tv_key_opacity_value"
+          android:layout_width="44dp"
+          android:layout_height="wrap_content"
+          android:gravity="end"
+          android:text="100%"
+          android:textSize="13sp"
+          android:textColor="#FFFFFF"
+          android:layout_marginStart="4dp"/>
+    </LinearLayout>
+
+    <!-- Blur Row -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+      <TextView
+          android:layout_width="96dp"
+          android:layout_height="wrap_content"
+          android:text="@string/theme_blur"
+          android:textSize="13sp"
+          android:textColor="#B0BEC5"/>
+
+      <com.google.android.material.slider.Slider
+          android:id="@+id/slider_blur"
+          android:layout_width="0dp"
+          android:layout_height="wrap_content"
+          android:layout_weight="1"
+          android:valueFrom="0.0"
+          android:valueTo="100.0"
+          android:stepSize="1.0"
+          android:value="0.0"/>
+
+      <TextView
+          android:id="@+id/tv_blur_value"
+          android:layout_width="44dp"
+          android:layout_height="wrap_content"
+          android:gravity="end"
+          android:text="0%"
+          android:textSize="13sp"
+          android:textColor="#FFFFFF"
+          android:layout_marginStart="4dp"/>
+    </LinearLayout>
+
+    <!-- Key Shadow Row -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+      <TextView
+          android:layout_width="96dp"
+          android:layout_height="wrap_content"
+          android:text="@string/theme_key_shadow"
+          android:textSize="13sp"
+          android:textColor="#B0BEC5"/>
+
+      <com.google.android.material.slider.Slider
+          android:id="@+id/slider_key_shadow"
+          android:layout_width="0dp"
+          android:layout_height="wrap_content"
+          android:layout_weight="1"
+          android:valueFrom="0.0"
+          android:valueTo="6.0"
+          android:value="0.0"/>
+
+      <TextView
+          android:id="@+id/tv_key_shadow_value"
+          android:layout_width="44dp"
+          android:layout_height="wrap_content"
+          android:gravity="end"
+          android:text="0.0dp"
+          android:textSize="13sp"
+          android:textColor="#FFFFFF"
+          android:layout_marginStart="4dp"/>
+    </LinearLayout>
   </LinearLayout>
-</FrameLayout>
+
+  <!-- Bottom Done Button -->
+  <FrameLayout
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:paddingTop="6dp"
+      android:paddingBottom="16dp">
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btn_crop_done"
+        style="@style/Widget.MaterialComponents.Button"
+        android:layout_width="160dp"
+        android:layout_height="46dp"
+        android:layout_gravity="center"
+        android:text="Done"
+        android:textAllCaps="false"
+        android:textSize="15sp"
+        android:textColor="@color/settings_on_primary"
+        app:backgroundTint="@color/settings_primary"
+        app:cornerRadius="23dp"/>
+  </FrameLayout>
+</LinearLayout>

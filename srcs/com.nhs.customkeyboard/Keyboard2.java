@@ -1433,7 +1433,7 @@ public class Keyboard2 extends InputMethodService
         Bitmap bmp = android.graphics.BitmapFactory.decodeFile(_config.customThemeImagePath);
         if (bmp != null)
         {
-          v.setBackground(new CustomThemeBackgroundDrawable(bmp, _config.customThemeDarkness));
+          v.setBackground(new com.nhs.customkeyboard.theme.CustomThemeBackgroundDrawable(bmp, _config.customThemeDarkness, v));
           return;
         }
       }
@@ -1459,74 +1459,6 @@ public class Keyboard2 extends InputMethodService
     if (_keyboard_container_view != null)
     {
       applyRootContainerBackground(_keyboard_container_view);
-    }
-  }
-
-  private static class CustomThemeBackgroundDrawable extends Drawable
-  {
-    private final Bitmap _bitmap;
-    private final float _darkness;
-    private final Paint _paint = new Paint(Paint.ANTI_ALIAS_FLAG | Paint.FILTER_BITMAP_FLAG);
-    private final Paint _darknessPaint = new Paint();
-    private final Rect _srcRect = new Rect();
-    private final Rect _dstRect = new Rect();
-
-    public CustomThemeBackgroundDrawable(Bitmap bitmap, float darkness)
-    {
-      _bitmap = bitmap;
-      _darkness = darkness;
-      _darknessPaint.setColor(Color.BLACK);
-      _darknessPaint.setStyle(Paint.Style.FILL);
-      _darknessPaint.setAlpha((int) (Math.min(0.9f, Math.max(0f, darkness)) * 255));
-    }
-
-    @Override
-    public void draw(@androidx.annotation.NonNull Canvas canvas)
-    {
-      Rect bounds = getBounds();
-      if (bounds.isEmpty() || _bitmap == null || _bitmap.isRecycled()) return;
-
-      int viewW = bounds.width();
-      int viewH = bounds.height();
-      int bmpW = _bitmap.getWidth();
-      int bmpH = _bitmap.getHeight();
-
-      float scale = Math.max((float) viewW / bmpW, (float) viewH / bmpH);
-      float scaledW = bmpW * scale;
-      float scaledH = bmpH * scale;
-
-      float left = bounds.left + (viewW - scaledW) / 2f;
-      float top = bounds.bottom - scaledH;
-
-      _srcRect.set(0, 0, bmpW, bmpH);
-      _dstRect.set((int) left, (int) top, (int) (left + scaledW), (int) (top + scaledH));
-
-      canvas.save();
-      canvas.clipRect(bounds);
-      canvas.drawBitmap(_bitmap, _srcRect, _dstRect, _paint);
-      if (_darkness > 0f)
-      {
-        canvas.drawRect(bounds, _darknessPaint);
-      }
-      canvas.restore();
-    }
-
-    @Override
-    public void setAlpha(int alpha)
-    {
-      _paint.setAlpha(alpha);
-    }
-
-    @Override
-    public void setColorFilter(@androidx.annotation.Nullable ColorFilter colorFilter)
-    {
-      _paint.setColorFilter(colorFilter);
-    }
-
-    @Override
-    public int getOpacity()
-    {
-      return PixelFormat.TRANSLUCENT;
     }
   }
 }
