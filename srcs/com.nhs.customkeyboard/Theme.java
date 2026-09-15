@@ -190,7 +190,11 @@ public class Theme
         int opacity = activated ? config.keyActivatedOpacity : config.keyOpacity;
         int baseAlpha = (bg_color >>> 24);
         int finalAlpha = (int) (baseAlpha * (opacity / 255f));
-        bg_paint.setColor((bg_color & 0x00FFFFFF) | (finalAlpha << 24));
+        // Apply key brightness multiplier to each RGB channel, clamped to 0-255
+        int br = Math.min(255, (int)(((bg_color >> 16) & 0xFF) * config.keyBrightness));
+        int bg = Math.min(255, (int)(((bg_color >> 8) & 0xFF) * config.keyBrightness));
+        int bb = Math.min(255, (int)((bg_color & 0xFF) * config.keyBrightness));
+        bg_paint.setColor((finalAlpha << 24) | (br << 16) | (bg << 8) | bb);
         border_left_paint = init_border_paint(config, border_width, theme.keyBorderColorLeft);
         border_top_paint = init_border_paint(config, border_width, theme.keyBorderColorTop);
         border_right_paint = init_border_paint(config, border_width, theme.keyBorderColorRight);

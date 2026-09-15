@@ -69,6 +69,7 @@ public final class Config
   public float key_vertical_margin;
   public float key_horizontal_margin;
   public int labelBrightness; // 0 - 255
+  public float keyBrightness; // 0.5 - 2.0 multiplier
   public int keyboardOpacity; // 0 - 255
   public float customBorderRadius; // 0 - 1
   public float customBorderLineWidth; // dp
@@ -212,6 +213,7 @@ public final class Config
     key_horizontal_margin = get_dip_pref(dm, "key_horizontal_margin", 2) / 100;
     // Label brightness is used as the alpha channel
     labelBrightness = _prefs.getInt("label_brightness", 100) * 255 / 100;
+    keyBrightness = _prefs.getInt("key_brightness", 100) / 100.f;
     // Keyboard opacity
     keyboardOpacity = _prefs.getInt("keyboard_opacity", 100) * 255 / 100;
     keyOpacity = _prefs.getInt("key_opacity", 100) * 255 / 100;

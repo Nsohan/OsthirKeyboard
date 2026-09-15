@@ -240,8 +240,8 @@
   <style name="MonetDark" parent="@style/BaseTheme">
     <item name="android:isLightTheme">false</item>
     <item name="colorKeyboard">@color/system_neutral1_900</item>
-    <item name="colorKey">@color/system_neutral1_800</item>
-    <item name="colorKeyActivated">@color/system_neutral1_700</item>
+    <item name="colorKey">@color/system_neutral1_600</item>
+    <item name="colorKeyActivated">@color/system_neutral1_500</item>
     <item name="colorKeyAction">@color/system_accent2_800</item>
     <item name="colorKeyActionActivated">@color/system_accent2_800</item>
     <item name="colorKeySpaceBar">?attr/colorKey</item>

@@ -12,6 +12,7 @@
     <string name="pref_category_layout">Active Layouts</string>
     <string name="pref_category_layout_options">Layout Options</string>
     <string name="pref_label_brightness">Adjust label brightness</string>
+    <string name="pref_key_brightness">Adjust key brightness</string>
     <string name="pref_keyboard_opacity">Adjust keyboard background opacity</string>
     <string name="pref_key_opacity">Adjust key opacity</string>
     <string name="pref_key_activated_opacity">Adjust pressed key opacity</string>
