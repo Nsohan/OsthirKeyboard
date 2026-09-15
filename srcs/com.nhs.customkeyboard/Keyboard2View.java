@@ -1111,6 +1111,14 @@ public class Keyboard2View extends View
   private float scaleTextSize(KeyValue k, boolean main_label)
   {
     float smaller_font = k.hasFlagsAny(KeyValue.FLAG_SMALLER_FONT) ? 0.75f : 1.f;
+    if (k != null && k.getKind() == KeyValue.Kind.Event)
+    {
+      KeyValue.Event ev = k.getEvent();
+      if (ev == KeyValue.Event.SWITCH_VOICE_TYPING || ev == KeyValue.Event.SWITCH_VOICE_TYPING_CHOOSER)
+      {
+        smaller_font = 1.15f;
+      }
+    }
     float label_size = main_label ? _mainLabelSize : _subLabelSize;
     return label_size * smaller_font;
   }

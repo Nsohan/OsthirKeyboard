@@ -546,7 +546,7 @@ public final class KeyValue implements Comparable<KeyValue>
   public static final KeyValue CHANGE_METHOD = eventKey(0xE009, Event.CHANGE_METHOD_PICKER, FLAG_SMALLER_FONT);
   public static final KeyValue CHANGE_METHOD_PREV = eventKey(0xE009, Event.CHANGE_METHOD_PREV, FLAG_SMALLER_FONT);
   public static final KeyValue CHANGE_METHOD_NEXT = eventKey(0xE009, Event.CHANGE_METHOD_NEXT, FLAG_SMALLER_FONT);
-  public static final KeyValue VOICE_TYPING_CHOOSER = eventKey(0xE015, Event.SWITCH_VOICE_TYPING_CHOOSER, FLAG_SMALLER_FONT);
+  public static final KeyValue VOICE_TYPING_CHOOSER = eventKey(0xE015, Event.SWITCH_VOICE_TYPING_CHOOSER, 0);
   public static final KeyValue COMPOSE_CANCEL = placeholderKey(0xE01A, Placeholder.COMPOSE_CANCEL, FLAG_SECONDARY);
 
   public static KeyValue getSpecialKeyByName(String name)
@@ -661,7 +661,7 @@ public final class KeyValue implements Comparable<KeyValue>
       case "change_method_next": return CHANGE_METHOD_NEXT;
       case "action": return eventKey("Action", Event.ACTION, FLAG_SMALLER_FONT); // Will always be replaced
       case "capslock": return eventKey(0xE012, Event.CAPS_LOCK, 0);
-      case "voice_typing": return eventKey(0xE015, Event.SWITCH_VOICE_TYPING, FLAG_SMALLER_FONT);
+      case "voice_typing": return eventKey(0xE015, Event.SWITCH_VOICE_TYPING, 0);
       case "voice_typing_chooser": return VOICE_TYPING_CHOOSER;
       case "complete_first": return statefulKey(Stateful.Complete_first);
       case "complete_second": return statefulKey(Stateful.Complete_second);
