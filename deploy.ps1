@@ -1,3 +1,7 @@
+param(
+    [string]$Device = ""
+)
+
 # NHSCustomKeyboard 1-Click Wi-Fi Deploy Script for Antigravity / PowerShell
 Write-Host "=========================================" -ForegroundColor Cyan
 Write-Host " NHSCustomKeyboard Deploy to Android Device" -ForegroundColor Cyan
@@ -22,19 +26,62 @@ if (-not $env:JAVA_HOME -or -not (Test-Path "$env:JAVA_HOME\bin\java.exe")) {
 }
 
 # 1. Check for connected ADB device
-$deviceLines = adb devices | Select-String -Pattern "\b(device)\b"
-if (-not $deviceLines) {
-    adb connect 192.168.1.4:39435 | Out-Null
-    $deviceLines = adb devices | Select-String -Pattern "\b(device)\b"
-}
-if (-not $deviceLines) {
-    Write-Host "No device connected via ADB." -ForegroundColor Red
-    Write-Host "Please connect your phone via Wi-Fi ADB first:" -ForegroundColor Yellow
-    Write-Host "  adb connect <YOUR_PHONE_IP>:<PORT>" -ForegroundColor White
-    exit 1
+function Get-ConnectedDevices {
+    $lines = adb devices
+    $found = @()
+    foreach ($line in $lines) {
+        if ($line -match '^([^\s]+)\s+device$') {
+            $found += $Matches[1].Trim()
+        }
+    }
+    return ,$found
 }
 
-$targetDevice = ($deviceLines | ForEach-Object { ($_ -split "`t")[0] })[0]
+$targetDevice = $Device
+if (-not $targetDevice) {
+    $connectedDevices = @(Get-ConnectedDevices)
+    if ($connectedDevices.Count -eq 0) {
+        Write-Host "No active ADB device detected." -ForegroundColor Yellow
+        Write-Host "Enter phone IP suffix [Default: 68.120]:" -ForegroundColor Cyan
+        Write-Host -NoNewline "192.168." -ForegroundColor Green
+        $inputSuffix = (Read-Host).Trim()
+
+        if (-not $inputSuffix) {
+            $inputSuffix = "68.120"
+        }
+
+        # Handle whether user typed the suffix or the full IP
+        if ($inputSuffix -match '^192\.168\.') {
+            $ip = $inputSuffix
+        } elseif ($inputSuffix -match '^\d+\.\d+\.\d+\.\d+') {
+            $ip = $inputSuffix
+        } else {
+            $inputSuffix = $inputSuffix.TrimStart('.')
+            $ip = "192.168.$inputSuffix"
+        }
+
+        # Default TCP/IP port 5555
+        if ($ip -notmatch ':\d+$') {
+            $connectAddress = "$ip`:5555"
+        } else {
+            $connectAddress = $ip
+        }
+
+        Write-Host "Connecting to $connectAddress..." -ForegroundColor Cyan
+        adb connect $connectAddress | Out-Null
+        Start-Sleep -Milliseconds 500
+
+        $connectedDevices = @(Get-ConnectedDevices)
+    }
+
+    if ($connectedDevices.Count -eq 0) {
+        Write-Host "Failed to connect to device via ADB." -ForegroundColor Red
+        Write-Host "Please ensure Wireless Debugging is ON and your phone is on the same Wi-Fi network." -ForegroundColor Yellow
+        exit 1
+    }
+    $targetDevice = $connectedDevices[0]
+}
+
 Write-Host "Found connected device ($targetDevice). Building and installing debug APK..." -ForegroundColor Green
 
 # 2. Build and install to phone
