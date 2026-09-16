@@ -149,9 +149,12 @@ if ($gitStatus) {
     
     if (-not $DryRun -and -not $SkipPush) {
         $shouldCommit = $AutoCommit
-        if (-not $shouldCommit -and [Environment]::UserInteractive) {
-            $confirm = Read-Host "Stage and commit these changes before releasing? (y/N)"
-            $shouldCommit = ($confirm -eq 'y' -or $confirm -eq 'Y')
+        $canPrompt = -not [Console]::IsInputRedirected
+        if (-not $shouldCommit -and $canPrompt) {
+            try {
+                $confirm = Read-Host "Stage and commit these changes before releasing? (y/N)"
+                $shouldCommit = ($confirm -eq 'y' -or $confirm -eq 'Y')
+            } catch {}
         }
         
         if ($shouldCommit) {
@@ -347,12 +350,13 @@ host=github.com
                 $tmpJsonFile = [System.IO.Path]::GetTempFileName()
                 $utf8NoBom = [System.Text.UTF8Encoding]::new($false)
                 [System.IO.File]::WriteAllBytes($tmpJsonFile, $utf8NoBom.GetBytes($releasePayload))
+                $tmpJsonPath = $tmpJsonFile.Replace('\', '/')
 
                 $createResp = & curl.exe -s -S -X POST `
                     -H "Authorization: Bearer $githubToken" `
                     -H "Accept: application/vnd.github+json" `
                     -H "Content-Type: application/json" `
-                    --data-binary "@$tmpJsonFile" `
+                    --data-binary "@$tmpJsonPath" `
                     "$releaseApiUrl"
 
                 Remove-Item $tmpJsonFile -Force -ErrorAction SilentlyContinue
@@ -401,11 +405,13 @@ host=github.com
                 Write-Info "Uploading $assetName..."
                 $uploadUri = "https://uploads.github.com/repos/$repoOwner/$repoName/releases/$targetReleaseId/assets?name=$assetName"
 
+                $assetPathClean = (Resolve-Path $assetPath).Path.Replace('\', '/')
+
                 # Use curl.exe for robust large binary streaming and progress meter
                 $curlResult = & curl.exe --progress-bar -f -s -S -X POST `
                     -H "Authorization: Bearer $githubToken" `
                     -H "Content-Type: application/vnd.android.package-archive" `
-                    --data-binary "@$assetPath" `
+                    --data-binary "@$assetPathClean" `
                     "$uploadUri" 2>&1
 
                 if ($LASTEXITCODE -ne 0) {
