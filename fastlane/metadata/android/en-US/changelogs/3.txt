@@ -1,0 +1,6 @@
+• Brand new Custom Image & Wallpaper Theme Studio with live preview
+• Independent custom theme key opacity
+• Expanded candidate grid on suggestion long-press with drag-to-delete
+• Customizable suggestion toolbar (icon size, spacing, order)
+• Fixed contrast in translation language picker and candidate popups
+• Gboard-style 3-state Shift behavior improvements
