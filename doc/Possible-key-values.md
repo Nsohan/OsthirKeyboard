@@ -184,6 +184,10 @@ Value                  | Meaning
 `switch_backward`      | Change the keyboard layout to the previous one in the list.
 `switch_greekmath`     | Switch to the Greek & Math Symbols layer.
 `switch_clipboard`     | Switch to the clipboard pane.
+`switch_back_clipboard`| Switch back from the clipboard pane to the text layer.
+`switch_gif`           | Switch to the GIF picker pane.
+`switch_back_gif`      | Switch back from the GIF picker pane to the text layer.
+`switch_period_symbols`| Switch to period symbols popup layer.
 `change_method`        | Open the input method picker dialog.
 `change_method_prev`   | Switch to the previously used input method.
 `action`               | Performs a special context-sensitive operation related to the Enter key. For example, in the Twitter (X) app, `enter` adds a new line, while `action` posts.
@@ -201,6 +205,13 @@ Value           | Meaning
 `complete_second` | Enter the second best suggestion (the right one)
 `complete_third`  | Enter the third best suggestion (the left one)
 `complete_emoji`  | Enter the emoji suggestion
+
+## Visual Label Overrides (`cL`, `CL`, etc.)
+
+NHSCustomKeyboard supports independent visual labels on any key output slot (`cL`, `CL`, `nwL`, `NWL`, `neL`, `NEL`, `wL`, `WL`, `eL`, `EL`, `swL`, `SWL`, `sL`, `SL`, `seL`, `SEL`). 
+* Adding `L` to any output attribute controls what is visually printed on the key without changing what it types.
+* If a label attribute is omitted, the output value is displayed by default.
+* For complete details and a position table, see [Custom-layouts.md](Custom-layouts.md#visible-labels-visual-overrides).
 
 ## Unused
 These keys are known to do nothing.

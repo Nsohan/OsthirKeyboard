@@ -360,7 +360,9 @@ public class LayoutsPreference extends ListGroupPreference<LayoutsPreference.Lay
     {
       try
       {
-        return Utils.read_all_utf8(ctx.getResources().openRawResource(R.raw.latn_qwerty_us));
+        int rawId = ctx.getResources().getIdentifier(name, "raw", ctx.getPackageName());
+        if (rawId == 0) rawId = R.raw.latn_qwerty_us;
+        return Utils.read_all_utf8(ctx.getResources().openRawResource(rawId));
       }
       catch (Exception e2)
       {
@@ -496,7 +498,7 @@ public class LayoutsPreference extends ListGroupPreference<LayoutsPreference.Lay
 
   String read_initial_custom_layout()
   {
-    return read_builtin_layout_xml(getContext(), "latn_qwerty_us");
+    return read_builtin_layout_xml(getContext(), "latn_qwerty_us_custom");
   }
 
   String read_initial_keymap()

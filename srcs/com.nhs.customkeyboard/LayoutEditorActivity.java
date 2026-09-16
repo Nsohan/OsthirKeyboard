@@ -101,7 +101,7 @@ public class LayoutEditorActivity extends Activity
     Intent intent = getIntent();
     String initial_xml = intent != null ? intent.getStringExtra(EXTRA_INITIAL_XML) : null;
     if (initial_xml == null || initial_xml.isEmpty())
-      initial_xml = LayoutsPreference.read_builtin_layout_xml(this, "latn_qwerty_us");
+      initial_xml = LayoutsPreference.read_builtin_layout_xml(this, "latn_qwerty_us_custom");
 
     _layout_index = intent != null ? intent.getIntExtra(EXTRA_LAYOUT_INDEX, -1) : -1;
     _allow_remove = intent != null && intent.getBooleanExtra(EXTRA_ALLOW_REMOVE, false);

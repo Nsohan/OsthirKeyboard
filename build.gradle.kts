@@ -186,9 +186,9 @@ val initDebugKeystore by tasks.registering(Exec::class) {
   commandLine("keytool", "-genkeypair", "-dname", "cn=d, ou=e, o=b, c=ug", "-alias", "debug", "-keypass", "debug0", "-keystore", "debug.keystore", "-keyalg", "rsa", "-storepass", "debug0", "-validity", "10000")
 }
 
-// latn_qwerty_us is used as a raw resource by the custom layout option.
+// latn_qwerty_us and latn_qwerty_us_custom are used as raw resources by layout options.
 val copyRawQwertyUS by tasks.registering(Copy::class) {
-  from("srcs/layouts/latn_qwerty_us.xml")
+  from("srcs/layouts/latn_qwerty_us.xml", "srcs/layouts/latn_qwerty_us_custom.xml")
   into("build/generated-resources/raw")
 }
 

@@ -51,6 +51,10 @@ The `<keyboard>`...`</keyboard>` pair follows the declaration tag and encloses t
 
 * `locale_extra_keys`: Whether Unexpected should add language-dependent extra keys from [method.xml](../res/xml/method.xml) to this layout. It accepts `true` or `false`, and defaults to `true`. To disable these automatic additions, specify `locale_extra_keys="false"`.
 
+* `keymap`: (NHSCustomKeyboard) The name of a saved transliteration keymap to apply (e.g. `keymap="Tamil"`). Center-tap characters pass through this keymap engine to produce transliterated script.
+
+* `swipekeymap`: (NHSCustomKeyboard) Whether transliteration also applies to swipe outputs. Accepts `true` or `false`, defaults to `false`. (Inert if `keymap` is not set).
+
 ## Row
 The `<row>`...`</row>` pair encloses one row on the keyboard. It has the following optional property:
 * `height`: The height of the row: a positive floating-point value.
@@ -62,57 +66,68 @@ A row's default height is 1.0 (one quarter of the keyboard height specified on t
 (A row of keys is drawn with a minimum height of 0.5 even if you specify a smaller value for `height`. There is no such minimum for a row without keys, such as a spacer row.)
 
 ## Key
-The `<key />` tag defines a key on the keyboard. Its position in the sequence of keys inside `<row>`...`</row>` indicates its position in the row from left to right. What the key does is defined by optional properties.
+The `<key />` tag defines a key on the keyboard. Its position in the sequence of keys inside `<row>`...`</row>` indicates its position in the row from left to right. What the key does and displays is defined by optional attributes.
 
-### Taps
-What the key does when tapped is defined by the optional `c` property. For example, `<key c="a" />` defines the "a" key. Unexpected Keyboard provides a legend in the middle of the key.
+### Outputs: Taps & Swipes
+Each key has a center position and 8 compass directions. Every position supports both **normal** (lowercase) and **shifted** (uppercase) output:
 
-When the Shift modifier is tapped, the "a" key becomes the "A" key and the legend temporarily changes. The Fn modifier makes a different change. You can override this behavior with a modmap (see below).
+```
+        NW   N   NE          nw   n   ne
+          \  |  /              \  |  /
+        W -  C  - E          w  - c -  e
+          /  |  \              /  |  \
+        SW   S   SE          sw   s   se
+     [Shifted Outputs]      [Normal Outputs]
+```
 
-### Swipes
-The following optional properties define the effects of swipes:
-* `n`, `ne`, `e`, `se`, `s`, `sw`, `w`, `nw`: What the key should do when it is swiped in the direction of that compass point. ("North" means upward and "East" is to the right.)
-<TABLE ALIGN=CENTER>
-  <TR>
-    <TD STYLE="width: 6em;">nw</TD><TD>n</TD><TD>ne</TD>
-  </TR>
-  <TR ALIGN=CENTER>
-    <TD>w</TD><TD>c</TD><TD>e</TD>
-  </TR>
-  <TR>
-    <TD>sw</TD><TD>s</TD><TD>se</TD>
-  </TR>
-</TABLE>
+* **Center Tap**:
+  * `c`: Base tap output (**required** for standard keys).
+  * `C`: Shifted tap output (requires `c` to be defined; if omitted, Shift uppercase-transforms `c`).
+* **Swipes (8 directions)**:
+  * Normal: `nw`, `n`, `ne`, `w`, `e`, `sw`, `s`, `se`
+  * Shifted: `NW`, `N`, `NE`, `W`, `E`, `SW`, `S`, `SE`
+* **Legacy numeric notation**: `key0` (center), `key1`..`key8` (directions).
 
-* `key1` through `key8` is an older way to achieve the same effects. The directions are ordered as follows:
-<TABLE ALIGN=CENTER>
-  <TR>
-    <TD>key1</TD><TD>key7</TD><TD>key2</TD>
-  </TR>
-  <TR>
-    <TD>key5</TD><TD>key0</TD><TD>key6</TD>
-  </TR>
-  <TR>
-    <TD>key3</TD><TD>key8</TD><TD>key4</TD>
-  </TR>
-</TABLE>
+### Visible Labels (Visual Overrides)
+Labels control **what is visually printed on the key**, completely independent of what is typed:
 
-You can define a swipe only once with either compass-point or numeric notation. Unexpected Keyboard automatically puts a small legend in that direction from the center of the key.
+| Position | Normal Label (matches output) | Shifted Label (matches output) |
+| :--- | :--- | :--- |
+| **Center** | `cL` (matches `c`) | `CL` (matches `C`) |
+| **North-West (↖)** | `nwL` (matches `nw`) | `NWL` (matches `NW`) |
+| **North (↑)** | `nL` (matches `n`) | `NL` (matches `N`) |
+| **North-East (↗)** | `neL` (matches `ne`) | `NEL` (matches `NE`) |
+| **West (←)** | `wL` (matches `w`) | `WL` (matches `W`) |
+| **East (→)** | `eL` (matches `e`) | `EL` (matches `E`) |
+| **South-West (↙)** | `swL` (matches `sw`) | `SWL` (matches `SW`) |
+| **South (↓)** | `sL` (matches `s`) | `SL` (matches `S`) |
+| **South-East (↘)** | `seL` (matches `se`) | `SEL` (matches `SE`) |
 
-* `anticircle`: The key value to send when doing an anti-clockwise gesture on the key.
+> **Important Rule**: Labels never affect what the key types. If a label attribute is omitted (missing), the keyboard automatically displays the output key value instead.
 
-### Layout
-A key may have the following properties to control the row's layout:
-* `width`: The width of the key, a positive floating-point value. It defaults to 1.0
-* `shift`: How much empty space to add to the left of this key, a non-negative floating-point value. It defaults to 0.0
+#### Label Examples:
+```xml
+<!-- Outputs "a" but displays 🍎; shifted outputs "A" but displays ✈️ -->
+<key c="a" cL="🍎" C="A" CL="✈️" />
 
-Normally, a key's width is 1.0 unit. Unexpected Keyboard occupies the full width of the screen, and the row defining the highest number of units (in widths plus shifts) is as wide as the screen. A row whose width is a smaller number of units has empty space on the right.
+<!-- Swipe ↘ outputs email address, but displays an envelope icon 📧 -->
+<key c="e" se="myemail@domain.com" seL="📧" />
+```
 
-### Extra legend
-* `indication`: An optional extra legend to show under the main label. For example, `<key c="2" indication="ABC" />` displays ABC at the bottom of the 2 key, as on a pinpad or some telephones. If the key also defines a downward swipe with `s` or `key8`, the legends overlap.
+### Gestures & Long Press
+* `lp` or `long_press`: Key value to send when holding down the key.
+* `anticircle`: Key value to send when drawing an anti-clockwise circle gesture on the key.
 
-### Possible key values
-Built-in strings that assign a special function to a key are described in [this page](Possible-key-values.md). For example, `se="copy"` means a southeasterly swipe produces the Copy key. If a key value does not match any of the built-in strings, it outputs that text _verbatim_. For example, `c="a"` simply outputs the letter a.
+### Layout & Appearance
+* `width`: The width of the key, a positive floating-point value. Defaults to `1.0`. (Action keys like Backspace or Shift often use `1.5`, Space uses `4.0` or `5.0`).
+* `shift`: How much empty space to add to the left of this key in key-width units. Defaults to `0.0`. (For example, `shift="0.5"` staggers row 2).
+* `role`: Styling role for the key:
+  * `role="action"`: Renders the key with the theme's action/accent color (like Shift, Enter, Backspace).
+  * `role="normal"`: Standard character key styling (default).
+* `indication`: An optional extra legend to show under the main label (e.g. `<key c="2" indication="ABC" />`).
+
+### Possible Key Values
+Built-in strings that assign a special function to a key are described in [Possible key values](Possible-key-values.md). For example, `se="copy"` means a southeasterly swipe produces the Copy action. If a key value does not match any built-in special string, it outputs that text _verbatim_ (including full strings or emojis).
 
 In a layout, a key value can also start with the `loc` prefix. These are place-holders; the tap or swipe does nothing unless enabled through the "Add keys to keyboard" option in the Settings menu, or implicitly enabled by the language the device is set to use. For example, `ne="loc accent_aigu"` says that a northeast swipe produces the acute accent combinatorial key—if enabled.
 

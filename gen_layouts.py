@@ -14,6 +14,9 @@ if hasattr(sys.stdout, 'reconfigure'):
 # are sorted alphabetically.
 FIRST_LAYOUTS = [ "latn_qwerty_us", "latn_colemak", "latn_dvorak" ]
 
+# Layouts excluded from built-in list (used as template for custom layout option)
+EXCLUDED_LAYOUTS = set([ "latn_qwerty_us_custom" ])
+
 # Read a layout from a file. Returns [None] if [fname] is not a layout.
 def read_layout(fname):
     root = XML.parse(fname).getroot()
@@ -25,6 +28,8 @@ def read_layout(fname):
 def read_layouts(files):
     for layout_file in files:
         layout_id, _ = os.path.splitext(os.path.basename(layout_file))
+        if layout_id in EXCLUDED_LAYOUTS:
+            continue
         layout = read_layout(layout_file)
         if layout == None:
             print("Not a layout file: %s" % layout_file)
