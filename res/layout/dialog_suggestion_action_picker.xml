@@ -14,7 +14,7 @@
       android:id="@+id/tv_picker_title"
       android:layout_width="match_parent"
       android:layout_height="wrap_content"
-      android:textColor="?attr/colorLabel"
+      android:textColor="@color/settings_on_surface"
       android:textSize="19sp"
       android:textStyle="bold"
       android:gravity="center_horizontal"

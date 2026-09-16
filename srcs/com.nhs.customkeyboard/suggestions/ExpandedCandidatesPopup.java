@@ -29,6 +29,8 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.core.content.ContextCompat;
+
 import com.nhs.customkeyboard.Config;
 import com.nhs.customkeyboard.R;
 import com.nhs.customkeyboard.VibratorCompat;
@@ -69,6 +71,7 @@ public final class ExpandedCandidatesPopup
   private int _themeColorLabel;
   private int _themeColorSubLabel;
   private float _themeBorderRadius;
+  private boolean _isDarkTheme = true;
 
   private final List<String> _currentWords = new ArrayList<>();
   private boolean _isDragging = false;
@@ -169,6 +172,10 @@ public final class ExpandedCandidatesPopup
         (int)(5 * density),
         (int)(6 * density),
         (int)(5 * density));
+    if (android.os.Build.VERSION.SDK_INT >= 21)
+    {
+      _cardLayout.setElevation(8 * density);
+    }
 
     _scrollView = new ScrollView(_context);
     _scrollView.setLayoutParams(new LinearLayout.LayoutParams(
@@ -298,39 +305,80 @@ public final class ExpandedCandidatesPopup
       _themeBorderRadius = 12 * density;
     }
 
-    boolean isDark = isDarkColor(_themeColorKeyboard);
+    boolean isNight = (themeCtx.getResources().getConfiguration().uiMode & android.content.res.Configuration.UI_MODE_NIGHT_MASK) == android.content.res.Configuration.UI_MODE_NIGHT_YES;
+    boolean isCustomTheme = (config != null && config.themeName != null && config.themeName.startsWith("custom_"))
+        || (config != null && config.theme == R.style.CustomImageTheme)
+        || (_themeColorKeyboard == Color.TRANSPARENT && Color.alpha(_themeColorKey) < 255);
 
     // Compute elevated surface color for popup card
     int cardBgColor;
-    if (isDark)
+    if (isCustomTheme)
     {
-      if (_themeColorKey != 0 && _themeColorKey != _themeColorKeyboard && _themeColorKey != Color.TRANSPARENT)
+      if (!isNight)
       {
-        cardBgColor = _themeColorKey;
+        cardBgColor = ContextCompat.getColor(themeCtx, R.color.settings_card_bg);
+        _themeColorLabel = ContextCompat.getColor(themeCtx, R.color.settings_on_surface);
+        _themeColorSubLabel = ContextCompat.getColor(themeCtx, R.color.settings_on_surface_variant);
+        _themeColorKeyActivated = Color.parseColor("#1F000000");
+        _isDarkTheme = false;
       }
       else
       {
-        cardBgColor = Color.parseColor("#1E2024");
+        cardBgColor = ContextCompat.getColor(themeCtx, R.color.settings_card_bg);
+        _themeColorLabel = ContextCompat.getColor(themeCtx, R.color.settings_on_surface);
+        _themeColorSubLabel = ContextCompat.getColor(themeCtx, R.color.settings_on_surface_variant);
+        _themeColorKeyActivated = Color.parseColor("#26FFFFFF");
+        _isDarkTheme = true;
       }
     }
     else
     {
-      if (_themeColorKey != 0 && _themeColorKey != _themeColorKeyboard && _themeColorKey != Color.TRANSPARENT)
+      _isDarkTheme = isDarkColor(_themeColorKeyboard);
+      if (_isDarkTheme)
       {
-        cardBgColor = _themeColorKey;
+        if (_themeColorKey != 0 && _themeColorKey != _themeColorKeyboard && _themeColorKey != Color.TRANSPARENT)
+        {
+          cardBgColor = _themeColorKey;
+        }
+        else
+        {
+          cardBgColor = Color.parseColor("#1E2024");
+        }
       }
       else
       {
-        cardBgColor = Color.parseColor("#F5F5F7");
+        if (_themeColorKey != 0 && _themeColorKey != _themeColorKeyboard && _themeColorKey != Color.TRANSPARENT)
+        {
+          cardBgColor = _themeColorKey;
+        }
+        else
+        {
+          cardBgColor = Color.parseColor("#F5F5F7");
+        }
+      }
+
+      // Ensure popup card background is completely opaque
+      cardBgColor = Color.rgb(Color.red(cardBgColor), Color.green(cardBgColor), Color.blue(cardBgColor));
+
+      // Guarantee high-contrast text against the solid card background
+      boolean cardIsDark = isDarkColor(cardBgColor);
+      boolean labelIsDark = isDarkColor(_themeColorLabel);
+      if (cardIsDark && labelIsDark)
+      {
+        _themeColorLabel = Color.WHITE;
+      }
+      else if (!cardIsDark && !labelIsDark)
+      {
+        _themeColorLabel = Color.parseColor("#1F1F1F");
       }
     }
 
-    float cornerRadius = Math.max(10 * density, _themeBorderRadius);
+    float cornerRadius = Math.max(12 * density, _themeBorderRadius);
     GradientDrawable cardBg = new GradientDrawable();
     cardBg.setShape(GradientDrawable.RECTANGLE);
     cardBg.setCornerRadius(cornerRadius);
     cardBg.setColor(cardBgColor);
-    int strokeColor = isDark ? Color.parseColor("#2BFFFFFF") : Color.parseColor("#22000000");
+    int strokeColor = _isDarkTheme ? Color.parseColor("#2BFFFFFF") : Color.parseColor("#1A000000");
     cardBg.setStroke((int)(1 * density), strokeColor);
     _cardLayout.setBackground(cardBg);
 
@@ -339,7 +387,8 @@ public final class ExpandedCandidatesPopup
     chipBg.setShape(GradientDrawable.RECTANGLE);
     chipBg.setCornerRadius(8 * density);
     chipBg.setColor(cardBgColor);
-    chipBg.setStroke((int)(1.5f * density), (_themeColorLabel & 0x00FFFFFF) | 0x66000000);
+    int chipStrokeColor = _isDarkTheme ? Color.parseColor("#33FFFFFF") : Color.parseColor("#33000000");
+    chipBg.setStroke((int)(1.5f * density), chipStrokeColor);
     _floatingChip.setBackground(chipBg);
     _floatingChip.setTextColor(_themeColorLabel);
   }
@@ -517,8 +566,12 @@ public final class ExpandedCandidatesPopup
           mask.setShape(GradientDrawable.RECTANGLE);
           mask.setCornerRadius(6 * density);
           mask.setColor(Color.WHITE);
+          int rippleAlpha = (_themeColorKeyActivated >>> 24);
+          int rippleColor = (rippleAlpha == 0 || rippleAlpha == 255)
+              ? (_isDarkTheme ? Color.parseColor("#26FFFFFF") : Color.parseColor("#1F000000"))
+              : _themeColorKeyActivated;
           RippleDrawable ripple = new RippleDrawable(
-              ColorStateList.valueOf(_themeColorKeyActivated),
+              ColorStateList.valueOf(rippleColor),
               null,
               mask);
           cell.setBackground(ripple);

@@ -75,6 +75,7 @@ public class ThemeCropActivity extends AppCompatActivity
 
   private final Handler _blurHandler = new Handler(Looper.getMainLooper());
   private Runnable _blurRunnable;
+  private boolean _saved = false;
 
   @Override
   protected void onCreate(@Nullable Bundle savedInstanceState)
@@ -532,6 +533,7 @@ public class ThemeCropActivity extends AppCompatActivity
         Config.globalConfig().keyShadow = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, keyShadow, getResources().getDisplayMetrics());
       }
 
+      _saved = true;
       Intent resultIntent = new Intent();
       resultIntent.putExtra(EXTRA_RESULT_THEME_ID, themeId);
       setResult(RESULT_OK, resultIntent);
@@ -549,6 +551,21 @@ public class ThemeCropActivity extends AppCompatActivity
     if (_blurRunnable != null)
     {
       _blurHandler.removeCallbacks(_blurRunnable);
+    }
+    if (!_saved && Config.globalConfig() != null)
+    {
+      SharedPreferences p = PreferenceManager.getDefaultSharedPreferences(this);
+      String themeName = p.getString("theme", "monet");
+      if (themeName != null && themeName.startsWith("custom_"))
+      {
+        Config.globalConfig().keyOpacity = Math.max(0, Math.min(255, Math.round(p.getFloat("custom_theme_key_opacity", 1.0f) * 255)));
+        Config.globalConfig().keyShadow = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, p.getFloat("custom_theme_key_shadow", 0.0f), getResources().getDisplayMetrics());
+      }
+      else
+      {
+        Config.globalConfig().keyOpacity = p.getInt("key_opacity", 100) * 255 / 100;
+        Config.globalConfig().keyShadow = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, p.getFloat("key_shadow", 3.0f), getResources().getDisplayMetrics());
+      }
     }
     super.onDestroy();
   }

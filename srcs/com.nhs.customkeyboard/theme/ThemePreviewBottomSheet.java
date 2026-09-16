@@ -2,6 +2,7 @@ package com.nhs.customkeyboard.theme;
 
 import android.app.Dialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.content.res.TypedArray;
 import android.graphics.Color;
@@ -57,6 +58,7 @@ public class ThemePreviewBottomSheet extends BottomSheetDialogFragment
 
   private SwitchMaterial _switchKeyBorders;
   private boolean _currentKeyBorders = true;
+  private boolean _applied = false;
 
   public static ThemePreviewBottomSheet newInstance(String themeId)
   {
@@ -428,9 +430,9 @@ public class ThemePreviewBottomSheet extends BottomSheetDialogFragment
       editor.putFloat("custom_theme_darkness", _model.darknessOverlay);
       editor.putFloat("custom_theme_key_opacity", _model.keyOpacity);
       editor.putFloat("custom_theme_key_shadow", _model.keyShadow);
-      editor.putInt("key_opacity", Math.round(_model.keyOpacity * 100));
     }
 
+    _applied = true;
     editor.apply();
 
     // Notify listeners & refresh
@@ -441,6 +443,28 @@ public class ThemePreviewBottomSheet extends BottomSheetDialogFragment
 
     Toast.makeText(requireContext(), R.string.theme_applied_toast, Toast.LENGTH_SHORT).show();
     dismiss();
+  }
+
+  @Override
+  public void onDismiss(@NonNull DialogInterface dialog)
+  {
+    super.onDismiss(dialog);
+    if (!_applied && Config.globalConfig() != null && getContext() != null)
+    {
+      SharedPreferences p = PreferenceManager.getDefaultSharedPreferences(requireContext());
+      Config.globalConfig().keyBorders = p.getBoolean("key_borders", true);
+      String themeName = p.getString("theme", "monet");
+      if (themeName != null && themeName.startsWith("custom_"))
+      {
+        Config.globalConfig().keyOpacity = Math.max(0, Math.min(255, Math.round(p.getFloat("custom_theme_key_opacity", 1.0f) * 255)));
+        Config.globalConfig().keyShadow = dp(p.getFloat("custom_theme_key_shadow", 0.0f));
+      }
+      else
+      {
+        Config.globalConfig().keyOpacity = p.getInt("key_opacity", 100) * 255 / 100;
+        Config.globalConfig().keyShadow = dp(p.getFloat("key_shadow", 3.0f));
+      }
+    }
   }
 
   private float dp(float v)
