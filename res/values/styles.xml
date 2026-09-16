@@ -240,6 +240,8 @@
     <item name="switchPreferenceCompatStyle">@style/settingsSwitchPreferenceStyle</item>
     <item name="checkBoxPreferenceStyle">@style/settingsCheckBoxPreferenceStyle</item>
     <item name="dialogPreferenceStyle">@style/settingsDialogPreferenceStyle</item>
+    <item name="editTextPreferenceStyle">@style/settingsEditTextPreferenceStyle</item>
+    <item name="dropdownPreferenceStyle">@style/settingsDropdownPreferenceStyle</item>
   </style>
 
   <style name="settingsCategoryTitle" parent="TextAppearance.MaterialComponents.Caption">
@@ -253,7 +255,7 @@
     <item name="android:layout">@layout/pref_category_settings</item>
   </style>
 
-  <!-- All five below point at the SAME layout (one icon, applied
+  <!-- All below point at the SAME layout (one icon, applied
        everywhere) - see pref_item_settings.xml for the single place that
        controls it. -->
   <style name="settingsPreferenceStyle" parent="Preference.Material">
@@ -269,6 +271,12 @@
     <item name="android:layout">@layout/pref_item_settings</item>
   </style>
   <style name="settingsDialogPreferenceStyle" parent="Preference.DialogPreference.Material">
+    <item name="android:layout">@layout/pref_item_settings</item>
+  </style>
+  <style name="settingsEditTextPreferenceStyle" parent="Preference.DialogPreference.EditTextPreference.Material">
+    <item name="android:layout">@layout/pref_item_settings</item>
+  </style>
+  <style name="settingsDropdownPreferenceStyle" parent="Preference.DropDown.Material">
     <item name="android:layout">@layout/pref_item_settings</item>
   </style>
 </resources>

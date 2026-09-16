@@ -420,11 +420,11 @@
     <string name="tasker_builder_saved_toast">Automation config saved</string>
 
     <string name="settings_title" translatable="false">Settings</string>
-    <string name="pref_screen_languages_title" translatable="false">Languages</string>
+    <string name="pref_screen_languages_title" translatable="false">Languages &amp; Layouts</string>
     <string name="pref_screen_languages_summary" translatable="false">English (US)</string>
-    <string name="pref_screen_preferences_title" translatable="false">Preferences</string>
+    <string name="pref_screen_preferences_title" translatable="false">Input &amp; Behavior</string>
     <string name="pref_screen_theme_title" translatable="false">Theme</string>
-    <string name="pref_screen_suggestions_title" translatable="false">Dictionary &amp; suggestions</string>
+    <string name="pref_screen_suggestions_title" translatable="false">Suggestions &amp; Dictionaries</string>
     <string name="pref_next_word_prediction_title">Predict next word</string>
     <string name="pref_next_word_prediction_summary">Suggest the next likely word after typing a space</string>
     <string name="pref_user_learning_title">Self-learning dictionary</string>
@@ -441,11 +441,21 @@
     <string name="pref_clear_learned_summary">Delete all automatically learned words and phrase patterns</string>
     <string name="pref_clear_learned_confirm">Are you sure you want to clear all learned words and predictions?</string>
     <string name="user_dict_stats_format">Learned Words: %1$d\nLearned Phrase Transitions: %2$d</string>
-    <string name="pref_screen_typing_title" translatable="false">Glide typing</string>
+    <string name="pref_screen_typing_title" translatable="false">Typing &amp; Gestures</string>
     <string name="pref_screen_clipboard_title" translatable="false">Clipboard</string>
     <string name="pref_screen_dictionary_title" translatable="false">Installed dictionaries</string>
     <string name="pref_screen_tasker_title" translatable="false">Tasker &amp; Automation</string>
     <string name="pref_screen_about_title" translatable="false">About</string>
+
+    <string name="pref_category_haptics" translatable="false">Haptic Feedback</string>
+    <string name="pref_category_hardware" translatable="false">Hardware Keyboard</string>
+    <string name="pref_category_dimensions" translatable="false">Dimensions &amp; Margins</string>
+    <string name="pref_category_visuals" translatable="false">Key Appearance &amp; Colors</string>
+    <string name="pref_category_font_size" translatable="false">Font &amp; Label Sizing</string>
+    <string name="pref_category_dictionaries" translatable="false">Dictionaries &amp; Backup</string>
+    <string name="pref_category_toolbar" translatable="false">Toolbar &amp; Quick Tools</string>
+    <string name="pref_category_gestures" translatable="false">Swipes &amp; Gestures</string>
+    <string name="pref_category_key_press" translatable="false">Key Press &amp; Hold</string>
 
     <string name="pref_category_about">About</string>
     <string name="about_tagline">Lightweight, customizable &amp; privacy-friendly</string>
