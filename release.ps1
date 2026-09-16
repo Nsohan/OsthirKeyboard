@@ -342,13 +342,14 @@ if (-not $SkipPush) {
                     prerelease       = [bool]$PreRelease
                 } | ConvertTo-Json -Depth 10
 
-                $tmpJsonFile = [System.IO.Path]::GetTempFileName() + ".json"
-                [System.IO.File]::WriteAllText($tmpJsonFile, $releasePayload, [System.Text.UTF8Encoding]::new($false))
+                $tmpJsonFile = [System.IO.Path]::GetTempFileName()
+                $utf8NoBom = [System.Text.UTF8Encoding]::new($false)
+                [System.IO.File]::WriteAllBytes($tmpJsonFile, $utf8NoBom.GetBytes($releasePayload))
 
                 $createResp = & curl.exe -s -S -X POST `
                     -H "Authorization: Bearer $githubToken" `
                     -H "Accept: application/vnd.github+json" `
-                    -H "Content-Type: application/json; charset=utf-8" `
+                    -H "Content-Type: application/json" `
                     --data-binary "@$tmpJsonFile" `
                     "$releaseApiUrl"
 
