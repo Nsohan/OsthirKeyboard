@@ -62,6 +62,13 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
 
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Outline;
+import android.os.Build;
+import android.view.ViewOutlineProvider;
+import androidx.preference.PreferenceManager;
+
 public class LayoutEditorActivity extends Activity
 {
   public static final String EXTRA_INITIAL_XML = "initial_xml";
@@ -96,6 +103,12 @@ public class LayoutEditorActivity extends Activity
     setContentView(R.layout.activity_layout_editor);
 
     Config config = Config.globalConfig();
+    if (config == null)
+    {
+      SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+      Config.initGlobalConfig(prefs, getResources(), false, com.nhs.customkeyboard.dict.Dictionaries.instance(this));
+      config = Config.globalConfig();
+    }
     LayoutModifier.init(config, getResources());
 
     Intent intent = getIntent();
@@ -134,9 +147,67 @@ public class LayoutEditorActivity extends Activity
 
     // Create real native Keyboard2View with active keyboard theme
     Config config = Config.globalConfig();
-    Context themeContext = (config.theme != 0) ? new android.view.ContextThemeWrapper(this, config.theme) : this;
+    if (config == null)
+    {
+      SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+      Config.initGlobalConfig(prefs, getResources(), false, com.nhs.customkeyboard.dict.Dictionaries.instance(this));
+      config = Config.globalConfig();
+    }
+    int themeResId = (config != null && config.theme != 0) ? config.theme : R.style.Light;
+    Context themeContext = new android.view.ContextThemeWrapper(this, themeResId);
     _keyboard_view = new Keyboard2View(themeContext);
     _keyboard_view.setPreviewMode(true);
+
+    boolean isCustomTheme = (config != null && config.themeName != null && config.themeName.startsWith("custom_"));
+    if (isCustomTheme && config.customThemeImagePath != null)
+    {
+      try
+      {
+        Bitmap bmp = BitmapFactory.decodeFile(config.customThemeImagePath);
+        if (bmp != null)
+        {
+          _keyboard_view.setCustomBackgroundBitmap(bmp, config.customThemeDarkness);
+        }
+      }
+      catch (Throwable ignored) {}
+    }
+
+    FrameLayout cardDeck = findViewById(R.id.card_visual_deck);
+    if (cardDeck != null)
+    {
+      int cardBgColor;
+      if (isCustomTheme)
+      {
+        cardBgColor = 0xFF1E1F22;
+      }
+      else
+      {
+        android.content.res.TypedArray a = themeContext.getTheme().obtainStyledAttributes(new int[]{ R.attr.colorKeyboard });
+        int colorKeyboard = a.getColor(0, Color.TRANSPARENT);
+        a.recycle();
+        cardBgColor = (colorKeyboard != Color.TRANSPARENT) ? colorKeyboard : ContextCompat.getColor(this, R.color.settings_card_bg);
+      }
+
+      GradientDrawable deckBg = new GradientDrawable();
+      deckBg.setCornerRadius(dp(16));
+      deckBg.setColor(cardBgColor);
+      deckBg.setStroke(dp(1), ContextCompat.getColor(this, R.color.settings_divider));
+      cardDeck.setBackground(deckBg);
+
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP)
+      {
+        cardDeck.setOutlineProvider(new ViewOutlineProvider()
+        {
+          @Override
+          public void getOutline(View view, Outline outline)
+          {
+            outline.setRoundRect(0, 0, view.getWidth(), view.getHeight(), dp(16));
+          }
+        });
+        cardDeck.setClipToOutline(true);
+      }
+    }
+
     _preview_holder.addView(_keyboard_view, new FrameLayout.LayoutParams(
             FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.WRAP_CONTENT));
 
