@@ -89,18 +89,34 @@ Antigravity will run the build and push it to your device automatically.
 
 ---
 
-## 4. Build a Production Release APK for Everyone
+## 4. Build & Publish a Production Release (1-Click Automation)
 
-To create an optimized, minified, signed APK to share with anyone:
+To build, sign, tag, and publish an official GitHub Release with release notes and APK assets:
 
+### 1-Click Automated Release
 ```powershell
-.\gradlew assembleRelease
+.\release.ps1
 ```
+This script automatically:
+1. Reads `versionName` and `versionCode` from `build.gradle.kts`.
+2. Runs `.\gradlew assembleRelease` to compile and sign the release APK using `release.keystore`.
+3. Packages both `OsthirKeyboard.apk` (required by the in-app `UpdateChecker`) and `OsthirKeyboard-v<version>.apk`.
+4. Computes SHA-256 hashes and file sizes.
+5. Loads or generates release notes (from `RELEASE_NOTES_v<version>.md` or Git history).
+6. Creates the Git tag `v<version>` and pushes commits + tags to GitHub.
+7. Publishes the release to GitHub via the REST API and uploads the APK assets directly.
 
-- **Output File**: `build\outputs\apk\release\NHSCustomKeyboard-release.apk`
-- **Size**: ~2.92 MB (minified via R8/ProGuard)
-- **Signed**: Automatically signed with `release.keystore`
-- **Compatibility**: Android 5.0+ (API 21+) — works on any Android phone.
+#### Useful Release Flags:
+```powershell
+# Preview everything without modifying git or GitHub
+.\release.ps1 -DryRun
+
+# Publish without rebuilding the APK (if already built)
+.\release.ps1 -SkipBuild
+
+# Build and tag locally without pushing to GitHub
+.\release.ps1 -SkipPush
+```
 
 ---
 
