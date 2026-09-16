@@ -226,16 +226,16 @@ $releaseNotes = $null
 if ($Notes) {
     $releaseNotes = $Notes
 } elseif ($NotesFile -and (Test-Path $NotesFile)) {
-    $releaseNotes = Get-Content $NotesFile -Raw -Encoding UTF8
+    $releaseNotes = [System.IO.File]::ReadAllText((Resolve-Path $NotesFile).Path, [System.Text.Encoding]::UTF8)
     Write-Info "Loaded release notes from $NotesFile"
 } elseif (Test-Path "RELEASE_NOTES_$tagName.md") {
-    $releaseNotes = Get-Content "RELEASE_NOTES_$tagName.md" -Raw -Encoding UTF8
+    $releaseNotes = [System.IO.File]::ReadAllText((Resolve-Path "RELEASE_NOTES_$tagName.md").Path, [System.Text.Encoding]::UTF8)
     Write-Info "Loaded release notes from RELEASE_NOTES_$tagName.md"
 } elseif (Test-Path "RELEASE_NOTES.md") {
-    $releaseNotes = Get-Content "RELEASE_NOTES.md" -Raw -Encoding UTF8
+    $releaseNotes = [System.IO.File]::ReadAllText((Resolve-Path "RELEASE_NOTES.md").Path, [System.Text.Encoding]::UTF8)
     Write-Info "Loaded release notes from RELEASE_NOTES.md"
 } elseif ($releaseCode -and (Test-Path "fastlane\metadata\android\en-US\changelogs\$releaseCode.txt")) {
-    $releaseNotes = Get-Content "fastlane\metadata\android\en-US\changelogs\$releaseCode.txt" -Raw -Encoding UTF8
+    $releaseNotes = [System.IO.File]::ReadAllText((Resolve-Path "fastlane\metadata\android\en-US\changelogs\$releaseCode.txt").Path, [System.Text.Encoding]::UTF8)
     Write-Info "Loaded release notes from Fastlane changelog ($releaseCode.txt)"
 } else {
     # Auto-generate from git commits since previous tag
@@ -348,18 +348,22 @@ host=github.com
                 } | ConvertTo-Json -Depth 10
 
                 $tmpJsonFile = [System.IO.Path]::GetTempFileName()
+                $respFile = [System.IO.Path]::GetTempFileName()
                 $utf8NoBom = [System.Text.UTF8Encoding]::new($false)
                 [System.IO.File]::WriteAllBytes($tmpJsonFile, $utf8NoBom.GetBytes($releasePayload))
                 $tmpJsonPath = $tmpJsonFile.Replace('\', '/')
+                $respPath = $respFile.Replace('\', '/')
 
-                $createResp = & curl.exe -s -S -X POST `
+                curl.exe -s -S -o "$respPath" `
                     -H "Authorization: Bearer $githubToken" `
+                    -H "User-Agent: OsthirKeyboard" `
                     -H "Accept: application/vnd.github+json" `
                     -H "Content-Type: application/json" `
                     --data-binary "@$tmpJsonPath" `
                     "$releaseApiUrl"
 
-                Remove-Item $tmpJsonFile -Force -ErrorAction SilentlyContinue
+                $createResp = [System.IO.File]::ReadAllText($respFile, [System.Text.Encoding]::UTF8)
+                Remove-Item $tmpJsonFile, $respFile -Force -ErrorAction SilentlyContinue
 
                 $newRelease = $null
                 try { $newRelease = $createResp | ConvertFrom-Json } catch {}
