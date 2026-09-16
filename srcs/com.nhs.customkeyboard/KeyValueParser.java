@@ -32,6 +32,15 @@ public final class KeyValueParser
 
   static public KeyValue parse(String input) throws ParseError
   {
+    if (input.startsWith("task:") || input.startsWith("tasker:"))
+    {
+      String taskName = input.substring(input.indexOf(':') + 1).trim();
+      if (taskName.startsWith("'") && taskName.endsWith("'") && taskName.length() >= 2)
+      {
+        taskName = taskName.substring(1, taskName.length() - 1);
+      }
+      return KeyValue.makeTaskerKey(taskName);
+    }
     int symbol_ends = 0;
     final int input_len = input.length();
     while (symbol_ends < input_len && input.charAt(symbol_ends) != ':')
@@ -59,7 +68,7 @@ public final class KeyValueParser
   {
     if (KEYDEF_TOKEN != null)
       return;
-    KEYDEF_TOKEN = Pattern.compile("'|,|keyevent:|(?:[^\\\\',]+|\\\\.)+");
+    KEYDEF_TOKEN = Pattern.compile("'|,|keyevent:|task:|tasker:|(?:[^\\\\',]+|\\\\.)+");
     QUOTED_PAT = Pattern.compile("((?:[^'\\\\]+|\\\\.)*)'");
     WORD_PAT = Pattern.compile("[a-zA-Z0-9_]+|.");
   }
@@ -82,6 +91,8 @@ public final class KeyValueParser
       case "'": return parse_string_keydef(m);
       case ",": parseError("Unexpected comma", m); return null;
       case "keyevent:": return parse_keyevent_keydef(m);
+      case "task:":
+      case "tasker:": return parse_tasker_keydef(m);
       default: return key_by_name_or_str(remove_escaping(token));
     }
   }
@@ -102,6 +113,20 @@ public final class KeyValueParser
     catch (Exception _e)
     { parseError("Expected an integer payload", m); }
     return KeyValue.keyeventKey("", eventcode, 0);
+  }
+
+  static Pattern TASK_UNQUOTED_PAT;
+
+  static KeyValue parse_tasker_keydef(Matcher m) throws ParseError
+  {
+    if (match(m, QUOTED_PAT))
+      return KeyValue.makeTaskerKey(remove_escaping(m.group(1)));
+    if (TASK_UNQUOTED_PAT == null)
+      TASK_UNQUOTED_PAT = Pattern.compile("(?:[^\\\\',]+|\\\\.)+");
+    if (match(m, TASK_UNQUOTED_PAT))
+      return KeyValue.makeTaskerKey(remove_escaping(m.group(0)).trim());
+    parseError("Expected task name", m);
+    return null;
   }
 
   /** Returns [true] if the next token is a comma, [false] if it is the end of the input. Throws an error otherwise. */
@@ -202,6 +227,13 @@ public final class KeyValueParser
           if (symbol == null)
             symbol = String.valueOf(eventcode);
           return KeyValue.keyeventKey(symbol, eventcode, flags);
+
+        case "task":
+        case "tasker":
+          payload = parseSingleQuotedString(m);
+          if (symbol == null)
+            return KeyValue.makeTaskerKey(payload, payload, flags);
+          return KeyValue.makeTaskerKey(payload, symbol, flags);
 
         default: break;
       }

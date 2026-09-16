@@ -1205,7 +1205,10 @@ public class CandidatesView extends LinearLayout
     TaskerBridge.run_task(ctx, taskName, text1, text2, keyword, timeoutMs, (output, errorMessage) -> {
       if (errorMessage != null)
       {
-        Toast.makeText(ctx, errorMessage, Toast.LENGTH_SHORT).show();
+        if (!errorMessage.equals(ctx.getString(R.string.tasker_error_timeout)))
+        {
+          Toast.makeText(ctx, errorMessage, Toast.LENGTH_SHORT).show();
+        }
         return;
       }
       if (output != null)

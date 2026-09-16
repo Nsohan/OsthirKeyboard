@@ -20,6 +20,8 @@ import com.nhs.customkeyboard.suggestions.UserLearningEngine;
 import com.nhs.customkeyboard.avro.AvroEngine;
 
 import android.content.Context;
+import android.widget.Toast;
+import com.nhs.customkeyboard.prefs.TaskerAutomationManager;
 
 public final class KeyEventHandler
         implements Config.IKeyEventHandler,
@@ -209,6 +211,9 @@ public final class KeyEventHandler
       case Slider:
         handle_slider(key.getSlider(), key.getSliderRepeat(), true);
         break;
+      case Tasker:
+        _autocap.stop();
+        break;
       default: break;
     }
   }
@@ -262,6 +267,11 @@ public final class KeyEventHandler
         break;
       case String:
         String s = key.getString();
+        if (check_and_handle_tasker_string(s))
+        {
+          _recv.onKeyCommitted();
+          break;
+        }
         if (has_sentence_terminator(s))
         {
           _last_word = null;
@@ -297,6 +307,10 @@ public final class KeyEventHandler
       case Slider: handle_slider(key.getSlider(), key.getSliderRepeat(), false); break;
       case Macro: evaluate_macro(key.getMacro()); break;
       case Stateful: handle_stateful(key.getStateful()); break;
+      case Tasker:
+        handle_tasker_key(key.getTaskName());
+        _recv.onKeyCommitted();
+        break;
     }
     update_meta_state(old_mods);
     _last_action = _next_last_action;
@@ -849,6 +863,107 @@ public final class KeyEventHandler
     {
       suggestion_entered(text);
     }
+  }
+
+  private boolean check_and_handle_tasker_string(String s)
+  {
+    if (s == null || s.isEmpty())
+      return false;
+    try
+    {
+      String storedJson = TaskerAutomationManager.load(_recv.getContext());
+      if (storedJson != null)
+      {
+        TaskerAutomationConfig config = TaskerAutomationConfig.parse(storedJson);
+        if (config != null && config.tasks != null && config.tasks.containsKey(s))
+        {
+          handle_tasker_key(s);
+          return true;
+        }
+      }
+    }
+    catch (Exception ignored) {}
+    return false;
+  }
+
+  private void handle_tasker_key(String taskOrKeyword)
+  {
+    final Context ctx = _recv.getContext();
+    if (ctx == null || taskOrKeyword == null || taskOrKeyword.isEmpty())
+      return;
+
+    InputConnection ic = _recv.getCurrentInputConnection();
+    String text1 = "";
+    String text2 = "";
+    String keyword = "";
+
+    if (ic != null)
+    {
+      try
+      {
+        CharSequence before = ic.getTextBeforeCursor(4000, 0);
+        if (before != null) text1 = before.toString();
+        CharSequence after = ic.getTextAfterCursor(4000, 0);
+        if (after != null) text2 = after.toString();
+        CharSequence selected = ic.getSelectedText(0);
+        if (selected != null) keyword = selected.toString();
+      }
+      catch (Exception ignored) {}
+    }
+
+    String resolvedTaskName = taskOrKeyword;
+    long timeoutMs = 15000;
+    try
+    {
+      String storedJson = TaskerAutomationManager.load(ctx);
+      if (storedJson != null)
+      {
+        TaskerAutomationConfig config = TaskerAutomationConfig.parse(storedJson);
+        if (config != null)
+        {
+          timeoutMs = config.timeout_ms;
+          if (config.tasks != null && config.tasks.containsKey(taskOrKeyword))
+          {
+            String mapped = config.tasks.get(taskOrKeyword);
+            if (mapped != null && !mapped.isEmpty())
+              resolvedTaskName = mapped;
+          }
+        }
+      }
+    }
+    catch (Exception ignored) {}
+
+    Toast.makeText(ctx, "Running Tasker: " + resolvedTaskName, Toast.LENGTH_SHORT).show();
+
+    TaskerBridge.run_task(ctx, resolvedTaskName, text1, text2, keyword, timeoutMs,
+        (output, errorMessage) -> {
+          if (errorMessage != null)
+          {
+            // Do not toast on timeout: key actions are often fire-and-forget (e.g. toggles, scripts).
+            // Only toast on real communication failures (e.g. Tasker not installed or external access disabled).
+            if (!errorMessage.equals(ctx.getString(R.string.tasker_error_timeout)))
+            {
+              Toast.makeText(ctx, errorMessage, Toast.LENGTH_SHORT).show();
+            }
+            return;
+          }
+          if (output != null && !output.isEmpty())
+          {
+            InputConnection lateConn = _recv.getCurrentInputConnection();
+            if (lateConn != null)
+            {
+              lateConn.beginBatchEdit();
+              try
+              {
+                lateConn.commitText(output, 1);
+              }
+              finally
+              {
+                lateConn.endBatchEdit();
+              }
+            }
+          }
+        });
   }
 
   /** Move the cursor right or left, if possible without sending key events.

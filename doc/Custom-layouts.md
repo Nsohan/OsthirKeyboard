@@ -126,6 +126,17 @@ Labels control **what is visually printed on the key**, completely independent o
   * `role="normal"`: Standard character key styling (default).
 * `indication`: An optional extra legend to show under the main label (e.g. `<key c="2" indication="ABC" />`).
 
+### Tasker Automation Keys
+You can bind a key tap, swipe, long press, or gesture to trigger a Tasker task directly without typing characters into your active input field:
+* Use the prefix `task:<task_name>` (or `tasker:<task_name>`), for example:
+  ```xml
+  <!-- Tap 'e' types 'e'. Swiping ↘ runs Tasker task 'task1' showing 🎃. Shifted swipe ↘ runs 'task2' showing 🎁 -->
+  <key c="e" nw="!" ne="3" sw="\#" se="task:task1" seL="🎃" SE="task:task2" SEL="🎁" />
+  ```
+* Tasker keys fire the task via `TaskerBridge`, automatically passing cursor context (`%nhck_text1`, `%nhck_text2`, `%nhck_keyword`).
+* If the task returns text output, it will be inserted; if it is a fire-and-forget task (or returns nothing), your text input remains completely untouched.
+* You can also map Tasker keywords configured in Settings > Tasker Automation directly.
+
 ### Possible Key Values
 Built-in strings that assign a special function to a key are described in [Possible key values](Possible-key-values.md). For example, `se="copy"` means a southeasterly swipe produces the Copy action. If a key value does not match any built-in special string, it outputs that text _verbatim_ (including full strings or emojis).
 

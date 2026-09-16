@@ -20,10 +20,16 @@ Key values can be any of the following:
   + The name of a special key, as listed below.
   + `'string'` An arbitrary string that can contain `:`. `'` can be added to the string as `` \' ``.
   + `keyevent:keycode` An Android keycode. They are listed as `KEYCODE_...` in [KeyEvent](https://developer.android.com/reference/android/view/KeyEvent#summary).
+  + `task:task_name` (or `tasker:task_name`): Directly triggers a Tasker task via `TaskerBridge` without typing anything into the field (unless the task returns output).
 
   Examples:
   + `⏯:keyevent:85` A play/pause key (which has no effect in most apps).
   + `my@:'my.email@domain.com'` A key that sends an arbitrary string
+  + `🎃:task:task1` A key with legend 🎃 that fires Tasker task `task1`
+  + In layout XML: `se="task:task1" seL="🎃"`
+
+- A key value starting with `task:task_name` or `tasker:task_name`.
+  Directly triggers a Tasker task. Can be used in attributes like `c="task:my_task"` or `se="task:my_task"`.
 
 - A macro, `legend:key_def1,key_def2,...`.
   This results in a key with legend `legend` that behaves as if the sequence of `key_def` had been pressed in order.

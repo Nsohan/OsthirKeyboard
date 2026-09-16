@@ -110,6 +110,7 @@ public final class KeyValue implements Comparable<KeyValue>
     Slider, // [_payload] is a [KeyValue.Slider], value is slider repeatition.
     Macro, // [_payload] is a [KeyValue.Macro], value is unused.
     Stateful, // [_payload] is a [KeyValue.Stateful], value is the query.
+    Tasker, // [_payload] is a [KeyValue.TaskerTarget], value is unused.
   }
 
   private static final int FLAGS_OFFSET = 20;
@@ -250,6 +251,12 @@ public final class KeyValue implements Comparable<KeyValue>
     return (Stateful)_payload;
   }
 
+  /** Defined only when [getKind() == Kind.Tasker]. */
+  public String getTaskName()
+  {
+    return ((TaskerTarget)_payload).taskName;
+  }
+
   /* Update the char and the symbol. */
   public KeyValue withChar(char c)
   {
@@ -284,6 +291,10 @@ public final class KeyValue implements Comparable<KeyValue>
         if (symbol.length() > 1)
           flags |= FLAG_SMALLER_FONT;
         return new KeyValue(symbol, _code, _code, flags);
+      case Tasker:
+        if (symbol.length() > 1)
+          flags |= FLAG_SMALLER_FONT;
+        return makeTaskerKey(getTaskName(), symbol, flags);
       case Macro:
         return makeMacro(symbol, getMacro(), flags);
       default:
@@ -512,6 +523,20 @@ public final class KeyValue implements Comparable<KeyValue>
     if (symbol.length() > 1)
       flags |= FLAG_SMALLER_FONT;
     return new KeyValue(new Macro(keys, symbol), Kind.Macro, 0, flags);
+  }
+
+  public static KeyValue makeTaskerKey(String taskName)
+  {
+    return makeTaskerKey(taskName, taskName, 0);
+  }
+
+  public static KeyValue makeTaskerKey(String taskName, String symbol, int flags)
+  {
+    if (symbol == null || symbol.isEmpty())
+      symbol = taskName;
+    if (symbol.length() > 1)
+      flags |= FLAG_SMALLER_FONT;
+    return new KeyValue(new TaskerTarget(taskName, symbol), Kind.Tasker, 0, flags | FLAG_SPECIAL);
   }
 
   /** Make a modifier key for passing to [KeyModifier]. */
@@ -938,6 +963,32 @@ public final class KeyValue implements Comparable<KeyValue>
         d = keys[i].compareTo(snd.keys[i]);
         if (d != 0) return d;
       }
+      return _symbol.compareTo(snd._symbol);
+    }
+  };
+
+  public static final class TaskerTarget implements Comparable<TaskerTarget>, Describe
+  {
+    public final String taskName;
+    private final String _symbol;
+
+    public TaskerTarget(String taskName, String symbol)
+    {
+      this.taskName = taskName != null ? taskName : "";
+      this._symbol = symbol != null ? symbol : "";
+    }
+
+    @Override
+    public String toString() { return _symbol; }
+
+    @Override
+    public String describe() { return "task:" + taskName; }
+
+    @Override
+    public int compareTo(TaskerTarget snd)
+    {
+      int d = taskName.compareTo(snd.taskName);
+      if (d != 0) return d;
       return _symbol.compareTo(snd._symbol);
     }
   };
