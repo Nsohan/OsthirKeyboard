@@ -69,7 +69,7 @@ param(
     [switch]$DryRun
 )
 
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = "Continue"
 
 # --- Output helpers ---
 function Write-Step { param([string]$msg) Write-Host "`n[+] $msg" -ForegroundColor Cyan }
@@ -271,7 +271,7 @@ if (-not $SkipPush) {
         Write-Info "Pushing commits to origin/$currentBranch..."
         git push origin $currentBranch
         Write-Info "Pushing tag $tagName to origin..."
-        $tagPushResult = git push origin $tagName 2>&1
+        git push origin $tagName
         if ($LASTEXITCODE -ne 0) {
             Write-Info "Updating tag ref on remote (--force)..."
             git push origin $tagName --force
