@@ -1,0 +1,5 @@
+• Custom Layout Editor: Visual key mapping and swipe action customization
+• Tasker & Automation: Direct Tasker task execution via key swipes and taps
+• Settings Reorganization: Clean, structured preference categories and modern card styling
+• Distinct Vector Icons: Unique icons for opacity controls, gestures, and quick tools
+• UI Polish: Fixed preference dialog edge padding and custom wallpaper preview contrast
