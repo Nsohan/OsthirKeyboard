@@ -126,7 +126,7 @@ if (-not $releaseVersion) {
 }
 
 $tagName = "v$releaseVersion"
-$releaseTitle = "OsthirKeyboard v$releaseVersion 🚀"
+$releaseTitle = "OsthirKeyboard v$releaseVersion"
 
 Write-Step "Target Version: $releaseVersion (versionCode: $releaseCode) | Tag: $tagName"
 
@@ -223,16 +223,16 @@ $releaseNotes = $null
 if ($Notes) {
     $releaseNotes = $Notes
 } elseif ($NotesFile -and (Test-Path $NotesFile)) {
-    $releaseNotes = Get-Content $NotesFile -Raw
+    $releaseNotes = Get-Content $NotesFile -Raw -Encoding UTF8
     Write-Info "Loaded release notes from $NotesFile"
 } elseif (Test-Path "RELEASE_NOTES_$tagName.md") {
-    $releaseNotes = Get-Content "RELEASE_NOTES_$tagName.md" -Raw
+    $releaseNotes = Get-Content "RELEASE_NOTES_$tagName.md" -Raw -Encoding UTF8
     Write-Info "Loaded release notes from RELEASE_NOTES_$tagName.md"
 } elseif (Test-Path "RELEASE_NOTES.md") {
-    $releaseNotes = Get-Content "RELEASE_NOTES.md" -Raw
+    $releaseNotes = Get-Content "RELEASE_NOTES.md" -Raw -Encoding UTF8
     Write-Info "Loaded release notes from RELEASE_NOTES.md"
 } elseif ($releaseCode -and (Test-Path "fastlane\metadata\android\en-US\changelogs\$releaseCode.txt")) {
-    $releaseNotes = Get-Content "fastlane\metadata\android\en-US\changelogs\$releaseCode.txt" -Raw
+    $releaseNotes = Get-Content "fastlane\metadata\android\en-US\changelogs\$releaseCode.txt" -Raw -Encoding UTF8
     Write-Info "Loaded release notes from Fastlane changelog ($releaseCode.txt)"
 } else {
     # Auto-generate from git commits since previous tag
@@ -294,13 +294,15 @@ if (-not $SkipPush) {
     if (-not $githubToken) {
         # Query Windows Git Credential Manager
         try {
-            $inputData = "protocol=https`nhost=github.com`n"
+            $inputData = @"
+protocol=https
+host=github.com
+
+"@
             $credOutput = $inputData | git credential fill 2>$null
-            foreach ($line in ($credOutput -split "`r?`n")) {
-                if ($line -match '^password=(.+)$') {
-                    $githubToken = $matches[1]
-                    break
-                }
+            $match = [regex]::Match($credOutput, 'password=(.+)')
+            if ($match.Success) {
+                $githubToken = $match.Groups[1].Value.Trim()
             }
         } catch {}
     }
