@@ -268,9 +268,14 @@ if (-not $SkipPush) {
     } else {
         $currentBranch = (git branch --show-current).Trim()
         if (-not $currentBranch) { $currentBranch = "main" }
-        Write-Info "Pushing commits to origin/$currentBranch and tag $tagName..."
+        Write-Info "Pushing commits to origin/$currentBranch..."
         git push origin $currentBranch
-        git push origin $tagName
+        Write-Info "Pushing tag $tagName to origin..."
+        $tagPushResult = git push origin $tagName 2>&1
+        if ($LASTEXITCODE -ne 0) {
+            Write-Info "Updating tag ref on remote (--force)..."
+            git push origin $tagName --force
+        }
         Write-Success "Pushed git commits and tag $tagName to origin."
     }
 } else {
@@ -306,47 +311,62 @@ if (-not $SkipPush) {
         if ($DryRun) {
             Write-Info "[DryRun] Would call GitHub API to create release $tagName and upload APK assets."
         } else {
-            # 1. Check if release already exists
             $releaseApiUrl = "https://api.github.com/repos/$repoOwner/$repoName/releases"
             $tagApiUrl = "$releaseApiUrl/tags/$tagName"
-            $headers = @{
-                "Authorization" = "Bearer $githubToken"
-                "Accept"        = "application/vnd.github+json"
-                "User-Agent"    = "OsthirKeyboard-Release-Automation"
-            }
 
+            # 1. Check if release already exists
             $existingRelease = $null
-            try {
-                $existingRelease = Invoke-RestMethod -Uri $tagApiUrl -Headers $headers -Method Get -ErrorAction Stop
-                Write-Info "Found existing release for $tagName (ID: $($existingRelease.id))."
-            } catch {
-                # 404 is expected if the release doesn't exist yet
+            $getReleaseJson = & curl.exe -s -H "Authorization: Bearer $githubToken" -H "Accept: application/vnd.github+json" "$tagApiUrl"
+            if ($getReleaseJson) {
+                try {
+                    $parsed = $getReleaseJson | ConvertFrom-Json
+                    if ($parsed.id) {
+                        $existingRelease = $parsed
+                        Write-Info "Found existing release for $tagName (ID: $($existingRelease.id))."
+                    }
+                } catch {}
             }
 
             $targetReleaseId = $null
-            $uploadUrlTemplate = $null
             $htmlUrl = $null
 
             if ($null -eq $existingRelease) {
-                # Create Release
+                # Create Release via UTF-8 JSON payload to avoid Windows ANSI/codepage emoji mangling
                 Write-Info "Creating new GitHub Release: $releaseTitle..."
                 $releasePayload = @{
                     tag_name         = $tagName
-                    target_commitish = "main"
+                    target_commitish = if ($currentBranch) { $currentBranch } else { "main" }
                     name             = $releaseTitle
                     body             = $releaseNotes
                     draft            = [bool]$Draft
                     prerelease       = [bool]$PreRelease
-                } | ConvertTo-Json
+                } | ConvertTo-Json -Depth 10
 
-                $newRelease = Invoke-RestMethod -Uri $releaseApiUrl -Headers $headers -Method Post -Body $releasePayload -ContentType "application/json"
+                $tmpJsonFile = [System.IO.Path]::GetTempFileName() + ".json"
+                [System.IO.File]::WriteAllText($tmpJsonFile, $releasePayload, [System.Text.UTF8Encoding]::new($false))
+
+                $createResp = & curl.exe -s -S -X POST `
+                    -H "Authorization: Bearer $githubToken" `
+                    -H "Accept: application/vnd.github+json" `
+                    -H "Content-Type: application/json; charset=utf-8" `
+                    --data-binary "@$tmpJsonFile" `
+                    "$releaseApiUrl"
+
+                Remove-Item $tmpJsonFile -Force -ErrorAction SilentlyContinue
+
+                $newRelease = $null
+                try { $newRelease = $createResp | ConvertFrom-Json } catch {}
+
+                if (-not $newRelease -or -not $newRelease.id) {
+                    Write-Err "Failed to create GitHub release. Response: $createResp"
+                    exit 1
+                }
+
                 $targetReleaseId = $newRelease.id
-                $uploadUrlTemplate = $newRelease.upload_url
                 $htmlUrl = $newRelease.html_url
                 Write-Success "Created GitHub release (ID: $targetReleaseId)!"
             } else {
                 $targetReleaseId = $existingRelease.id
-                $uploadUrlTemplate = $existingRelease.upload_url
                 $htmlUrl = $existingRelease.html_url
             }
 
@@ -357,10 +377,9 @@ if (-not $SkipPush) {
             )
 
             # Check existing assets to avoid duplicates or replace old ones
+            $assetsResp = & curl.exe -s -H "Authorization: Bearer $githubToken" -H "Accept: application/vnd.github+json" "$releaseApiUrl/$targetReleaseId/assets"
             $existingAssets = @()
-            try {
-                $existingAssets = Invoke-RestMethod -Uri "$releaseApiUrl/$targetReleaseId/assets" -Headers $headers -Method Get
-            } catch {}
+            try { $existingAssets = $assetsResp | ConvertFrom-Json } catch {}
 
             foreach ($asset in $assetsToUpload) {
                 $assetName = $asset.Name
@@ -370,11 +389,10 @@ if (-not $SkipPush) {
                 $match = $existingAssets | Where-Object { $_.name -eq $assetName }
                 if ($match) {
                     Write-Info "Replacing existing asset '$assetName' (ID: $($match.id))..."
-                    try {
-                        Invoke-RestMethod -Uri "https://api.github.com/repos/$repoOwner/$repoName/releases/assets/$($match.id)" -Headers $headers -Method Delete | Out-Null
-                    } catch {
-                        Write-Warn "Could not delete old asset: $_"
-                    }
+                    & curl.exe -s -X DELETE `
+                        -H "Authorization: Bearer $githubToken" `
+                        -H "Accept: application/vnd.github+json" `
+                        "https://api.github.com/repos/$repoOwner/$repoName/releases/assets/$($match.id)" | Out-Null
                 }
 
                 Write-Info "Uploading $assetName..."
