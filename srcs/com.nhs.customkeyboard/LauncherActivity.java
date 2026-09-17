@@ -81,7 +81,47 @@ public class LauncherActivity extends AppCompatActivity implements Handler.Callb
       return;
     }
 
+    if (android.os.Build.VERSION.SDK_INT >= 29)
+    {
+      getWindow().setNavigationBarContrastEnforced(false);
+      getWindow().setStatusBarContrastEnforced(false);
+    }
+
+    androidx.core.view.WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
+
+    androidx.core.view.WindowInsetsControllerCompat insetsController =
+        androidx.core.view.WindowCompat.getInsetsController(getWindow(), getWindow().getDecorView());
+    if (insetsController != null)
+    {
+      boolean isNight = (getResources().getConfiguration().uiMode & android.content.res.Configuration.UI_MODE_NIGHT_MASK) == android.content.res.Configuration.UI_MODE_NIGHT_YES;
+      insetsController.setAppearanceLightStatusBars(!isNight);
+      insetsController.setAppearanceLightNavigationBars(!isNight);
+    }
+
     setContentView(R.layout.launcher_activity);
+
+    View root = findViewById(R.id.launcher_root_layout);
+    if (root != null)
+    {
+      androidx.core.view.ViewCompat.setOnApplyWindowInsetsListener(root, (v, windowInsets) -> {
+        androidx.core.graphics.Insets insets = windowInsets.getInsets(
+            androidx.core.view.WindowInsetsCompat.Type.systemBars());
+        v.setPadding(insets.left, insets.top, insets.right, 0);
+        return windowInsets;
+      });
+    }
+
+    View scrollView = findViewById(R.id.launcher_scroll_view);
+    if (scrollView != null)
+    {
+      androidx.core.view.ViewCompat.setOnApplyWindowInsetsListener(scrollView, (v, windowInsets) -> {
+        androidx.core.graphics.Insets insets = windowInsets.getInsets(
+            androidx.core.view.WindowInsetsCompat.Type.systemBars());
+        int extraBottom = (int) (16 * getResources().getDisplayMetrics().density);
+        v.setPadding(v.getPaddingLeft(), v.getPaddingTop(), v.getPaddingRight(), insets.bottom + extraBottom);
+        return windowInsets;
+      });
+    }
 
     _toolbar = findViewById(R.id.launcher_toolbar);
     if (_toolbar != null)

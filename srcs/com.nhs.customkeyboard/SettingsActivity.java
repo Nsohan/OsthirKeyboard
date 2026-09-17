@@ -45,6 +45,11 @@ public class SettingsActivity extends AppCompatActivity
   public void onCreate(Bundle savedInstanceState)
   {
     super.onCreate(savedInstanceState);
+    if (android.os.Build.VERSION.SDK_INT >= 29) {
+      getWindow().setNavigationBarContrastEnforced(false);
+      getWindow().setStatusBarContrastEnforced(false);
+    }
+    androidx.core.view.WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
     androidx.core.view.WindowInsetsControllerCompat insetsController = androidx.core.view.WindowCompat.getInsetsController(getWindow(), getWindow().getDecorView());
     if (insetsController != null) {
       boolean isNight = (getResources().getConfiguration().uiMode & android.content.res.Configuration.UI_MODE_NIGHT_MASK) == android.content.res.Configuration.UI_MODE_NIGHT_YES;
@@ -52,6 +57,16 @@ public class SettingsActivity extends AppCompatActivity
       insetsController.setAppearanceLightNavigationBars(!isNight);
     }
     setContentView(R.layout.settings_activity);
+
+    View root = findViewById(R.id.settings_root_layout);
+    if (root != null) {
+      androidx.core.view.ViewCompat.setOnApplyWindowInsetsListener(root, (v, windowInsets) -> {
+        androidx.core.graphics.Insets insets = windowInsets.getInsets(
+            androidx.core.view.WindowInsetsCompat.Type.systemBars());
+        v.setPadding(insets.left, insets.top, insets.right, 0);
+        return windowInsets;
+      });
+    }
     Toolbar toolbar = findViewById(R.id.settings_toolbar);
     setSupportActionBar(toolbar);
     setTitle(R.string.settings_title);
@@ -320,8 +335,13 @@ public class SettingsActivity extends AppCompatActivity
       {
         rv.setClipToPadding(false);
         int padTop = (int) (8 * getResources().getDisplayMetrics().density);
-        int padBottom = (int) (24 * getResources().getDisplayMetrics().density);
-        rv.setPadding(0, padTop, 0, padBottom);
+        androidx.core.view.ViewCompat.setOnApplyWindowInsetsListener(rv, (v, insets) -> {
+          androidx.core.graphics.Insets bars = insets.getInsets(
+              androidx.core.view.WindowInsetsCompat.Type.systemBars());
+          int extraBottom = (int) (16 * getResources().getDisplayMetrics().density);
+          v.setPadding(0, padTop, 0, bars.bottom + extraBottom);
+          return insets;
+        });
       }
       update_languages_summary();
 

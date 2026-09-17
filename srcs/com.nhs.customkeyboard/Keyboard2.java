@@ -961,6 +961,11 @@ public class Keyboard2 extends InputMethodService
         window.setNavigationBarColor(navColor);
       }
 
+      if (VERSION.SDK_INT >= 29)
+      {
+        window.setNavigationBarContrastEnforced(false);
+      }
+
       if (VERSION.SDK_INT >= 30)
       {
         WindowInsetsController insetsController = window.getInsetsController();

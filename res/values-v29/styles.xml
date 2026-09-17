@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:android="http://schemas.android.com/apk/res/android">
+
+  <style name="appTheme" parent="settingsTheme">
+    <item name="android:windowBackground">@color/settings_background</item>
+    <item name="android:statusBarColor">@color/settings_background</item>
+    <item name="android:navigationBarColor">@android:color/transparent</item>
+    <item name="android:enforceNavigationBarContrast">false</item>
+    <item name="android:enforceStatusBarContrast">false</item>
+  </style>
+
+  <style name="settingsTheme" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+    <item name="android:windowBackground">@color/settings_background</item>
+    <item name="colorPrimary">@color/settings_primary</item>
+    <item name="colorPrimaryDark">@color/settings_primary_dark</item>
+    <item name="colorAccent">@color/settings_accent</item>
+    <item name="colorSecondary">@color/settings_secondary</item>
+    <item name="colorControlActivated">@color/settings_accent</item>
+    <item name="colorSurface">@color/settings_surface</item>
+    <item name="colorOnSurface">@color/settings_on_surface</item>
+    <item name="android:statusBarColor">@color/settings_background</item>
+    <item name="android:navigationBarColor">@android:color/transparent</item>
+    <item name="android:enforceNavigationBarContrast">false</item>
+    <item name="android:enforceStatusBarContrast">false</item>
+    <item name="android:windowLightStatusBar">@bool/settings_window_light_status_bar</item>
+    <item name="android:windowLightNavigationBar">@bool/settings_window_light_nav_bar</item>
+    <item name="preferenceTheme">@style/settingsPreferenceTheme</item>
+    <item name="colorLabel">@color/settings_icon_tint</item>
+    <item name="android:windowAnimationStyle">@style/settingsWindowAnimation</item>
+  </style>
+
+</resources>

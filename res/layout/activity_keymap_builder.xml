@@ -3,7 +3,6 @@
     android:id="@+id/keymap_builder_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:fitsSystemWindows="true"
     android:background="#F7F8FA"
     android:orientation="vertical">
 
@@ -191,17 +190,17 @@
         android:layout_weight="1"
         android:clipToPadding="false"
         android:fillViewport="true"
-        android:paddingStart="16dp"
-        android:paddingTop="4dp"
-        android:paddingEnd="16dp"
-        android:paddingBottom="8dp"
         android:scrollbars="vertical">
 
         <LinearLayout
             android:id="@+id/keymap_builder_rows_container"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical" />
+            android:orientation="vertical"
+            android:paddingStart="16dp"
+            android:paddingTop="4dp"
+            android:paddingEnd="16dp"
+            android:paddingBottom="8dp" />
 
     </ScrollView>
 

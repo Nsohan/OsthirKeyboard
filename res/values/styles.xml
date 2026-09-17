@@ -197,7 +197,7 @@
   <style name="appTheme" parent="settingsTheme">
     <item name="android:windowBackground">@color/settings_background</item>
     <item name="android:statusBarColor">@color/settings_background</item>
-    <item name="android:navigationBarColor">@color/settings_background</item>
+    <item name="android:navigationBarColor">@android:color/transparent</item>
   </style>
 
   <!-- SettingsActivity is the only screen using this theme (and the
@@ -213,7 +213,7 @@
     <item name="colorSurface">@color/settings_surface</item>
     <item name="colorOnSurface">@color/settings_on_surface</item>
     <item name="android:statusBarColor">@color/settings_background</item>
-    <item name="android:navigationBarColor">@color/settings_background</item>
+    <item name="android:navigationBarColor">@android:color/transparent</item>
     <item name="android:windowLightStatusBar">@bool/settings_window_light_status_bar</item>
     <item name="android:windowLightNavigationBar">@bool/settings_window_light_nav_bar</item>
     <item name="preferenceTheme">@style/settingsPreferenceTheme</item>

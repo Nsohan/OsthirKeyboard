@@ -70,6 +70,14 @@ public class ThemeActivity extends AppCompatActivity
   {
     super.onCreate(savedInstanceState);
 
+    if (android.os.Build.VERSION.SDK_INT >= 29)
+    {
+      getWindow().setNavigationBarContrastEnforced(false);
+      getWindow().setStatusBarContrastEnforced(false);
+    }
+
+    WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
+
     WindowInsetsControllerCompat insetsController = WindowCompat.getInsetsController(getWindow(), getWindow().getDecorView());
     if (insetsController != null)
     {
@@ -86,7 +94,19 @@ public class ThemeActivity extends AppCompatActivity
       androidx.core.view.ViewCompat.setOnApplyWindowInsetsListener(root, (v, windowInsets) -> {
         androidx.core.graphics.Insets insets = windowInsets.getInsets(
             androidx.core.view.WindowInsetsCompat.Type.systemBars());
-        v.setPadding(insets.left, insets.top, insets.right, insets.bottom);
+        v.setPadding(insets.left, insets.top, insets.right, 0);
+        return windowInsets;
+      });
+    }
+
+    View scrollView = findViewById(R.id.theme_scroll_view);
+    if (scrollView != null)
+    {
+      androidx.core.view.ViewCompat.setOnApplyWindowInsetsListener(scrollView, (v, windowInsets) -> {
+        androidx.core.graphics.Insets insets = windowInsets.getInsets(
+            androidx.core.view.WindowInsetsCompat.Type.systemBars());
+        int extraBottom = (int) (16 * getResources().getDisplayMetrics().density);
+        v.setPadding(v.getPaddingLeft(), v.getPaddingTop(), v.getPaddingRight(), insets.bottom + extraBottom);
         return windowInsets;
       });
     }

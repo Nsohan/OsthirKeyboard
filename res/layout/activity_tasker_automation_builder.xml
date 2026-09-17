@@ -4,7 +4,6 @@
     android:id="@+id/tab_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:fitsSystemWindows="true"
     android:background="@color/settings_background"
     android:orientation="vertical">
 
@@ -33,21 +32,22 @@
         android:textSize="13sp" />
 
     <ScrollView
+        android:id="@+id/tab_scroll_view"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
         android:clipToPadding="false"
         android:fillViewport="true"
-        android:paddingStart="16dp"
-        android:paddingTop="4dp"
-        android:paddingEnd="16dp"
-        android:paddingBottom="8dp"
         android:scrollbars="vertical">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical">
+            android:orientation="vertical"
+            android:paddingStart="16dp"
+            android:paddingTop="4dp"
+            android:paddingEnd="16dp"
+            android:paddingBottom="8dp">
 
             <!-- nhck_replace / nhck_append / nhck_timeout: 3 fixed rows,
                  always present, never added/removed. -->

@@ -102,6 +102,10 @@ public class ThemePreviewBottomSheet extends BottomSheetDialogFragment
     BottomSheetDialog dialog = (BottomSheetDialog) super.onCreateDialog(savedInstanceState);
     if (dialog.getWindow() != null)
     {
+      if (android.os.Build.VERSION.SDK_INT >= 29)
+      {
+        dialog.getWindow().setNavigationBarContrastEnforced(false);
+      }
       boolean isNight = (getResources().getConfiguration().uiMode & android.content.res.Configuration.UI_MODE_NIGHT_MASK) == android.content.res.Configuration.UI_MODE_NIGHT_YES;
       androidx.core.view.WindowInsetsControllerCompat insetsController = androidx.core.view.WindowCompat.getInsetsController(
           dialog.getWindow(), dialog.getWindow().getDecorView());

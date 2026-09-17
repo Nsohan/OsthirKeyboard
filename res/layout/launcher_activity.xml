@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/launcher_root_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="@color/settings_background"
-    android:fitsSystemWindows="true">
+    android:background="@color/settings_background">
 
   <!-- Top App Bar / Toolbar -->
   <com.google.android.material.appbar.MaterialToolbar
@@ -71,9 +71,11 @@
   </LinearLayout>
 
   <androidx.core.widget.NestedScrollView
+      android:id="@+id/launcher_scroll_view"
       android:layout_width="match_parent"
       android:layout_height="0dp"
       android:layout_weight="1"
+      android:clipToPadding="false"
       android:fillViewport="true">
 
     <LinearLayout

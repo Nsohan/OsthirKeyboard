@@ -85,8 +85,14 @@ public class ThemeCropActivity extends AppCompatActivity
 
     if (getWindow() != null)
     {
+      if (android.os.Build.VERSION.SDK_INT >= 29)
+      {
+        getWindow().setNavigationBarContrastEnforced(false);
+        getWindow().setStatusBarContrastEnforced(false);
+      }
+      androidx.core.view.WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
       getWindow().setStatusBarColor(0xFF121316);
-      getWindow().setNavigationBarColor(0xFF121316);
+      getWindow().setNavigationBarColor(android.graphics.Color.TRANSPARENT);
       androidx.core.view.WindowInsetsControllerCompat insetsController =
           androidx.core.view.WindowCompat.getInsetsController(getWindow(), getWindow().getDecorView());
       if (insetsController != null)

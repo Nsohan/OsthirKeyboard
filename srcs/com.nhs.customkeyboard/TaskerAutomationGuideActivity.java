@@ -24,7 +24,34 @@ public class TaskerAutomationGuideActivity extends AppCompatActivity
   protected void onCreate(Bundle savedInstanceState)
   {
     super.onCreate(savedInstanceState);
+    if (android.os.Build.VERSION.SDK_INT >= 29)
+    {
+      getWindow().setNavigationBarContrastEnforced(false);
+      getWindow().setStatusBarContrastEnforced(false);
+    }
+    androidx.core.view.WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
+
+    androidx.core.view.WindowInsetsControllerCompat insetsController =
+        androidx.core.view.WindowCompat.getInsetsController(getWindow(), getWindow().getDecorView());
+    if (insetsController != null)
+    {
+      boolean isNight = (getResources().getConfiguration().uiMode & android.content.res.Configuration.UI_MODE_NIGHT_MASK) == android.content.res.Configuration.UI_MODE_NIGHT_YES;
+      insetsController.setAppearanceLightStatusBars(!isNight);
+      insetsController.setAppearanceLightNavigationBars(!isNight);
+    }
+
     setContentView(R.layout.tasker_automation_guide_activity);
+
+    android.view.View root = findViewById(R.id.tasker_guide_root_layout);
+    if (root != null)
+    {
+      androidx.core.view.ViewCompat.setOnApplyWindowInsetsListener(root, (v, windowInsets) -> {
+        androidx.core.graphics.Insets insets = windowInsets.getInsets(
+            androidx.core.view.WindowInsetsCompat.Type.systemBars());
+        v.setPadding(insets.left, insets.top, insets.right, insets.bottom);
+        return windowInsets;
+      });
+    }
 
     Toolbar toolbar = findViewById(R.id.tasker_guide_toolbar);
     setSupportActionBar(toolbar);

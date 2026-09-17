@@ -140,7 +140,29 @@ public class KeymapBuilderActivity extends Activity
             setTheme(android.R.style.Theme_DeviceDefault_Light_NoActionBar);
         super.onCreate(savedInstanceState);
 
+        if (android.os.Build.VERSION.SDK_INT >= 29)
+        {
+            getWindow().setNavigationBarContrastEnforced(false);
+            getWindow().setStatusBarContrastEnforced(false);
+        }
+        if (android.os.Build.VERSION.SDK_INT >= 21)
+        {
+            getWindow().setNavigationBarColor(android.graphics.Color.TRANSPARENT);
+        }
+        androidx.core.view.WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
+
         setContentView(R.layout.activity_keymap_builder);
+
+        View root = findViewById(R.id.keymap_builder_root);
+        if (root != null)
+        {
+            androidx.core.view.ViewCompat.setOnApplyWindowInsetsListener(root, (v, windowInsets) -> {
+                androidx.core.graphics.Insets insets = windowInsets.getInsets(
+                    androidx.core.view.WindowInsetsCompat.Type.systemBars());
+                v.setPadding(insets.left, insets.top, insets.right, insets.bottom);
+                return windowInsets;
+            });
+        }
 
         _header = findViewById(R.id.keymap_builder_header);
         _name_input = findViewById(R.id.keymap_builder_name_input);
