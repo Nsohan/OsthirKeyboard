@@ -67,9 +67,9 @@ Useful links.
   <row>
     <key c="q" ne="1" se="loc esc"/>
     <key c="w" nw="~" ne="2" sw="\@"/>
-    <key c="e" nw="!" ne="3" sw="\#" se="task:task1" seL="🎃" SE="task:task2" SEL="🎁"/>
+    <key c="e" nw="!" ne="3" sw="\#" se="youremail@email.com" seL="📧" SE="+0123456789" SEL="☎️"/>
     <key c="r" ne="4" sw="$"/>
-    <key c="t" ne="5" sw="%"/>
+    <key c="t" ne="5" sw="%" se="task:task1" seL="🎃" SE="task:task2" SEL="🎁"/>
     <key c="y" ne="6" sw="^"/>
     <key c="u" ne="7" sw="&amp;"/>
     <key c="i" ne="8" sw="*"/>

@@ -727,7 +727,7 @@ public final class KeyValue implements Comparable<KeyValue>
       /* Spaces */
       case "\\t": return charKey("\\t", '\t', 0); // Send the tab character
       case "\\n": return charKey("\\n", '\n', 0); // Send the newline character
-      case "space": return editingKey(0xE00D, Editing.SPACE_BAR, FLAG_SMALLER_FONT | FLAG_GREYED);
+      case "space": return editingKey(0xE00D, Editing.SPACE_BAR, 0);
       case "nbsp": return charKey("\u237d", '\u00a0', FLAG_SMALLER_FONT);
       case "nnbsp": return charKey("\u2423", '\u202F', FLAG_SMALLER_FONT);
 

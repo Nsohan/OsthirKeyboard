@@ -911,7 +911,7 @@ public final class KeyEventHandler
       catch (Exception ignored) {}
     }
 
-    String resolvedTaskName = taskOrKeyword;
+    String resolvedTaskName = null;
     long timeoutMs = 15000;
     try
     {
@@ -922,18 +922,48 @@ public final class KeyEventHandler
         if (config != null)
         {
           timeoutMs = config.timeout_ms;
-          if (config.tasks != null && config.tasks.containsKey(taskOrKeyword))
+          if (config.tasks != null)
           {
-            String mapped = config.tasks.get(taskOrKeyword);
-            if (mapped != null && !mapped.isEmpty())
-              resolvedTaskName = mapped;
+            if (config.tasks.containsKey(taskOrKeyword))
+            {
+              String mapped = config.tasks.get(taskOrKeyword);
+              if (mapped != null && !mapped.trim().isEmpty())
+                resolvedTaskName = mapped.trim();
+            }
+            else
+            {
+              for (java.util.Map.Entry<String, String> entry : config.tasks.entrySet())
+              {
+                if (entry.getKey() != null && entry.getKey().equalsIgnoreCase(taskOrKeyword))
+                {
+                  String mapped = entry.getValue();
+                  if (mapped != null && !mapped.trim().isEmpty())
+                  {
+                    resolvedTaskName = mapped.trim();
+                    break;
+                  }
+                }
+              }
+            }
           }
         }
       }
     }
     catch (Exception ignored) {}
 
-    Toast.makeText(ctx, "Running Tasker: " + resolvedTaskName, Toast.LENGTH_SHORT).show();
+    if (resolvedTaskName == null)
+    {
+      final String unmappedKeyword = taskOrKeyword;
+      new Handler(Looper.getMainLooper()).post(() -> {
+        Toast.makeText(ctx.getApplicationContext(), "Task '" + unmappedKeyword + "' is not configured. Please map it in Settings > Tasker & Automation first.", Toast.LENGTH_LONG).show();
+      });
+      return;
+    }
+
+    final String finalTaskName = resolvedTaskName;
+    new Handler(Looper.getMainLooper()).post(() -> {
+      Toast.makeText(ctx.getApplicationContext(), "Running Tasker: " + finalTaskName, Toast.LENGTH_SHORT).show();
+    });
 
     TaskerBridge.run_task(ctx, resolvedTaskName, text1, text2, keyword, timeoutMs,
         (output, errorMessage) -> {
@@ -943,7 +973,9 @@ public final class KeyEventHandler
             // Only toast on real communication failures (e.g. Tasker not installed or external access disabled).
             if (!errorMessage.equals(ctx.getString(R.string.tasker_error_timeout)))
             {
-              Toast.makeText(ctx, errorMessage, Toast.LENGTH_SHORT).show();
+              new Handler(Looper.getMainLooper()).post(() -> {
+                Toast.makeText(ctx.getApplicationContext(), errorMessage, Toast.LENGTH_SHORT).show();
+              });
             }
             return;
           }

@@ -946,14 +946,18 @@ public class Keyboard2View extends View
                     || (kv.getKind() == KeyValue.Kind.Editing
                     && kv.getEditing() == KeyValue.Editing.SPACE_BAR);
 
-    float textSize = scaleTextSize(kv, true);
-    if (is_space_bar)
-      textSize /= 1.3f;
+    float textSize = is_space_bar ? (_subLabelSize * 0.8f) : scaleTextSize(kv, true);
 
-    Paint p = tc.label_paint(
-            kv.hasFlagsAny(KeyValue.FLAG_KEY_FONT),
-            labelColor(key, kv, isKeyDown, false),
-            textSize);
+    Paint p = is_space_bar
+            ? tc.sublabel_paint(
+                    kv.hasFlagsAny(KeyValue.FLAG_KEY_FONT),
+                    labelColor(key, kv, isKeyDown, true),
+                    textSize,
+                    Paint.Align.CENTER)
+            : tc.label_paint(
+                    kv.hasFlagsAny(KeyValue.FLAG_KEY_FONT),
+                    labelColor(key, kv, isKeyDown, false),
+                    textSize);
 
     boolean hasCustomLabel = (key.keyLabels != null
             && key.keyLabels[_mods.has(KeyValue.Modifier.SHIFT) ? 9 : 0] != null

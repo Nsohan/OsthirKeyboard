@@ -152,7 +152,7 @@ public final class Config
     foldable_unfolded = foldableUnfolded;
 
     float characterSizeScale = 1.f;
-    String show_numpad_s = _prefs.getString("show_numpad", "never");
+    String show_numpad_s = _prefs.getString("show_numpad", "landscape");
     show_numpad = "always".equals(show_numpad_s);
     int keyboardHeightPercent;
     if (orientation_landscape)
