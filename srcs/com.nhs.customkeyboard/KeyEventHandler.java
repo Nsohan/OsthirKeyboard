@@ -960,10 +960,6 @@ public final class KeyEventHandler
       return;
     }
 
-    final String finalTaskName = resolvedTaskName;
-    new Handler(Looper.getMainLooper()).post(() -> {
-      Toast.makeText(ctx.getApplicationContext(), "Running Tasker: " + finalTaskName, Toast.LENGTH_SHORT).show();
-    });
 
     TaskerBridge.run_task(ctx, resolvedTaskName, text1, text2, keyword, timeoutMs,
         (output, errorMessage) -> {
