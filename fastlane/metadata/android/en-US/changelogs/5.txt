@@ -1,0 +1,4 @@
+- Silent Tasker automation execution (removed intrusive toast notifications)
+- Direct key task execution support (task:<name> and tasker:<name>)
+- Task mapping validation and clear configuration guidance
+- UI and window styling polish across Settings, Layout Editor, Dictionary, and Theme activities
