@@ -225,6 +225,11 @@ public class Keyboard2View extends View
       _highlightedKey = findKeyByLine(prevLine);
   }
 
+  public Theme getTheme()
+  {
+    return _theme;
+  }
+
   public void reset()
   {
     _mods = Pointers.Modifiers.EMPTY;

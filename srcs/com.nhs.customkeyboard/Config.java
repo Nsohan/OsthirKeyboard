@@ -298,6 +298,12 @@ public final class Config
     _prefs.edit().putBoolean("clipboard_history_enabled", e).apply();
   }
 
+  public boolean isDynamicTheme()
+  {
+    return "monet".equals(themeName) || "monetlight".equals(themeName) || "monetdark".equals(themeName)
+        || theme == R.style.MonetLight || theme == R.style.MonetDark;
+  }
+
   private float get_dip_pref(DisplayMetrics dm, String pref_name, float def)
   {
     float value;

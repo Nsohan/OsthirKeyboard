@@ -210,6 +210,15 @@ public class ThemeCardView extends View
       // Bottom bar split
       drawSplitKeyIndicators(canvas, _cardRect, halfW);
     }
+    else if (_model.isDynamicColor && android.os.Build.VERSION.SDK_INT >= 31)
+    {
+      int dynamicBg = ContextCompat.getColor(getContext(), R.color.system_accent2_50);
+      int dynamicKey = ContextCompat.getColor(getContext(), R.color.system_neutral1_0);
+      int dynamicAccent = ContextCompat.getColor(getContext(), R.color.system_accent1_600);
+      _bgPaint.setColor(dynamicBg);
+      canvas.drawRect(_cardRect, _bgPaint);
+      drawKeyIndicators(canvas, _cardRect, dynamicKey, dynamicAccent);
+    }
     else
     {
       _bgPaint.setColor(_model.previewBgColor);

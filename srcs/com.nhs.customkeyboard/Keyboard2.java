@@ -742,6 +742,39 @@ public class Keyboard2 extends InputMethodService
     _candidates_view.setVisibility(should_show ? View.VISIBLE : View.GONE);
   }
 
+  private boolean hasThemeOrDynamicColorsChanged(int prev_theme)
+  {
+    if (prev_theme != _config.theme)
+      return true;
+    if (_keyboard_layout_view == null)
+      return true;
+    if (_config != null && _config.isDynamicTheme())
+    {
+      Context themeCtx = new ContextThemeWrapper(this, _config.theme);
+      android.content.res.TypedArray a = themeCtx.obtainStyledAttributes(new int[]{
+          R.attr.colorKeyboard,
+          R.attr.colorKey,
+          R.attr.colorKeyAction,
+          R.attr.colorLabelAction
+      });
+      int currentKbColor = a.getColor(0, 0);
+      int currentKeyColor = a.getColor(1, 0);
+      int currentKeyActionColor = a.getColor(2, 0);
+      int currentLabelActionColor = a.getColor(3, 0);
+      a.recycle();
+
+      Theme viewTheme = _keyboard_layout_view.getTheme();
+      if (viewTheme == null
+          || viewTheme.colorKey != currentKeyColor
+          || viewTheme.colorKeyAction != currentKeyActionColor
+          || viewTheme.colorLabelAction != currentLabelActionColor)
+      {
+        return true;
+      }
+    }
+    return false;
+  }
+
   /** Might re-create the keyboard view. [_keyboard_layout_view.setKeyboard()] and
    [setInputView()] must be called soon after. */
   private void refresh_config()
@@ -749,8 +782,8 @@ public class Keyboard2 extends InputMethodService
     int prev_theme = _config.theme;
     _config.refresh(getResources(), _foldStateTracker.isUnfolded(), _dictionaries);
     refresh_current_dictionary();
-    // Refreshing the theme config requires re-creating the views
-    if (prev_theme != _config.theme)
+    // Refreshing the theme config or dynamic colors requires re-creating the views
+    if (hasThemeOrDynamicColorsChanged(prev_theme))
     {
       create_keyboard_view();
       _emojiPane = null;
