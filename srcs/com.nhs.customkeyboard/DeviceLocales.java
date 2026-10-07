@@ -56,14 +56,29 @@ public final class DeviceLocales
   private static List<Loc> get_installed_locales(String pkg, InputMethodManager imm)
   {
     List<Loc> locs = new ArrayList<Loc>();
-    for (InputMethodInfo imi : imm.getEnabledInputMethodList())
-      if (imi.getPackageName().equals(pkg))
+    if (imm == null)
+      return locs;
+    List<InputMethodInfo> enabledImis = imm.getEnabledInputMethodList();
+    if (enabledImis != null)
+    {
+      for (InputMethodInfo imi : enabledImis)
       {
-        for (InputMethodSubtype subtype :
-            imm.getEnabledInputMethodSubtypeList(imi, true))
-          locs.add(new Loc(subtype));
-        break;
+        if (imi != null && imi.getPackageName() != null && imi.getPackageName().equals(pkg))
+        {
+          List<InputMethodSubtype> subtypes =
+              imm.getEnabledInputMethodSubtypeList(imi, true);
+          if (subtypes != null)
+          {
+            for (InputMethodSubtype subtype : subtypes)
+            {
+              if (subtype != null)
+                locs.add(new Loc(subtype));
+            }
+          }
+          break;
+        }
       }
+    }
     return locs;
   }
 
@@ -71,15 +86,22 @@ public final class DeviceLocales
   {
     // Android might return a random subtype, for example, the first in the
     // list alphabetically.
+    if (imm == null || installed == null)
+      return null;
     InputMethodSubtype current_subtype = imm.getCurrentInputMethodSubtype();
     if (current_subtype == null)
       return null;
     if (VERSION.SDK_INT < 24)
       return new Loc(current_subtype);
     String default_lang_tag = current_subtype.getLanguageTag();
-    for (Loc l : installed)
-      if (l.lang_tag.equals(default_lang_tag))
-        return l;
+    if (default_lang_tag != null)
+    {
+      for (Loc l : installed)
+      {
+        if (l != null && default_lang_tag.equals(l.lang_tag))
+          return l;
+      }
+    }
     return null;
   }
 }

@@ -40,7 +40,7 @@ public final class Logs
       _debug_logs.println(s);
   }
 
-  public static void exn(String msg, Exception e)
+  public static void exn(String msg, Throwable e)
   {
     Log.e(TAG, msg, e);
   }

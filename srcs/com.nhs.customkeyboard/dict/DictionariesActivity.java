@@ -8,8 +8,9 @@ import com.nhs.customkeyboard.R;
 public class DictionariesActivity extends AppCompatActivity
 {
   @Override
-  public void onCreate(Bundle savedInstanceState)
+  protected void onCreate(Bundle savedInstanceState)
   {
+    super.onCreate(savedInstanceState);
     if (android.os.Build.VERSION.SDK_INT >= 29)
     {
       getWindow().setNavigationBarContrastEnforced(false);

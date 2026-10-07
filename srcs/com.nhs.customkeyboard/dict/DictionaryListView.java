@@ -51,13 +51,19 @@ public class DictionaryListView extends LinearLayout
   {
     SupportedDictionaries ds = SupportedDictionaries.get(ctx.getResources());
     DeviceLocales locales = DeviceLocales.load(ctx);
+    if (locales == null || locales.installed == null)
+      return;
+    Set<String> added = new HashSet<String>();
     for (DeviceLocales.Loc loc : locales.installed)
     {
-      if (loc.dictionary != null)
+      if (loc != null && loc.dictionary != null && !added.contains(loc.dictionary))
       {
         int idx = ds.find(loc.dictionary);
         if (idx >= 0)
+        {
           inflate_item(ctx, ds, idx);
+          added.add(loc.dictionary);
+        }
       }
     }
   }
@@ -235,7 +241,7 @@ public class DictionaryListView extends LinearLayout
       _dictionaries.install(dict_name, data);
       return true;
     }
-    catch (Exception e)
+    catch (Throwable e)
     {
       Logs.exn("", e);
       return false;

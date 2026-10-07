@@ -29,19 +29,25 @@ public class SupportedDictionaries
   /** Find the index for a given dictionary name. Return [-1] if not found. */
   public int find(String dict_name)
   {
-    int i = Arrays.binarySearch(locales, dict_name);
-    return (i < 0) ? -1 : i;
+    if (dict_name == null || locales == null)
+      return -1;
+    for (int i = 0; i < locales.length; i++)
+    {
+      if (dict_name.equals(locales[i]))
+        return i;
+    }
+    return -1;
   }
 
-  public int length() { return locales.length; }
+  public int length() { return (locales != null) ? locales.length : 0; }
 
-  public String dict_name(int i) { return locales[i]; }
-  public String display_name(int i) { return names[i]; }
-  public int size(int i) { return sizes[i]; }
+  public String dict_name(int i) { return (locales != null && i >= 0 && i < locales.length) ? locales[i] : ""; }
+  public String display_name(int i) { return (names != null && i >= 0 && i < names.length) ? names[i] : ""; }
+  public int size(int i) { return (sizes != null && i >= 0 && i < sizes.length) ? sizes[i] : 0; }
 
   public String get_display_name(String dict_name)
   {
     int i = find(dict_name);
-    return (i >= 0) ? names[i] : dict_name;
+    return (i >= 0 && names != null && i < names.length) ? names[i] : dict_name;
   }
 }

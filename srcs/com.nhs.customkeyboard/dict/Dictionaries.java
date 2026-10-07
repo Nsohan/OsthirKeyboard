@@ -274,7 +274,7 @@ public final class Dictionaries
 
   Dictionaries(Context ctx)
   {
-    _context = ctx;
+    _context = (ctx != null) ? ctx.getApplicationContext() : null;
     _installed_dictionaries = new HashSet();
     _loaded_dictionaries = new TreeMap<String, Cdict[]>();
     load_prefs();
@@ -283,6 +283,8 @@ public final class Dictionaries
 
   void install_bundled_dictionaries()
   {
+    if (_context == null)
+      return;
     try
     {
       String[] files = _context.getAssets().list("dictionaries");
@@ -314,7 +316,7 @@ public final class Dictionaries
           save();
       }
     }
-    catch (Exception e)
+    catch (Throwable e)
     {
       Logs.exn("Error installing bundled dictionaries", e);
     }
@@ -323,6 +325,8 @@ public final class Dictionaries
   void load_prefs()
   {
     _shared_prefs = null;
+    if (_context == null)
+      return;
     try
     {
       _shared_prefs =
@@ -339,7 +343,7 @@ public final class Dictionaries
 
   Cdict[] load_uncached(String dict_name)
   {
-    if (!_installed_dictionaries.contains(dict_name))
+    if (_context == null || !_installed_dictionaries.contains(dict_name))
       return null;
     try
     {
@@ -348,8 +352,7 @@ public final class Dictionaries
       inp.close();
       return Cdict.of_bytes(data);
     }
-    catch (IOException e) { return null; }
-    catch (Cdict.ConstructionError e) { return null; }
+    catch (Throwable e) { return null; }
   }
 
   void save()
