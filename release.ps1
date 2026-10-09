@@ -308,6 +308,27 @@ host=github.com
                 $githubToken = $match.Groups[1].Value.Trim()
             }
         } catch {}
+
+        if (-not $githubToken) {
+            try {
+                $gcmCandidates = @(
+                    "C:\Program Files\Git\mingw64\bin\git-credential-manager.exe",
+                    "C:\Program Files (x86)\Git\mingw64\bin\git-credential-manager.exe",
+                    "git-credential-manager"
+                )
+                foreach ($gcm in $gcmCandidates) {
+                    if ((Test-Path $gcm -ErrorAction SilentlyContinue) -or (Get-Command $gcm -ErrorAction SilentlyContinue)) {
+                        $inputLines = ('protocol=https', 'host=github.com', '') -join "`n"
+                        $out = $inputLines | & $gcm get 2>$null
+                        $pwdLine = $out | Where-Object { $_ -match '^password=(.+)' }
+                        if ($pwdLine) {
+                            $githubToken = ($pwdLine -replace '^password=', '').Trim()
+                            if ($githubToken) { break }
+                        }
+                    }
+                }
+            } catch {}
+        }
     }
 
     if ($githubToken) {

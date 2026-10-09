@@ -16,7 +16,7 @@ description: >
 | **Package ID** | `com.nhs.customkeyboard` |
 | **GitHub repo** | `https://github.com/Nsohan/OsthirKeyboard` |
 | **Upstream** | [Unexpected Keyboard](https://github.com/Julow/Unexpected-Keyboard) — a lightweight, gesture-driven FOSS Android keyboard |
-| **Version** | `0.0.02` (versionCode 2) |
+| **Version** | `0.0.06` (versionCode 6) |
 | **Min SDK** | 21 (Android 5.0 Lollipop) |
 | **Target SDK** | 36 |
 | **Compile SDK** | android-36 |

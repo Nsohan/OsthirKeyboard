@@ -1,0 +1,5 @@
+- Dynamic Monet theme support with live wallpaper accent color updates (Android 12+)
+- Dynamic color preview indicators in theme card picker
+- Dictionary management robustness with duplicate entry prevention and null-safety
+- Edge-to-edge navigation bar styling and lifecycle polish in Dictionary settings
+- Enhanced error handling and stability improvements across core keyboard components

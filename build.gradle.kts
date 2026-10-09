@@ -25,8 +25,8 @@ android {
     applicationId = "com.nhs.customkeyboard"
     minSdk = 21
     targetSdk { version = release(36) }
-    versionCode = 5
-    versionName = "0.0.05"
+    versionCode = 6
+    versionName = "0.0.06"
   }
 
   sourceSets {
