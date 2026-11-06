@@ -1,0 +1,5 @@
+- Unlink number row symbols from main layout so custom swipe symbols remain visible
+- Strip only duplicate number digits from main keys when number row is active
+- Fix Android 15 edge-to-edge navigation bar overlap with cached insets and relayout
+- Fix startup dictionary banner race condition and resolve active layout language
+- Update custom Bengali layout key and symbol mappings
