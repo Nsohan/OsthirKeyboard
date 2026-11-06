@@ -38,11 +38,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import com.nhs.customkeyboard.Config;
+import com.nhs.customkeyboard.KeyboardData;
 import com.nhs.customkeyboard.KeyValue;
 import com.nhs.customkeyboard.Logs;
 import com.nhs.customkeyboard.Pointers;
 import com.nhs.customkeyboard.R;
 import com.nhs.customkeyboard.SettingsActivity;
+import com.nhs.customkeyboard.dict.Dictionaries;
+import com.nhs.customkeyboard.dict.SupportedDictionaries;
 
 public class CandidatesView extends LinearLayout
 {
@@ -1396,13 +1399,58 @@ public class CandidatesView extends LinearLayout
           R.layout.candidates_status_no_dict, null);
       addView(_status_no_dict);
     }
-    Locale current_locale = (config.device_locales.default_ != null) ?
-      Locale.forLanguageTag(config.device_locales.default_.lang_tag) : null;
+    String lang_display_name = null;
+    KeyboardData current_layout = null;
+    int layout_i = config.get_current_layout();
+    if (config.layouts != null && layout_i >= 0 && layout_i < config.layouts.size())
+    {
+      current_layout = config.layouts.get(layout_i);
+    }
+
+    String dict_tag = null;
+    if (current_layout != null)
+    {
+      if (current_layout.dictionary != null && !current_layout.dictionary.trim().isEmpty())
+      {
+        dict_tag = current_layout.dictionary.trim();
+      }
+      else
+      {
+        dict_tag = Dictionaries.instance(getContext()).auto_detect_dictionary(current_layout);
+      }
+    }
+
+    if (dict_tag != null)
+    {
+      lang_display_name = SupportedDictionaries.get(getResources()).get_display_name(dict_tag);
+      if (lang_display_name == null || lang_display_name.equals(dict_tag))
+      {
+        try
+        {
+          Locale loc = Locale.forLanguageTag(dict_tag.replace('_', '-'));
+          if (loc != null && !loc.getDisplayName().isEmpty())
+            lang_display_name = loc.getDisplayName();
+        }
+        catch (Exception ignored) {}
+      }
+    }
+
+    if (lang_display_name == null && config.device_locales != null && config.device_locales.default_ != null)
+    {
+      try
+      {
+        Locale current_locale = Locale.forLanguageTag(config.device_locales.default_.lang_tag);
+        if (current_locale != null)
+          lang_display_name = current_locale.getDisplayName();
+      }
+      catch (Exception ignored) {}
+    }
+
     TextView tv = _status_no_dict.findViewById(android.R.id.text1);
-    if (tv != null && current_locale != null)
+    if (tv != null && lang_display_name != null)
       tv.setText(getResources().getString(
             R.string.candidates_status_click_to_install,
-            current_locale.getDisplayName()));
+            lang_display_name));
     _status_no_dict.setVisibility(View.VISIBLE);
   }
 

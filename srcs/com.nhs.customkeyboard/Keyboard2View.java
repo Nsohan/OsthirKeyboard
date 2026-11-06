@@ -55,9 +55,13 @@ public class Keyboard2View extends View
   private float _marginRight;
   private float _marginLeft;
   private float _marginBottom;
-  private int _insets_left = 0;
-  private int _insets_right = 0;
-  private int _insets_bottom = 0;
+  private static int s_cached_insets_left = 0;
+  private static int s_cached_insets_right = 0;
+  private static int s_cached_insets_bottom = 0;
+
+  private int _insets_left = s_cached_insets_left;
+  private int _insets_right = s_cached_insets_right;
+  private int _insets_bottom = s_cached_insets_bottom;
 
   private Theme _theme;
   private Theme.Computed _tc;
@@ -570,6 +574,32 @@ public class Keyboard2View extends View
   }
 
   @Override
+  protected void onAttachedToWindow()
+  {
+    super.onAttachedToWindow();
+    if (VERSION.SDK_INT >= 35)
+    {
+      WindowInsets wi = getRootWindowInsets();
+      if (wi != null)
+      {
+        int insets_types = WindowInsets.Type.systemBars() | WindowInsets.Type.displayCutout();
+        Insets insets = wi.getInsets(insets_types);
+        if (_insets_left != insets.left || _insets_right != insets.right || _insets_bottom != insets.bottom)
+        {
+          _insets_left = insets.left;
+          _insets_right = insets.right;
+          _insets_bottom = insets.bottom;
+          s_cached_insets_left = insets.left;
+          s_cached_insets_right = insets.right;
+          s_cached_insets_bottom = insets.bottom;
+          requestLayout();
+          invalidate();
+        }
+      }
+    }
+  }
+
+  @Override
   public WindowInsets onApplyWindowInsets(WindowInsets wi)
   {
     // LAYOUT_IN_DISPLAY_CUTOUT_MODE_ALWAYS is set in [Keyboard2#updateSoftInputWindowLayoutParams] for SDK_INT >= 35.
@@ -579,9 +609,20 @@ public class Keyboard2View extends View
             WindowInsets.Type.systemBars()
                     | WindowInsets.Type.displayCutout();
     Insets insets = wi.getInsets(insets_types);
+    boolean changed = (_insets_left != insets.left
+            || _insets_right != insets.right
+            || _insets_bottom != insets.bottom);
     _insets_left = insets.left;
     _insets_right = insets.right;
     _insets_bottom = insets.bottom;
+    s_cached_insets_left = insets.left;
+    s_cached_insets_right = insets.right;
+    s_cached_insets_bottom = insets.bottom;
+    if (changed)
+    {
+      requestLayout();
+      invalidate();
+    }
     return WindowInsets.CONSUMED;
   }
 

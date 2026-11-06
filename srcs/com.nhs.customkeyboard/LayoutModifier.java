@@ -68,7 +68,19 @@ public final class LayoutModifier
       }
       if (globalConfig.split_layout)
         added_number_row = LayoutLandscapeModifier.transform_number_row(added_number_row);
-      remove_keys.addAll(added_number_row.getKeys(0).keySet());
+      for (KeyboardData.Key key : added_number_row.keys)
+      {
+        if (key.getKeyValue(0) != null)
+          remove_keys.add(key.getKeyValue(0));
+      }
+      if (number_row_no_symbols != null)
+      {
+        for (KeyboardData.Key key : number_row_no_symbols.keys)
+        {
+          if (key.getKeyValue(0) != null)
+            remove_keys.add(key.getKeyValue(0));
+        }
+      }
     }
     // Add the bottom row before computing the extra keys
     if (include_bottom_row && kw.bottom_row)

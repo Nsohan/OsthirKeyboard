@@ -6,13 +6,13 @@
     <key c="ৈ" n="ঐ" lp="ঐ" se="৳" />
     <key c="া" n="আ" lp="আ" />
     <key c="ী" n="ঈ" lp="ঈ" />
-    <key c="ূ" n="ঊ" lp="ঊ" />
+    <key c="ূ" n="ঊ" lp="ঊ" sw="-" se="_" />
     <key c="ব" n="ভ" lp="ভ" sw="&lt;" se="&gt;" />
-    <key c="হ" n="ঙ" lp="ঙ" se="!" />
-    <key c="গ" n="ঘ" lp="ঘ" sw="-" se="_" />
+    <key c="হ" n="ঙ" lp="ঙ" se=")"  sw="("/>
+    <key c="গ" n="ঘ" lp="ঘ" sw="{" se="}" />
     <key c="দ" n="ধ" lp="ধ" sw="[" se="]" />
-    <key c="জ" n="ঝ" lp="ঝ" sw="{" se="}" />
-    <key c="ড" n="ঢ" lp="ঢ" sw="/" se="\\" />
+    <key c="জ" n="ঝ" lp="ঝ" sw="/" se="\\"/>
+    <key c="ড" n="ঢ" lp="ঢ" sw="ড়"/>
   </row>
 
   <!-- Row 2 (Home Row - Width: 11.0) -->
@@ -21,13 +21,13 @@
     <key c="ে" n="এ" lp="এ" />
     <key c="্" n="অ" lp="অ" sw="্র" se="zwj" />
     <key c="ি" n="ই" lp="ই" />
-    <key c="ু" n="উ" lp="উ" />
-    <key c="প" n="ফ" lp="ফ" sw="+" se="=" />
+    <key c="ু" n="উ" lp="উ" sw="+" se="-"/>
+    <key c="প" n="ফ" lp="ফ"  se="="  sw="*"/>
     <key c="র" n="ড়" lp="ড়" sw="ঢ়" se="র্" />
     <key c="ক" n="খ" lp="খ" />
-    <key c="ত" n="থ" lp="থ" sw="(" se=")" />
+    <key c="ত" n="থ" lp="থ" sw=":" se=";" />
     <key c="চ" n="ছ" lp="ছ" sw="&quot;" se="'" />
-    <key c="ট" n="ঠ" lp="ঠ" sw=":" se=";" />
+    <key c="ট" n="ঠ" lp="ঠ" />
   </row>
 
   <!-- Row 3 (Bottom Row - Width: 11.0) -->
@@ -37,10 +37,10 @@
     <key c="ম" n="ণ" lp="ণ" />
     <key c="ন" n="শ" lp="শ" />
     <key c="ৱ" n="ৎ" lp="ৎ" />
-    <key c="ল" n="ঃ" lp="ঃ" />
-    <key c="স" n="ষ" lp="ষ" se="\?" />
-    <key c="য" n="য়" lp="য়" se="্য" />
-    <key c="।" n="ঞ" lp="ঞ" sw="়" se="॥" />
+    <key c="ল" n="ঃ" lp="ঃ"  />
+    <key c="স" n="ষ" lp="ষ" se="\?" sw="!"/>
+    <key c="য" n="য়" lp="য়" se="্য" sw="়"/>
+    <key c="।" n="ঞ" lp="ঞ"  se="॥" sw="."/>
     <key c="," n="ঋ" lp="ঋ" sw="ৃ" se="." />
     <key role="action" key0="backspace" key2="delete" />
   </row>

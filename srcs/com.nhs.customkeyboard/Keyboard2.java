@@ -781,6 +781,8 @@ public class Keyboard2 extends InputMethodService
   {
     int prev_theme = _config.theme;
     _config.refresh(getResources(), _foldStateTracker.isUnfolded(), _dictionaries);
+    if (_config.default_layout_index >= 0 && _config.default_layout_index < _config.layouts.size())
+      _config.set_current_layout(_config.default_layout_index);
     refresh_current_dictionary();
     // Refreshing the theme config or dynamic colors requires re-creating the views
     if (hasThemeOrDynamicColorsChanged(prev_theme))
@@ -821,8 +823,6 @@ public class Keyboard2 extends InputMethodService
   {
     _config.editor_config.refresh(info, getResources());
     refresh_config();
-    if (_config.default_layout_index >= 0 && _config.default_layout_index < _config.layouts.size())
-      _config.set_current_layout(_config.default_layout_index);
     if (_is_period_symbols_active)
       _currentSpecialLayout = LayoutModifier.modify_period_symbols(KeyboardData.load(getResources(), R.xml.period_symbols));
     else
