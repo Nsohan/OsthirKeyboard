@@ -64,31 +64,13 @@ public class TaskerAutomationPreference extends Preference
     {
         String stored = TaskerAutomationManager.load(getContext());
         if (stored != null)
-            return ensure_nhck_defaults(stored);
+            return stored;
         return "{\n" +
-                "  \"nhck_append\": \"@@\",\n" +
-                "  \"nhck_replace\": \"##\",\n" +
                 "  \"nhck_timeout\": \"15000\",\n" +
-                "  \"runtask1\": \"Task 1\",\n" +
-                "  \"nhck_patterns\": [\n" +
-                "    {\n" +
-                "      \"name\": \"" + TaskerAutomationConfig.DEFAULT_EXPAND_PATTERN_NAME + "\",\n" +
-                "      \"prefix\": \"" + TaskerAutomationConfig.DEFAULT_EXPAND_PATTERN_PREFIX + "\",\n" +
-                "      \"suffix\": \"" + TaskerAutomationConfig.DEFAULT_EXPAND_PATTERN_SUFFIX + "\",\n" +
-                "      \"replace_prefix\": \"" + TaskerAutomationConfig.DEFAULT_EXPAND_PATTERN_REPLACE_PREFIX + "\",\n" +
-                "      \"fire_on_suffix\": \"" + TaskerAutomationConfig.DEFAULT_EXPAND_PATTERN_FIRE_ON_SUFFIX + "\",\n" +
-                "      \"task\": \"Expand Task 1\"\n" +
-                "    },\n" +
-                "    {\n" +
-                "      \"name\": \"" + TaskerAutomationConfig.DEFAULT_LIVE_PATTERN_NAME + "\",\n" +
-                "      \"prefix\": \"" + TaskerAutomationConfig.DEFAULT_LIVE_PATTERN_PREFIX + "\",\n" +
-                "      \"regex\": \"" + TaskerAutomationConfig.DEFAULT_LIVE_PATTERN_REGEX + "\",\n" +
-                "      \"suffix\": \"" + TaskerAutomationConfig.DEFAULT_LIVE_PATTERN_SUFFIX + "\",\n" +
-                "      \"replace_prefix\": \"" + TaskerAutomationConfig.DEFAULT_LIVE_PATTERN_REPLACE_PREFIX + "\",\n" +
-                "      \"fire_on_suffix\": \"" + TaskerAutomationConfig.DEFAULT_LIVE_PATTERN_FIRE_ON_SUFFIX + "\",\n" +
-                "      \"task\": \"TextExpander\"\n" +
-                "    }\n" +
-                "  ]\n" +
+                "  \"task1\": {\n" +
+                "    \"task\": \"taskerTask1\",\n" +
+                "    \"icon\": \"bolt\"\n" +
+                "  }\n" +
                 "}";
     }
 

@@ -49,12 +49,12 @@
             android:orientation="horizontal"
             android:baselineAligned="false">
 
-            <!-- Prefix Field (~w-1/3 so 'Prefix' hint doesn't truncate) -->
+            <!-- Prefix Field (~w-1/4, for '@@', '##') -->
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/til_trigger_prefix"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_weight="1.2"
+                android:layout_weight="1"
                 android:hint="@string/text_expander_field_prefix_hint"
                 style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
 
@@ -68,17 +68,17 @@
                     android:text="@@" />
             </com.google.android.material.textfield.TextInputLayout>
 
-            <!-- Trigger Keyword Field -->
+            <!-- Trigger Keyword Field (with task dropdown support) -->
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/til_trigger_keyword"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_weight="2.6"
+                android:layout_weight="3"
                 android:layout_marginStart="10dp"
                 android:hint="@string/text_expander_field_keyword_hint"
-                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu">
 
-                <com.google.android.material.textfield.TextInputEditText
+                <com.google.android.material.textfield.MaterialAutoCompleteTextView
                     android:id="@+id/et_trigger_keyword"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -88,64 +88,118 @@
             </com.google.android.material.textfield.TextInputLayout>
         </LinearLayout>
 
-        <!-- Row 2: Content Label on Left, [+ Insert Variable] Button on Right -->
+        <!-- Task Selected Banner: shown when keyword is a Tasker task -->
         <LinearLayout
+            android:id="@+id/layout_task_selected_info"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:layout_marginBottom="6dp"
+            android:orientation="horizontal"
             android:gravity="center_vertical"
-            android:orientation="horizontal">
+            android:layout_marginTop="12dp"
+            android:padding="12dp"
+            android:background="@drawable/bg_settings_card"
+            android:visibility="gone">
 
             <TextView
+                android:id="@+id/tv_task_selected_icon"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:textSize="24sp"
+                android:textColor="@color/settings_primary"
+                android:gravity="center"
+                android:layout_marginEnd="10dp" />
+
+            <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="@string/text_expander_field_output_title"
-                android:textColor="@color/settings_on_surface"
-                android:textSize="14sp"
-                android:textStyle="bold" />
+                android:orientation="vertical">
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btn_insert_variable"
-                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                android:layout_width="wrap_content"
-                android:layout_height="36dp"
-                android:paddingStart="10dp"
-                android:paddingEnd="10dp"
-                android:text="@string/text_expander_btn_insert_var"
-                android:textSize="12sp"
-                app:icon="@drawable/ic_add"
-                app:iconSize="16dp" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Tasker Task"
+                    android:textStyle="bold"
+                    android:textSize="13sp"
+                    android:textColor="@color/settings_on_surface" />
+
+                <TextView
+                    android:id="@+id/tv_task_selected_name"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textSize="12sp"
+                    android:textColor="@color/settings_on_surface_variant" />
+            </LinearLayout>
         </LinearLayout>
 
-        <!-- Row 3: Multiline Content Input -->
-        <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/til_output"
+        <!-- Standard Content Output Container (hidden when a task is selected) -->
+        <LinearLayout
+            android:id="@+id/layout_output_container"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            app:hintEnabled="false"
-            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+            android:orientation="vertical"
+            android:visibility="visible">
 
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/et_output"
+            <!-- Content Label on Left, [+ Insert Variable] Button on Right -->
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:fontFamily="monospace"
-                android:gravity="top|start"
-                android:hint="@string/text_expander_field_output_hint"
-                android:inputType="textMultiLine|textNoSuggestions"
-                android:minLines="3" />
-        </com.google.android.material.textfield.TextInputLayout>
+                android:layout_marginTop="16dp"
+                android:layout_marginBottom="6dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
 
-        <!-- Row 4: Helper Caption -->
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="6dp"
-            android:text="@string/text_expander_field_output_help"
-            android:textColor="@color/settings_on_surface_variant"
-            android:textSize="12sp" />
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/text_expander_field_output_title"
+                    android:textColor="@color/settings_on_surface"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_insert_variable"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="36dp"
+                    android:paddingStart="10dp"
+                    android:paddingEnd="10dp"
+                    android:text="@string/text_expander_btn_insert_var"
+                    android:textSize="12sp"
+                    app:icon="@drawable/ic_add"
+                    app:iconSize="16dp" />
+            </LinearLayout>
+
+            <!-- Multiline Content Input -->
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/til_output"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:hintEnabled="false"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/et_output"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="monospace"
+                    android:gravity="top|start"
+                    android:hint="@string/text_expander_field_output_hint"
+                    android:inputType="textMultiLine|textNoSuggestions"
+                    android:minLines="3" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- Helper Caption -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:text="@string/text_expander_field_output_help"
+                android:textColor="@color/settings_on_surface_variant"
+                android:textSize="12sp" />
+
+        </LinearLayout>
 
     </LinearLayout>
 </ScrollView>

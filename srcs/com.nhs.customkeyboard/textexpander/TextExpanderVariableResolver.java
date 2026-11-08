@@ -92,31 +92,6 @@ public final class TextExpanderVariableResolver
         list.add(new VariableInfo("$battery", "Battery Percentage", "Utilities"));
         list.add(new VariableInfo("$deviceModel", "Device Model", "Utilities"));
 
-        // Tasker Tasks from Tasker Automation Config
-        if (ctx != null)
-        {
-            try
-            {
-                String json = TaskerAutomationManager.load(ctx);
-                if (json != null && !json.trim().isEmpty())
-                {
-                    TaskerAutomationConfig config = TaskerAutomationConfig.parse(json);
-                    if (config != null && config.tasks != null)
-                    {
-                        for (String taskName : config.tasks.values())
-                        {
-                            if (taskName != null && !taskName.trim().isEmpty())
-                            {
-                                list.add(new VariableInfo("$task:" + taskName.trim(),
-                                        "Run Tasker: " + taskName.trim(), "Tasker Tasks"));
-                            }
-                        }
-                    }
-                }
-            }
-            catch (Exception ignored) {}
-        }
-
         return list;
     }
 

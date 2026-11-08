@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.ContentUris;
 import android.graphics.Bitmap;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Build.VERSION;
@@ -1165,7 +1166,15 @@ public class CandidatesView extends LinearLayout
       btn.setLayoutParams(lp);
       btn.setScaleType(ImageView.ScaleType.FIT_CENTER);
       btn.setPadding(padX, padY, padX, padY);
-      btn.setImageResource(item.getIconRes());
+      Drawable iconDrawable = item.getDrawable(ctx, iconColor, (int) targetIconSize);
+      if (iconDrawable != null)
+      {
+        btn.setImageDrawable(iconDrawable);
+      }
+      else
+      {
+        btn.setImageResource(item.getIconRes());
+      }
       btn.setColorFilter(iconColor);
       String title = item.getTitle(ctx);
       btn.setContentDescription(title);

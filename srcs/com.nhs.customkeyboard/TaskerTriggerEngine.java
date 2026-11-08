@@ -389,8 +389,10 @@ public class TaskerTriggerEngine
 
         for (String keyword : _config.tasks.keySet())
         {
-            add_full_command(_config.replace_trigger + keyword);
-            add_full_command(_config.append_trigger + keyword);
+            if (_config.replace_trigger != null && !_config.replace_trigger.isEmpty())
+                add_full_command(_config.replace_trigger + keyword);
+            if (_config.append_trigger != null && !_config.append_trigger.isEmpty())
+                add_full_command(_config.append_trigger + keyword);
         }
         reset_expand_closed_state();
     }

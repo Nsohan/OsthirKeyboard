@@ -397,7 +397,7 @@
     <string name="tasker_builder_section_tasks_hint">Type &lt;nhck_replace&gt;keyword or &lt;nhck_append&gt;keyword to run the matching task</string>
     <string name="tasker_builder_keyword_hint">keyword</string>
     <string name="tasker_builder_task_name_hint">Tasker task name</string>
-    <string name="tasker_builder_add_task">+ Add keyword</string>
+    <string name="tasker_builder_add_task">+ Add Task</string>
     <string name="tasker_builder_section_patterns">Expand patterns (nhck_patterns)</string>
     <string name="tasker_builder_section_patterns_hint">prefix/regex/suffix are regexes. "Fire only on suffix" off makes the task run live as you type; either way, a reply replaces regex+suffix, and prefix too if "Replace prefix" is on</string>
     <string name="tasker_builder_pattern_prefix_label">Prefix (regex)</string>
@@ -421,7 +421,16 @@
     <string name="tasker_builder_delete">Delete</string>
     <string name="tasker_builder_cancel">Cancel</string>
     <string name="tasker_builder_save">Save</string>
-    <string name="tasker_builder_saved_toast">Automation config saved</string>
+    <string name="tasker_icon_picker_title">Select Icon</string>
+    <string name="tasker_icon_picker_subtitle">Choose an icon from the Material Symbols pack</string>
+    <string name="tasker_icon_search_hint">Search 3,900+ icons...</string>
+    <string name="tasker_builder_keyboard_name_hint">Name on keyboard (e.g. task1)</string>
+    <string name="tasker_builder_pick_task">Pick Task</string>
+    <string name="tasker_builder_pick_task_title">Select Tasker Task</string>
+    <string name="tasker_builder_no_tasks_found">No tasks found in Tasker.\n\nPlease ensure Tasker is installed and \"Allow External Access\" is enabled in Tasker > Preferences > Misc.\n\nYou can also enter the task name manually.</string>
+    <string name="tasker_builder_select_icon">Select Icon</string>
+    <string name="text_expander_task_dropdown_hint">Select Tasker Task (optional)</string>
+    <string name="tasker_builder_saved_toast">Tasker automation saved</string>
 
     <string name="settings_title" translatable="false">Settings</string>
     <string name="pref_screen_languages_title" translatable="false">Languages &amp; Layouts</string>

@@ -23,8 +23,18 @@ import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton;
+import com.google.android.material.textfield.MaterialAutoCompleteTextView;
 import com.google.android.material.textfield.TextInputEditText;
+import com.google.android.material.textfield.TextInputLayout;
 import com.nhs.customkeyboard.R;
+import com.nhs.customkeyboard.TaskerAutomationConfig;
+import com.nhs.customkeyboard.prefs.TaskerAutomationManager;
+import com.nhs.customkeyboard.tasker.MaterialSymbols;
+
+import android.text.Editable;
+import android.text.TextWatcher;
+import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -147,15 +157,111 @@ public final class TextExpanderActivity extends AppCompatActivity
 
         final TextView tvDialogTitle = dialogView.findViewById(R.id.tv_dialog_title);
         final TextInputEditText etPrefix = dialogView.findViewById(R.id.et_trigger_prefix);
-        final TextInputEditText etKeyword = dialogView.findViewById(R.id.et_trigger_keyword);
+        final MaterialAutoCompleteTextView etKeyword = dialogView.findViewById(R.id.et_trigger_keyword);
+        final TextInputLayout tilKeyword = dialogView.findViewById(R.id.til_trigger_keyword);
         final TextInputEditText etOutput = dialogView.findViewById(R.id.et_output);
         final SwitchCompat switchEnabled = dialogView.findViewById(R.id.switch_dialog_enabled);
         final MaterialButton btnInsertVar = dialogView.findViewById(R.id.btn_insert_variable);
+        final View layoutOutputContainer = dialogView.findViewById(R.id.layout_output_container);
+        final View layoutTaskInfo = dialogView.findViewById(R.id.layout_task_selected_info);
+        final TextView tvTaskIcon = dialogView.findViewById(R.id.tv_task_selected_icon);
+        final TextView tvTaskName = dialogView.findViewById(R.id.tv_task_selected_name);
 
         if (tvDialogTitle != null)
         {
             tvDialogTitle.setText(isEdit ? R.string.text_expander_dialog_title_edit : R.string.text_expander_dialog_title_add);
         }
+
+        String taskerJson = TaskerAutomationManager.load(this);
+        TaskerAutomationConfig parsedConfig = null;
+        if (taskerJson != null)
+        {
+            try { parsedConfig = TaskerAutomationConfig.parse(taskerJson); }
+            catch (Exception ignored) {}
+        }
+        final TaskerAutomationConfig taskerConfig = parsedConfig;
+
+        final List<String> taskOptions = new ArrayList<>();
+        if (taskerConfig != null && taskerConfig.tasks != null)
+        {
+            for (String kw : taskerConfig.tasks.keySet())
+            {
+                taskOptions.add(kw);
+                taskOptions.add("task:" + kw);
+            }
+        }
+
+        if (!taskOptions.isEmpty())
+        {
+            etKeyword.setSimpleItems(taskOptions.toArray(new String[0]));
+            if (tilKeyword != null)
+            {
+                tilKeyword.setEndIconMode(TextInputLayout.END_ICON_DROPDOWN_MENU);
+            }
+        }
+        else
+        {
+            if (tilKeyword != null)
+            {
+                tilKeyword.setEndIconMode(TextInputLayout.END_ICON_NONE);
+            }
+        }
+
+        final Runnable updateOutputVisibility = () -> {
+            String kw = etKeyword.getText() != null ? etKeyword.getText().toString().trim() : "";
+            String matchedTask = null;
+            String icon = MaterialSymbols.DEFAULT_ICON;
+
+            if (taskerConfig != null && taskerConfig.tasks != null)
+            {
+                String cleanKw = kw.startsWith("task:") ? kw.substring(5).trim() : kw;
+                if (taskerConfig.tasks.containsKey(cleanKw))
+                {
+                    matchedTask = taskerConfig.tasks.get(cleanKw);
+                    icon = taskerConfig.getTaskIcon(cleanKw);
+                }
+            }
+
+            if (matchedTask != null)
+            {
+                if (layoutOutputContainer != null) layoutOutputContainer.setVisibility(View.GONE);
+                if (layoutTaskInfo != null)
+                {
+                    layoutTaskInfo.setVisibility(View.VISIBLE);
+                    if (tvTaskIcon != null)
+                    {
+                        MaterialSymbols.applyTo(tvTaskIcon);
+                        tvTaskIcon.setText(icon);
+                    }
+                    if (tvTaskName != null)
+                    {
+                        tvTaskName.setText(matchedTask);
+                    }
+                }
+            }
+            else
+            {
+                if (layoutOutputContainer != null) layoutOutputContainer.setVisibility(View.VISIBLE);
+                if (layoutTaskInfo != null) layoutTaskInfo.setVisibility(View.GONE);
+            }
+        };
+
+        etKeyword.addTextChangedListener(new TextWatcher()
+        {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {}
+
+            @Override
+            public void afterTextChanged(Editable s)
+            {
+                updateOutputVisibility.run();
+            }
+        });
+
+        etKeyword.setOnItemClickListener((parent, view, position, id) -> updateOutputVisibility.run());
 
         if (isEdit)
         {
@@ -170,6 +276,8 @@ public final class TextExpanderActivity extends AppCompatActivity
             switchEnabled.setChecked(true);
         }
 
+        updateOutputVisibility.run();
+
         btnInsertVar.setOnClickListener(v -> showVariablePopupMenu(v, etOutput));
 
         new MaterialAlertDialogBuilder(this)
@@ -177,13 +285,29 @@ public final class TextExpanderActivity extends AppCompatActivity
                 .setPositiveButton(R.string.save, (dialog, which) -> {
                     String prefix = etPrefix.getText() != null ? etPrefix.getText().toString().trim() : "@@";
                     String keyword = etKeyword.getText() != null ? etKeyword.getText().toString().trim() : "";
-                    String output = etOutput.getText() != null ? etOutput.getText().toString() : "";
                     boolean enabled = switchEnabled.isChecked();
 
                     if (prefix.isEmpty() || keyword.isEmpty())
                     {
                         Toast.makeText(this, R.string.text_expander_error_empty, Toast.LENGTH_SHORT).show();
                         return;
+                    }
+
+                    String cleanKw = keyword.startsWith("task:") ? keyword.substring(5).trim() : keyword;
+                    String matchedTask = null;
+                    if (taskerConfig != null && taskerConfig.tasks != null && taskerConfig.tasks.containsKey(cleanKw))
+                    {
+                        matchedTask = taskerConfig.tasks.get(cleanKw);
+                    }
+
+                    String output;
+                    if (matchedTask != null)
+                    {
+                        output = "$task:" + matchedTask;
+                    }
+                    else
+                    {
+                        output = etOutput.getText() != null ? etOutput.getText().toString() : "";
                     }
 
                     TextExpanderItem item = isEdit ? existingItem : new TextExpanderItem();

@@ -1,6 +1,12 @@
 package com.nhs.customkeyboard;
 
+import com.nhs.customkeyboard.tasker.MaterialSymbols;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
+
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -8,163 +14,30 @@ import java.util.Map;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
-/** Parsed, validated form of the single stored Tasker Automation JSON:
- {
- "nhck_replace": "##",     // optional, default "##"
- "nhck_append": "@@",      // optional, default "@@"
- "nhck_timeout": "15000",  // optional, default "15000" - ms to wait
- // for a task's result before giving up
- "runtask1": "Task 1",     // any other key -> a Tasker task NAME
- "runtask2": "Task 2",
- "nhck_patterns": [ // optional - see [ExpandPattern]
- { "name": "Calculator", "prefix": "\\.\\.", "suffix": " ", "replace_prefix": "true", "fire_on_suffix": "true", "task": "Expand Task 1" },
- { "prefix": "(\\s|^)", "regex": "x.{2,}", "suffix": " ", "replace_prefix": "false", "fire_on_suffix": "false", "task": "TextExpander" } // "name" optional, unnamed here
- ]
- }
-
- Typing <nhck_replace><keyword> (e.g. "##runtask1") sends the entire
- current field's text to the named task and, on completion, replaces
- the ENTIRE field with the task's returned output. Typing
- <nhck_append><keyword> (e.g. "@@runtask1") does the same Tasker
- call, but only replaces the typed trigger+keyword itself with the
- output, leaving the rest of the field untouched.
-
- Each entry in "nhck_patterns" describes an open-ended expander built
- around three regexes - "prefix", the optional "regex", and "suffix"
- - all three compiled with [Pattern.MULTILINE], so "^"/"$" also match
- right after/before a newline, not only at the very start/end of the
- whole field. On every keystroke (see
- [TaskerTriggerEngine.check_expand_patterns]), for each entry: find
- the closest "prefix" match before the cursor, then look at whatever
- follows it up to the cursor (the "in-between text"):
- - If that in-between text can be split into a part fully matching
- "regex" (or, if "regex" is omitted, just any non-empty part)
- followed immediately by a part fully matching "suffix" - the split
- landing exactly at the cursor - [task] is fired for this occurrence,
- with %nhck_prefix, %nhck_keyword (just the "regex" part) AND
- %nhck_suffix all sent. This occurrence is then CLOSED: no further
- keystroke will ever fire it again, unless the user backspaces back
- into (or past) either the %nhck_keyword or %nhck_suffix span, which
- reopens it - see [TaskerTriggerEngine.check_expand_patterns]'s
- "closed" tracking.
- - Otherwise, if "fire_on_suffix" is "false" and the WHOLE in-between
- text (with no "suffix" yet) fully matches "regex" (or is just
- non-empty, if "regex" is omitted), [task] fires again - %nhck_prefix
- and %nhck_keyword sent, %nhck_suffix left UNSET - and keeps firing
- again on every subsequent qualifying keystroke (typed forward or
- backspace) for as long as that stays true. If "fire_on_suffix" is
- "true", this in-between-only case never fires at all - [task] only
- ever runs once "suffix" itself is matched, same as the very first
- bullet above.
- - Otherwise, if "fire_on_suffix" is "false" and the in-between text
- USED to fully match "regex" (on some earlier keystroke) but no longer
- does, and "suffix" still hasn't matched either, [task] fires ONE MORE
- TIME with %nhck_keyword_stop="true" added (and %nhck_suffix still
- UNSET) - purely so it can react to the match having broken (e.g.
- dismiss a popup it showed) - then goes quiet again: no further fire
- for this same "stopped matching" streak, until "regex" matches again
- (a further failure after that CAN fire this once more). If
- "fire_on_suffix" is "true", there's no "used to match" state to break
- out of in the first place, so this never applies. A newline anywhere
- in the in-between text counts as "no longer matches" for this
- purpose too (a match, live or final, can never span a newline) - so
- pressing Enter right after a live match has the same effect as
- backspacing it down to nothing: it fires this same one-off
- %nhck_keyword_stop="true" call, with %nhck_keyword set to whatever
- was typed before the newline.
- - Otherwise (too little typed yet, or content never matched at all),
- nothing happens - the check simply runs again on the next keystroke.
-
- So "fire_on_suffix": "true" makes an entry behave like a one-shot
- calculation (e.g. "..5+1 " -> a doMath task, nothing runs until the
- whole "..5+1 " is typed) while "fire_on_suffix": "false" makes it a
- continuous live-suggestion trigger (e.g. a text-expander popup that
- updates as you type, and is told via %nhck_keyword_stop when to
- dismiss itself) that ALSO still fires one final time the moment
- "suffix" completes. Both are otherwise identical in every other
- respect - same regex-based prefix/suffix, same "replace_prefix", same
- field-editing behaviour once a reply lands.
-
- None of these calls touch the field themselves while they're
- running - seeing [task] fire at all is purely a "Running ..." toast
- (for a "fire_on_suffix": "false" entry, shown once when a fresh
- occurrence starts being live, not on every repeat, and not for its
- %nhck_keyword_stop call either; always shown for the one call a
- "fire_on_suffix": "true" entry ever makes) - unless and until one of
- them actually replies with non-empty text, at which point that reply
- replaces the matched span: %nhck_keyword's span, plus %nhck_suffix's
- span if this was a call where "suffix" had matched - PLUS
- %nhck_prefix's span too, but ONLY if "replace_prefix" is "true". With
- "replace_prefix": "false", the text "prefix" matched is left
- completely untouched in the field, immediately before wherever the
- replacement lands - this is what stops a leading separator like a
- space from being swallowed along with the replacement. Whatever the
- user typed after the matched span in the meantime (while the call
- that ended up replying was in flight) is carried through untouched
- right after the replacement - so however many overlapping calls end
- up in flight for the same occurrence (only possible for
- "fire_on_suffix": "false"), whichever one's reply lands FIRST wins
- and mutates the field; every other call's own attempt to apply its
- reply then correctly finds the field no longer matches what it
- expected and is silently dropped, however much later it eventually
- arrives.
-
- "prefix", "suffix", "task", "replace_prefix" and "fire_on_suffix" are
- all required (and, other than the two booleans, non-empty); "regex"
- is the only optional field - omitting it (or leaving it empty) means
- "any non-empty in-between text counts", the same fallback for both
- values of "fire_on_suffix". An invalid regex, or a
- "replace_prefix"/"fire_on_suffix" value that isn't "true" or "false",
- is rejected at [parse] time with a [KeymapJsonUtils.ParseError], same
- as any other malformed field in this JSON.
-
- If "nhck_replace", "nhck_append", "nhck_timeout" and/or
- "nhck_patterns" are missing (or "nhck_patterns" is an empty array)
- from the stored JSON, they are auto-filled with their defaults - see
- [DEFAULT_REPLACE_TRIGGER], [DEFAULT_APPEND_TRIGGER],
- [DEFAULT_TIMEOUT_MS], and, for "nhck_patterns" specifically, TWO
- example entries are filled in when it's missing entirely - one for
- each value of "fire_on_suffix" - built from
- [DEFAULT_EXPAND_PATTERN_PREFIX] / [DEFAULT_EXPAND_PATTERN_SUFFIX] /
- [DEFAULT_EXPAND_PATTERN_TASK] /
- [DEFAULT_EXPAND_PATTERN_REPLACE_PREFIX] /
- [DEFAULT_EXPAND_PATTERN_FIRE_ON_SUFFIX] and
- [DEFAULT_LIVE_PATTERN_PREFIX] / [DEFAULT_LIVE_PATTERN_REGEX] /
- [DEFAULT_LIVE_PATTERN_SUFFIX] / [DEFAULT_LIVE_PATTERN_REPLACE_PREFIX] /
- [DEFAULT_LIVE_PATTERN_FIRE_ON_SUFFIX] / [DEFAULT_LIVE_PATTERN_TASK].
- When any default gets auto-filled, [needs_persist] is set to true
- and the caller should write [to_json]'s (beautified) output back to
- storage. */
+/**
+ * Parsed, validated form of the Tasker Automation JSON.
+ * Maps keyboard shortcut names to Tasker task names and optional Material Symbol icons.
+ */
 public final class TaskerAutomationConfig
 {
     public static final String KEY_REPLACE_TRIGGER = "nhck_replace";
     public static final String KEY_APPEND_TRIGGER = "nhck_append";
     public static final String KEY_TIMEOUT_MS = "nhck_timeout";
     public static final String KEY_EXPAND_PATTERNS = "nhck_patterns";
+    public static final String KEY_TASK_ICONS = "nhck_task_icons";
 
     public static final String LEGACY_KEY_REPLACE_TRIGGER = "nhck_replace";
     public static final String LEGACY_KEY_APPEND_TRIGGER = "nhck_append";
     public static final String LEGACY_KEY_TIMEOUT_MS = "nhck_timeout";
     public static final String LEGACY_KEY_EXPAND_PATTERNS = "nhck_patterns";
-    /** Optional per-entry key inside "nhck_patterns". See [ExpandPattern]. */
     public static final String KEY_EXPAND_PATTERN_REGEX = "regex";
-    public static final String DEFAULT_REPLACE_TRIGGER = "##";
-    public static final String DEFAULT_APPEND_TRIGGER = "@@";
+
+    public static final String DEFAULT_REPLACE_TRIGGER = "";
+    public static final String DEFAULT_APPEND_TRIGGER = "";
     public static final long DEFAULT_TIMEOUT_MS = 15000;
-    /** Guards against a typo'd huge value stalling the keyboard's
-     receiver/timeout bookkeeping indefinitely, and against 0/negative
-     values that would fire the timeout immediately or never register. */
     public static final long MIN_TIMEOUT_MS = 1000;
     public static final long MAX_TIMEOUT_MS = 120000;
 
-    /** First of the two example entries auto-filled into
-     "nhck_patterns" when that key is missing (or present but empty)
-     from the stored JSON - a "fire_on_suffix": "true" (one-shot,
-     calculation-style) entry. Rename the task in-place to whichever
-     Tasker task you want it to run. [DEFAULT_EXPAND_PATTERN_PREFIX]
-     is a regex matching the literal 2 characters ".." (the dots are
-     escaped since "prefix" is a regex now, and a bare "." would
-     instead match any single character). */
     public static final String DEFAULT_EXPAND_PATTERN_NAME = "Classic calculation";
     public static final String DEFAULT_EXPAND_PATTERN_PREFIX = "\\.\\.";
     public static final String DEFAULT_EXPAND_PATTERN_SUFFIX = " ";
@@ -172,11 +45,6 @@ public final class TaskerAutomationConfig
     public static final String DEFAULT_EXPAND_PATTERN_REPLACE_PREFIX = "true";
     public static final String DEFAULT_EXPAND_PATTERN_FIRE_ON_SUFFIX = "true";
 
-    /** Second of the two example entries auto-filled into
-     "nhck_patterns" when that key is missing entirely - a
-     "fire_on_suffix": "false" (continuous, live-suggestion-style)
-     entry. Rename the task in-place to whichever Tasker task you want
-     it to run. */
     public static final String DEFAULT_LIVE_PATTERN_NAME = "Live text expander";
     public static final String DEFAULT_LIVE_PATTERN_PREFIX = "(\\s|^)";
     public static final String DEFAULT_LIVE_PATTERN_REGEX = "x.{2,}";
@@ -185,26 +53,6 @@ public final class TaskerAutomationConfig
     public static final String DEFAULT_LIVE_PATTERN_REPLACE_PREFIX = "false";
     public static final String DEFAULT_LIVE_PATTERN_FIRE_ON_SUFFIX = "false";
 
-    /** One "nhck_patterns" entry. [prefix], [suffix], [task],
-     [replace_prefix_str] and [fire_on_suffix_str] are required
-     (non-empty, except the two booleans just need to be present and
-     valid); [regex] and [name] are both optional - null (or,
-     equivalently, empty) means "any non-empty in-between text
-     matches" for [regex], and "unnamed" for [name]. [name] is purely
-     a user-facing label (shown in the Automation Builder so someone
-     can tell their patterns apart at a glance) - it's never sent to
-     Tasker and never affects matching in any way; added purely so
-     upgrading doesn't require touching any existing config, every
-     entry that predates this field simply parses with [name] null,
-     same as one that leaves it out on purpose. [prefix], [regex]
-     (when present) and [suffix] are all regex source strings, each
-     with its own pre-compiled (MULTILINE) [Pattern] - compiled once
-     here rather than in the hot
-     [TaskerTriggerEngine.check_expand_patterns] path. [replace_prefix]/
-     [fire_on_suffix] are the parsed boolean form of
-     [replace_prefix_str]/[fire_on_suffix_str] (both kept around too,
-     verbatim, purely so [to_json] can round-trip whatever casing the
-     user typed rather than normalizing it to "true"/"false"). */
     public static final class ExpandPattern
     {
         public final String name;
@@ -245,228 +93,203 @@ public final class TaskerAutomationConfig
     public final long timeout_ms;
     /** keyword -> Tasker task name, in declared order. */
     public final LinkedHashMap<String, String> tasks;
-    /** In declared order. Never empty - if "nhck_patterns" was missing
-     or an empty array, contains the two example entries built from
-     [DEFAULT_EXPAND_PATTERN_PREFIX]/etc. and
-     [DEFAULT_LIVE_PATTERN_PREFIX]/etc. */
+    /** keyword -> Material symbol icon name, in declared order. */
+    public final LinkedHashMap<String, String> task_icons;
     public final List<ExpandPattern> expand_patterns;
-    /** True if any of "nhck_replace", "nhck_append", "nhck_timeout" or
-     "nhck_patterns" were missing/empty in the parsed JSON and a
-     default was auto-filled in this result. When true, the caller
-     should persist [to_json]'s output back to storage so the stored
-     JSON stays in sync with what's actually in effect. */
     public final boolean needs_persist;
 
     private TaskerAutomationConfig(String replace_trigger_, String append_trigger_,
                                    long timeout_ms_, LinkedHashMap<String, String> tasks_,
+                                   LinkedHashMap<String, String> task_icons_,
                                    List<ExpandPattern> expand_patterns_, boolean needs_persist_)
     {
-        replace_trigger = replace_trigger_;
-        append_trigger = append_trigger_;
+        replace_trigger = replace_trigger_ != null ? replace_trigger_ : "";
+        append_trigger = append_trigger_ != null ? append_trigger_ : "";
         timeout_ms = timeout_ms_;
-        tasks = tasks_;
-        expand_patterns = expand_patterns_;
+        tasks = tasks_ != null ? tasks_ : new LinkedHashMap<>();
+        task_icons = task_icons_ != null ? task_icons_ : new LinkedHashMap<>();
+        expand_patterns = expand_patterns_ != null ? expand_patterns_ : new ArrayList<>();
         needs_persist = needs_persist_;
+    }
+
+    public String getTaskIcon(String keyword)
+    {
+        if (keyword == null) return MaterialSymbols.DEFAULT_ICON;
+        String icon = task_icons.get(keyword);
+        return (icon != null && !icon.isEmpty()) ? icon : MaterialSymbols.DEFAULT_ICON;
+    }
+
+    public String getIconForTask(String taskOrKeyword)
+    {
+        if (taskOrKeyword == null || taskOrKeyword.trim().isEmpty())
+        {
+            return MaterialSymbols.DEFAULT_ICON;
+        }
+        String query = taskOrKeyword.trim();
+        if (query.startsWith("tasker:"))
+        {
+            query = query.substring("tasker:".length()).trim();
+        }
+        if (task_icons.containsKey(query))
+        {
+            return task_icons.get(query);
+        }
+        for (Map.Entry<String, String> e : tasks.entrySet())
+        {
+            if (query.equalsIgnoreCase(e.getValue()) || query.equalsIgnoreCase(e.getKey()))
+            {
+                String icon = task_icons.get(e.getKey());
+                if (icon != null && !icon.isEmpty())
+                {
+                    return icon;
+                }
+            }
+        }
+        return MaterialSymbols.DEFAULT_ICON;
     }
 
     public static TaskerAutomationConfig parse(String json) throws KeymapJsonUtils.ParseError
     {
-        java.util.Set<String> array_field_keys = new java.util.HashSet<>();
-        array_field_keys.add(KEY_EXPAND_PATTERNS);
-        array_field_keys.add(LEGACY_KEY_EXPAND_PATTERNS);
-        // "prefix"/"regex"/"suffix" are all regex source strings now,
-        // so all three get lenient parsing - see [parse_json_string] -
-        // letting a user write "\s" instead of having to double-escape
-        // it to "\\s".
-        java.util.Set<String> lenient_value_keys = new java.util.HashSet<>();
-        lenient_value_keys.add(KEY_EXPAND_PATTERN_REGEX);
-        lenient_value_keys.add("prefix");
-        lenient_value_keys.add("suffix");
-        KeymapJsonUtils.MultiArrayObjectResult mixed =
-                KeymapJsonUtils.parse_object_with_array_fields(json, array_field_keys, lenient_value_keys);
-
-        String replace_trigger = DEFAULT_REPLACE_TRIGGER;
-        String append_trigger = DEFAULT_APPEND_TRIGGER;
-        long timeout_ms = DEFAULT_TIMEOUT_MS;
-        LinkedHashMap<String, String> tasks = new LinkedHashMap<>();
-        List<String> dup_keywords = new ArrayList<>();
-
-        boolean used_default_replace = true;
-        boolean used_default_append = true;
-        boolean used_default_timeout = true;
-
-        for (Map.Entry<String, String> e : mixed.string_entries)
+        if (json == null || json.trim().isEmpty())
         {
-            String key = e.getKey();
-            String value = e.getValue();
-            if (key.equals(KEY_REPLACE_TRIGGER) || key.equals(LEGACY_KEY_REPLACE_TRIGGER))
-            {
-                if (!value.isEmpty())
-                {
-                    replace_trigger = value;
-                    used_default_replace = false;
-                }
-            }
-            else if (key.equals(KEY_APPEND_TRIGGER) || key.equals(LEGACY_KEY_APPEND_TRIGGER))
-            {
-                if (!value.isEmpty())
-                {
-                    append_trigger = value;
-                    used_default_append = false;
-                }
-            }
-            else if (key.equals(KEY_TIMEOUT_MS) || key.equals(LEGACY_KEY_TIMEOUT_MS))
-            {
-                if (!value.isEmpty())
-                {
-                    long parsed;
-                    try
-                    {
-                        parsed = Long.parseLong(value.trim());
-                    }
-                    catch (NumberFormatException nfe)
-                    {
-                        throw new KeymapJsonUtils.ParseError(
-                                "\"" + KEY_TIMEOUT_MS + "\" must be a whole number of milliseconds, got \"" + value + "\"");
-                    }
-                    if (parsed < MIN_TIMEOUT_MS || parsed > MAX_TIMEOUT_MS)
-                        throw new KeymapJsonUtils.ParseError(
-                                "\"" + KEY_TIMEOUT_MS + "\" must be between " + MIN_TIMEOUT_MS
-                                        + " and " + MAX_TIMEOUT_MS + " (ms), got " + parsed);
-                    timeout_ms = parsed;
-                    used_default_timeout = false;
-                }
-            }
-            else
-            {
-                if (tasks.containsKey(key))
-                    dup_keywords.add(key);
-                tasks.put(key, value);
-            }
+            return new TaskerAutomationConfig("", "", DEFAULT_TIMEOUT_MS,
+                    new LinkedHashMap<>(), new LinkedHashMap<>(), new ArrayList<>(), false);
         }
 
-        if (!dup_keywords.isEmpty())
-            throw new KeymapJsonUtils.ParseError("Duplicate keyword: " + dup_keywords.get(0));
-
-        if (replace_trigger.equals(append_trigger))
-            throw new KeymapJsonUtils.ParseError("\"" + KEY_REPLACE_TRIGGER + "\" and \"" + KEY_APPEND_TRIGGER + "\" must be different");
-
-        if (tasks.isEmpty())
-            throw new KeymapJsonUtils.ParseError("Add at least one task, e.g. \"runtask1\": \"Task 1\"");
-
-        List<ExpandPattern> expand_patterns = new ArrayList<>();
-        LinkedHashSet<String> seen_pattern_keys = new LinkedHashSet<>();
-        List<List<Map.Entry<String, String>>> raw_pattern_objs = mixed.array_objects(KEY_EXPAND_PATTERNS);
-        if (raw_pattern_objs == null || raw_pattern_objs.isEmpty())
-            raw_pattern_objs = mixed.array_objects(LEGACY_KEY_EXPAND_PATTERNS);
-        for (List<Map.Entry<String, String>> obj : raw_pattern_objs)
+        try
         {
-            String name = null, prefix = null, regex = null, suffix = null, task = null;
-            String replace_prefix_str = null, fire_on_suffix_str = null;
-            for (Map.Entry<String, String> e : obj)
+            JSONObject root = new JSONObject(json);
+
+            String replace_trigger = root.optString(KEY_REPLACE_TRIGGER, root.optString(LEGACY_KEY_REPLACE_TRIGGER, ""));
+            String append_trigger = root.optString(KEY_APPEND_TRIGGER, root.optString(LEGACY_KEY_APPEND_TRIGGER, ""));
+            long timeout_ms = DEFAULT_TIMEOUT_MS;
+
+            if (root.has(KEY_TIMEOUT_MS) || root.has(LEGACY_KEY_TIMEOUT_MS))
             {
-                String key = e.getKey();
-                if (key.equals("name"))
-                    name = e.getValue();
-                else if (key.equals("prefix"))
-                    prefix = e.getValue();
-                else if (key.equals(KEY_EXPAND_PATTERN_REGEX))
-                    regex = e.getValue();
-                else if (key.equals("suffix"))
-                    suffix = e.getValue();
-                else if (key.equals("task"))
-                    task = e.getValue();
-                else if (key.equals("replace_prefix"))
-                    replace_prefix_str = e.getValue();
-                else if (key.equals("fire_on_suffix"))
-                    fire_on_suffix_str = e.getValue();
-                else
+                String timeoutStr = root.optString(KEY_TIMEOUT_MS, root.optString(LEGACY_KEY_TIMEOUT_MS, "15000"));
+                try
+                {
+                    timeout_ms = Long.parseLong(timeoutStr.trim());
+                }
+                catch (NumberFormatException e)
+                {
                     throw new KeymapJsonUtils.ParseError(
-                            "Unknown key \"" + key + "\" in \"" + KEY_EXPAND_PATTERNS
-                                    + "\" entry (expected \"name\" (optional), \"prefix\", \"" + KEY_EXPAND_PATTERN_REGEX
-                                    + "\" (optional), \"suffix\", \"task\", \"replace_prefix\", \"fire_on_suffix\")");
+                            "\"" + KEY_TIMEOUT_MS + "\" must be a whole number of milliseconds, got \"" + timeoutStr + "\"");
+                }
+                if (timeout_ms < MIN_TIMEOUT_MS || timeout_ms > MAX_TIMEOUT_MS)
+                {
+                    throw new KeymapJsonUtils.ParseError(
+                            "\"" + KEY_TIMEOUT_MS + "\" must be between " + MIN_TIMEOUT_MS
+                                    + " and " + MAX_TIMEOUT_MS + " (ms), got " + timeout_ms);
+                }
             }
-            if (prefix == null || prefix.isEmpty())
-                throw new KeymapJsonUtils.ParseError("Each \"" + KEY_EXPAND_PATTERNS + "\" entry needs a non-empty \"prefix\"");
-            if (suffix == null || suffix.isEmpty())
-                throw new KeymapJsonUtils.ParseError("Each \"" + KEY_EXPAND_PATTERNS + "\" entry needs a non-empty \"suffix\"");
-            if (task == null || task.isEmpty())
-                throw new KeymapJsonUtils.ParseError("Each \"" + KEY_EXPAND_PATTERNS + "\" entry needs a non-empty \"task\"");
-            if (replace_prefix_str == null || replace_prefix_str.isEmpty())
-                throw new KeymapJsonUtils.ParseError("Each \"" + KEY_EXPAND_PATTERNS + "\" entry needs a \"replace_prefix\" (\"true\" or \"false\")");
-            if (fire_on_suffix_str == null || fire_on_suffix_str.isEmpty())
-                throw new KeymapJsonUtils.ParseError("Each \"" + KEY_EXPAND_PATTERNS + "\" entry needs a \"fire_on_suffix\" (\"true\" or \"false\")");
-            if (regex != null && regex.isEmpty())
-                regex = null; // Empty "regex" is the same as omitting it entirely.
-            if (name != null && name.isEmpty())
-                name = null; // Empty "name" is the same as omitting it entirely - unnamed.
 
-            boolean replace_prefix = parse_bool_field(prefix, "replace_prefix", replace_prefix_str);
-            boolean fire_on_suffix = parse_bool_field(prefix, "fire_on_suffix", fire_on_suffix_str);
+            LinkedHashMap<String, String> tasks = new LinkedHashMap<>();
+            LinkedHashMap<String, String> task_icons = new LinkedHashMap<>();
 
-            Pattern compiled_prefix = compile_pattern_field_regex("prefix", prefix);
-            Pattern compiled_regex = regex != null ? compile_pattern_field_regex(KEY_EXPAND_PATTERN_REGEX, regex) : null;
-            Pattern compiled_suffix = compile_pattern_field_regex("suffix", suffix);
+            // Read explicit icons map if present
+            if (root.has(KEY_TASK_ICONS))
+            {
+                JSONObject iconsObj = root.optJSONObject(KEY_TASK_ICONS);
+                if (iconsObj != null)
+                {
+                    Iterator<String> iconKeys = iconsObj.keys();
+                    while (iconKeys.hasNext())
+                    {
+                        String k = iconKeys.next();
+                        task_icons.put(k, iconsObj.optString(k, MaterialSymbols.DEFAULT_ICON));
+                    }
+                }
+            }
 
-            String pattern_key = prefix + "\u0000" + suffix;
-            if (!seen_pattern_keys.add(pattern_key))
-                throw new KeymapJsonUtils.ParseError(
-                        "Duplicate \"" + KEY_EXPAND_PATTERNS + "\" entry: prefix \"" + prefix + "\" with suffix \"" + suffix + "\"");
+            Iterator<String> keys = root.keys();
+            while (keys.hasNext())
+            {
+                String key = keys.next();
+                if (key.equals(KEY_REPLACE_TRIGGER) || key.equals(LEGACY_KEY_REPLACE_TRIGGER)
+                        || key.equals(KEY_APPEND_TRIGGER) || key.equals(LEGACY_KEY_APPEND_TRIGGER)
+                        || key.equals(KEY_TIMEOUT_MS) || key.equals(LEGACY_KEY_TIMEOUT_MS)
+                        || key.equals(KEY_EXPAND_PATTERNS) || key.equals(LEGACY_KEY_EXPAND_PATTERNS)
+                        || key.equals(KEY_TASK_ICONS))
+                {
+                    continue;
+                }
 
-            expand_patterns.add(new ExpandPattern(name, prefix, compiled_prefix, regex, compiled_regex, suffix, compiled_suffix,
-                    task, replace_prefix_str, replace_prefix, fire_on_suffix_str, fire_on_suffix));
+                Object val = root.get(key);
+                if (val instanceof JSONObject)
+                {
+                    JSONObject taskObj = (JSONObject) val;
+                    String taskName = taskObj.optString("task", "");
+                    String icon = taskObj.optString("icon", MaterialSymbols.DEFAULT_ICON);
+                    tasks.put(key, taskName);
+                    task_icons.put(key, icon);
+                }
+                else if (val instanceof String)
+                {
+                    tasks.put(key, (String) val);
+                    if (!task_icons.containsKey(key))
+                    {
+                        task_icons.put(key, MaterialSymbols.DEFAULT_ICON);
+                    }
+                }
+            }
+
+            List<ExpandPattern> expand_patterns = new ArrayList<>();
+            if (root.has(KEY_EXPAND_PATTERNS) || root.has(LEGACY_KEY_EXPAND_PATTERNS))
+            {
+                JSONArray arr = root.optJSONArray(KEY_EXPAND_PATTERNS);
+                if (arr == null)
+                {
+                    arr = root.optJSONArray(LEGACY_KEY_EXPAND_PATTERNS);
+                }
+                if (arr != null)
+                {
+                    for (int i = 0; i < arr.length(); i++)
+                    {
+                        JSONObject obj = arr.optJSONObject(i);
+                        if (obj == null) continue;
+
+                        String name = obj.optString("name", null);
+                        String prefix = obj.optString("prefix", "");
+                        String regex = obj.has(KEY_EXPAND_PATTERN_REGEX) ? obj.optString(KEY_EXPAND_PATTERN_REGEX) : null;
+                        String suffix = obj.optString("suffix", "");
+                        String task = obj.optString("task", "");
+                        String replace_prefix_str = obj.optString("replace_prefix", "false");
+                        String fire_on_suffix_str = obj.optString("fire_on_suffix", "true");
+
+                        if (prefix.isEmpty() || suffix.isEmpty() || task.isEmpty())
+                        {
+                            continue;
+                        }
+
+                        boolean replace_prefix = Boolean.parseBoolean(replace_prefix_str);
+                        boolean fire_on_suffix = Boolean.parseBoolean(fire_on_suffix_str);
+
+                        Pattern compiled_prefix = compile_pattern_field_regex("prefix", prefix);
+                        Pattern compiled_regex = regex != null && !regex.isEmpty()
+                                ? compile_pattern_field_regex(KEY_EXPAND_PATTERN_REGEX, regex) : null;
+                        Pattern compiled_suffix = compile_pattern_field_regex("suffix", suffix);
+
+                        expand_patterns.add(new ExpandPattern(name, prefix, compiled_prefix, regex, compiled_regex,
+                                suffix, compiled_suffix, task, replace_prefix_str, replace_prefix,
+                                fire_on_suffix_str, fire_on_suffix));
+                    }
+                }
+            }
+
+            return new TaskerAutomationConfig(replace_trigger, append_trigger, timeout_ms, tasks,
+                    task_icons, expand_patterns, false);
         }
-
-        boolean used_default_expand_patterns = false;
-        if (expand_patterns.isEmpty())
+        catch (KeymapJsonUtils.ParseError pe)
         {
-            expand_patterns.add(new ExpandPattern(
-                    DEFAULT_EXPAND_PATTERN_NAME,
-                    DEFAULT_EXPAND_PATTERN_PREFIX, compile_pattern_field_regex("prefix", DEFAULT_EXPAND_PATTERN_PREFIX),
-                    null, null,
-                    DEFAULT_EXPAND_PATTERN_SUFFIX, compile_pattern_field_regex("suffix", DEFAULT_EXPAND_PATTERN_SUFFIX),
-                    DEFAULT_EXPAND_PATTERN_TASK,
-                    DEFAULT_EXPAND_PATTERN_REPLACE_PREFIX, Boolean.parseBoolean(DEFAULT_EXPAND_PATTERN_REPLACE_PREFIX),
-                    DEFAULT_EXPAND_PATTERN_FIRE_ON_SUFFIX, Boolean.parseBoolean(DEFAULT_EXPAND_PATTERN_FIRE_ON_SUFFIX)));
-            expand_patterns.add(new ExpandPattern(
-                    DEFAULT_LIVE_PATTERN_NAME,
-                    DEFAULT_LIVE_PATTERN_PREFIX, compile_pattern_field_regex("prefix", DEFAULT_LIVE_PATTERN_PREFIX),
-                    DEFAULT_LIVE_PATTERN_REGEX, compile_pattern_field_regex(KEY_EXPAND_PATTERN_REGEX, DEFAULT_LIVE_PATTERN_REGEX),
-                    DEFAULT_LIVE_PATTERN_SUFFIX, compile_pattern_field_regex("suffix", DEFAULT_LIVE_PATTERN_SUFFIX),
-                    DEFAULT_LIVE_PATTERN_TASK,
-                    DEFAULT_LIVE_PATTERN_REPLACE_PREFIX, Boolean.parseBoolean(DEFAULT_LIVE_PATTERN_REPLACE_PREFIX),
-                    DEFAULT_LIVE_PATTERN_FIRE_ON_SUFFIX, Boolean.parseBoolean(DEFAULT_LIVE_PATTERN_FIRE_ON_SUFFIX)));
-            used_default_expand_patterns = true;
+            throw pe;
         }
-
-        boolean needs_persist = used_default_replace || used_default_append
-                || used_default_timeout || used_default_expand_patterns;
-
-        return new TaskerAutomationConfig(replace_trigger, append_trigger, timeout_ms, tasks,
-                expand_patterns, needs_persist);
+        catch (Exception e)
+        {
+            throw new KeymapJsonUtils.ParseError("Invalid Tasker JSON: " + e.getMessage());
+        }
     }
 
-    /** Parses a "true"/"false" (case-insensitive) per-entry boolean
-     field - [field_name] is "replace_prefix" or "fire_on_suffix",
-     [prefix] is that entry's own "prefix" value, purely so the error
-     message can point at which entry is wrong. */
-    private static boolean parse_bool_field(String prefix, String field_name, String value) throws KeymapJsonUtils.ParseError
-    {
-        if (value.equalsIgnoreCase("true"))
-            return true;
-        if (value.equalsIgnoreCase("false"))
-            return false;
-        throw new KeymapJsonUtils.ParseError(
-                "\"" + field_name + "\" for prefix \"" + prefix + "\" must be \"true\" or \"false\", got \"" + value + "\"");
-    }
-
-    /** Compiles one of an "nhck_patterns" entry's regex fields
-     ([field_name] is "prefix", "regex" or "suffix", purely for the
-     error message) with [Pattern.MULTILINE] - so "^"/"$" in, say, a
-     "prefix" of "(\s|^)" also match right after/before a newline, not
-     only at the very start/end of the whole field - and turns an
-     invalid pattern into a [KeymapJsonUtils.ParseError] instead of
-     letting [PatternSyntaxException] escape. */
     private static Pattern compile_pattern_field_regex(String field_name, String pattern_source) throws KeymapJsonUtils.ParseError
     {
         try
@@ -481,46 +304,61 @@ public final class TaskerAutomationConfig
         }
     }
 
-    /** Re-serializes this config as beautified (2-space indented) JSON,
-     with every field - including any keys that were auto-filled with
-     defaults during [parse] - written out explicitly. Callers should
-     write this back to storage whenever [needs_persist] is true, so
-     the saved file always reflects what's actually in effect. */
     public String to_json()
     {
         StringBuilder sb = new StringBuilder();
         sb.append("{\n");
-        sb.append("  \"").append(KEY_REPLACE_TRIGGER).append("\": \"").append(escape_json(replace_trigger)).append("\",\n");
-        sb.append("  \"").append(KEY_APPEND_TRIGGER).append("\": \"").append(escape_json(append_trigger)).append("\",\n");
-        sb.append("  \"").append(KEY_TIMEOUT_MS).append("\": \"").append(timeout_ms).append("\",\n");
+        sb.append("  \"").append(KEY_TIMEOUT_MS).append("\": \"").append(timeout_ms).append("\"");
+
+        if (replace_trigger != null && !replace_trigger.isEmpty())
+        {
+            sb.append(",\n  \"").append(KEY_REPLACE_TRIGGER).append("\": \"").append(escape_json(replace_trigger)).append("\"");
+        }
+        if (append_trigger != null && !append_trigger.isEmpty())
+        {
+            sb.append(",\n  \"").append(KEY_APPEND_TRIGGER).append("\": \"").append(escape_json(append_trigger)).append("\"");
+        }
+
         for (Map.Entry<String, String> e : tasks.entrySet())
         {
-            sb.append("  \"").append(escape_json(e.getKey())).append("\": \"")
-                    .append(escape_json(e.getValue())).append("\",\n");
+            String keyword = e.getKey();
+            String taskName = e.getValue();
+            String icon = getTaskIcon(keyword);
+
+            sb.append(",\n  \"").append(escape_json(keyword)).append("\": {\n");
+            sb.append("    \"task\": \"").append(escape_json(taskName)).append("\",\n");
+            sb.append("    \"icon\": \"").append(escape_json(icon)).append("\"\n");
+            sb.append("  }");
         }
-        sb.append("  \"").append(KEY_EXPAND_PATTERNS).append("\": [\n");
-        for (int i = 0; i < expand_patterns.size(); i++)
+
+        if (expand_patterns != null && !expand_patterns.isEmpty())
         {
-            ExpandPattern p = expand_patterns.get(i);
-            sb.append("    {\n");
-            if (p.name != null)
-                sb.append("      \"name\": \"").append(escape_json(p.name)).append("\",\n");
-            sb.append("      \"prefix\": \"").append(escape_json(p.prefix)).append("\",\n");
-            if (p.regex != null)
-                sb.append("      \"").append(KEY_EXPAND_PATTERN_REGEX).append("\": \"").append(escape_json(p.regex)).append("\",\n");
-            sb.append("      \"suffix\": \"").append(escape_json(p.suffix)).append("\",\n");
-            sb.append("      \"replace_prefix\": \"").append(escape_json(p.replace_prefix_str)).append("\",\n");
-            sb.append("      \"fire_on_suffix\": \"").append(escape_json(p.fire_on_suffix_str)).append("\",\n");
-            sb.append("      \"task\": \"").append(escape_json(p.task)).append("\"\n");
-            sb.append("    }").append(i < expand_patterns.size() - 1 ? ",\n" : "\n");
+            sb.append(",\n  \"").append(KEY_EXPAND_PATTERNS).append("\": [\n");
+            for (int i = 0; i < expand_patterns.size(); i++)
+            {
+                ExpandPattern p = expand_patterns.get(i);
+                sb.append("    {\n");
+                if (p.name != null)
+                    sb.append("      \"name\": \"").append(escape_json(p.name)).append("\",\n");
+                sb.append("      \"prefix\": \"").append(escape_json(p.prefix)).append("\",\n");
+                if (p.regex != null)
+                    sb.append("      \"").append(KEY_EXPAND_PATTERN_REGEX).append("\": \"").append(escape_json(p.regex)).append("\",\n");
+                sb.append("      \"suffix\": \"").append(escape_json(p.suffix)).append("\",\n");
+                sb.append("      \"replace_prefix\": \"").append(escape_json(p.replace_prefix_str)).append("\",\n");
+                sb.append("      \"fire_on_suffix\": \"").append(escape_json(p.fire_on_suffix_str)).append("\",\n");
+                sb.append("      \"task\": \"").append(escape_json(p.task)).append("\"\n");
+                sb.append("    }").append(i < expand_patterns.size() - 1 ? ",\n" : "\n");
+            }
+            sb.append("  ]");
         }
-        sb.append("  ]\n");
-        sb.append("}\n");
+
+        sb.append("\n}\n");
         return sb.toString();
     }
 
     private static String escape_json(String s)
     {
+        if (s == null) return "";
         StringBuilder out = new StringBuilder(s.length() + 8);
         for (int i = 0; i < s.length(); i++)
         {

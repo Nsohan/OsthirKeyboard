@@ -21,14 +21,21 @@ public class SuggestionActionHelper
     public final String subtitle;
     public final int iconRes;
     public final boolean isTasker;
+    public final String iconName;
 
     public ActionItem(String id, String title, String subtitle, int iconRes, boolean isTasker)
+    {
+      this(id, title, subtitle, iconRes, isTasker, null);
+    }
+
+    public ActionItem(String id, String title, String subtitle, int iconRes, boolean isTasker, String iconName)
     {
       this.id = id;
       this.title = title;
       this.subtitle = subtitle;
       this.iconRes = iconRes;
       this.isTasker = isTasker;
+      this.iconName = iconName;
     }
   }
 
@@ -102,7 +109,8 @@ public class SuggestionActionHelper
       {
         String taskName = entry.getKey();
         String sub = entry.getValue();
-        list.add(new ActionItem(TASKER_PREFIX + taskName, taskName, sub, R.drawable.ic_tasker_bolt, true));
+        String iconName = config.getIconForTask(taskName);
+        list.add(new ActionItem(TASKER_PREFIX + taskName, taskName, sub, R.drawable.ic_tasker_bolt, true, iconName));
       }
     }
     catch (Exception e)

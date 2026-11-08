@@ -4,6 +4,9 @@ import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.graphics.drawable.Drawable;
+import androidx.core.content.ContextCompat;
+import com.nhs.customkeyboard.tasker.MaterialSymbolDrawable;
 import android.util.AttributeSet;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
@@ -309,7 +312,7 @@ public class SuggestionToolsPreference extends Preference
       else if (actionItem.id != null && actionItem.id.startsWith(SuggestionActionHelper.TASKER_PREFIX))
       {
         String taskName = actionItem.id.substring(SuggestionActionHelper.TASKER_PREFIX.length());
-        addOrEnableTaskerTool(taskName, prefs, rv);
+        addOrEnableTaskerTool(taskName, actionItem.iconName, prefs, rv);
         dialog.dismiss();
       }
     });
@@ -319,6 +322,11 @@ public class SuggestionToolsPreference extends Preference
 
   private void addOrEnableTaskerTool(String taskName, SharedPreferences prefs, RecyclerView rv)
   {
+    addOrEnableTaskerTool(taskName, null, prefs, rv);
+  }
+
+  private void addOrEnableTaskerTool(String taskName, String iconName, SharedPreferences prefs, RecyclerView rv)
+  {
     String id = SuggestionActionHelper.TASKER_PREFIX + taskName;
     for (int i = 0; i < _tools.size(); i++)
     {
@@ -326,6 +334,10 @@ public class SuggestionToolsPreference extends Preference
       if (existing.id.equals(id))
       {
         existing.enabled = true;
+        if (iconName != null && !iconName.isEmpty())
+        {
+          existing.iconName = iconName;
+        }
         SuggestionToolItem.saveToPrefs(prefs, _tools);
         if (Config.globalConfig() != null)
         {
@@ -339,11 +351,12 @@ public class SuggestionToolsPreference extends Preference
         {
           rv.smoothScrollToPosition(i);
         }
+        updatePreview(prefs);
         return;
       }
     }
 
-    SuggestionToolItem newItem = new SuggestionToolItem(id, taskName, R.drawable.ic_tasker_bolt, true, null);
+    SuggestionToolItem newItem = new SuggestionToolItem(id, taskName, R.drawable.ic_tasker_bolt, true, null, iconName);
     _tools.add(newItem);
     SuggestionToolItem.saveToPrefs(prefs, _tools);
     if (Config.globalConfig() != null)
@@ -437,7 +450,15 @@ public class SuggestionToolsPreference extends Preference
         iv.setLayoutParams(lp);
         iv.setScaleType(ImageView.ScaleType.FIT_CENTER);
         iv.setPadding(padX, padY, padX, padY);
-        iv.setImageResource(item.getIconRes());
+        Drawable d = item.getDrawable(getContext(), iconColor, (int) targetIconSize);
+        if (d != null)
+        {
+          iv.setImageDrawable(d);
+        }
+        else
+        {
+          iv.setImageResource(item.getIconRes());
+        }
         iv.setColorFilter(iconColor);
         _previewToolsContainer.addView(iv);
       }
@@ -499,7 +520,20 @@ public class SuggestionToolsPreference extends Preference
       Context ctx = holder.itemView.getContext();
       SuggestionToolItem item = _items.get(position);
       holder.title.setText(item.getTitle(ctx));
-      holder.icon.setImageResource(item.getIconRes());
+      int iconPx = (int) (24 * ctx.getResources().getDisplayMetrics().density);
+      TypedValue tvColor = new TypedValue();
+      ctx.getTheme().resolveAttribute(R.attr.colorLabel, tvColor, true);
+      int iconColor = tvColor.data != 0 ? tvColor.data : ContextCompat.getColor(ctx, R.color.settings_primary);
+      Drawable d = item.getDrawable(ctx, iconColor, iconPx);
+      if (d != null)
+      {
+        holder.icon.setImageDrawable(d);
+      }
+      else
+      {
+        holder.icon.setImageResource(item.getIconRes());
+      }
+      holder.icon.setColorFilter(iconColor);
 
       if (item.longPressAction != null && !item.longPressAction.isEmpty())
       {
@@ -776,7 +810,20 @@ public class SuggestionToolsPreference extends Preference
         ActionViewHolder vh = (ActionViewHolder) holder;
         SuggestionActionHelper.ActionItem item = row.action;
         vh.title.setText(item.title);
-        vh.icon.setImageResource(item.iconRes);
+        Context c = vh.itemView.getContext();
+        int iconPx = (int) (24 * c.getResources().getDisplayMetrics().density);
+        TypedValue tvColor = new TypedValue();
+        c.getTheme().resolveAttribute(R.attr.colorLabel, tvColor, true);
+        int iconColor = tvColor.data != 0 ? tvColor.data : ContextCompat.getColor(c, R.color.settings_primary);
+        if (item.isTasker && item.iconName != null && !item.iconName.isEmpty())
+        {
+          vh.icon.setImageDrawable(new MaterialSymbolDrawable(c, item.iconName, iconPx, iconColor));
+        }
+        else
+        {
+          vh.icon.setImageResource(item.iconRes);
+        }
+        vh.icon.setColorFilter(iconColor);
 
         if (item.subtitle != null && !item.subtitle.isEmpty())
         {

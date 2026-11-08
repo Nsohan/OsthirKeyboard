@@ -22,6 +22,7 @@ public class SuggestionToolItem
   public String customTitle;
   public boolean enabled;
   public String longPressAction;
+  public String iconName;
 
   public SuggestionToolItem(String id, int titleRes, int iconRes, boolean enabled)
   {
@@ -35,10 +36,20 @@ public class SuggestionToolItem
 
   public SuggestionToolItem(String id, String customTitle, int iconRes, boolean enabled, String longPressAction)
   {
-    this(id, 0, customTitle, iconRes, enabled, longPressAction);
+    this(id, 0, customTitle, iconRes, enabled, longPressAction, null);
+  }
+
+  public SuggestionToolItem(String id, String customTitle, int iconRes, boolean enabled, String longPressAction, String iconName)
+  {
+    this(id, 0, customTitle, iconRes, enabled, longPressAction, iconName);
   }
 
   public SuggestionToolItem(String id, int titleRes, String customTitle, int iconRes, boolean enabled, String longPressAction)
+  {
+    this(id, titleRes, customTitle, iconRes, enabled, longPressAction, null);
+  }
+
+  public SuggestionToolItem(String id, int titleRes, String customTitle, int iconRes, boolean enabled, String longPressAction, String iconName)
   {
     this.id = id;
     this.titleRes = titleRes;
@@ -46,11 +57,54 @@ public class SuggestionToolItem
     this.iconRes = iconRes;
     this.enabled = enabled;
     this.longPressAction = longPressAction;
+    this.iconName = iconName;
   }
 
   public boolean isTasker()
   {
     return id != null && id.startsWith(SuggestionActionHelper.TASKER_PREFIX);
+  }
+
+  public String getTaskerIconName(Context ctx)
+  {
+    if (iconName != null && !iconName.trim().isEmpty())
+    {
+      return iconName.trim();
+    }
+    if (isTasker() && ctx != null)
+    {
+      try
+      {
+        String json = com.nhs.customkeyboard.prefs.TaskerAutomationManager.load(ctx);
+        if (json != null)
+        {
+          com.nhs.customkeyboard.TaskerAutomationConfig config = com.nhs.customkeyboard.TaskerAutomationConfig.parse(json);
+          String taskName = id.substring(SuggestionActionHelper.TASKER_PREFIX.length());
+          String resolved = config.getIconForTask(taskName);
+          if (resolved != null && !resolved.isEmpty())
+          {
+            this.iconName = resolved;
+            return resolved;
+          }
+        }
+      }
+      catch (Exception ignored) {}
+    }
+    return com.nhs.customkeyboard.tasker.MaterialSymbols.DEFAULT_ICON;
+  }
+
+  public android.graphics.drawable.Drawable getDrawable(Context ctx, int color, int sizePx)
+  {
+    if (isTasker() && ctx != null)
+    {
+      String icon = getTaskerIconName(ctx);
+      return new com.nhs.customkeyboard.tasker.MaterialSymbolDrawable(ctx, icon, sizePx, color);
+    }
+    if (iconRes != 0 && ctx != null)
+    {
+      return androidx.core.content.ContextCompat.getDrawable(ctx, iconRes);
+    }
+    return null;
   }
 
   public String getTitle(Context ctx)
@@ -81,7 +135,7 @@ public class SuggestionToolItem
 
   public SuggestionToolItem copy()
   {
-    return new SuggestionToolItem(this.id, this.titleRes, this.customTitle, this.iconRes, this.enabled, this.longPressAction);
+    return new SuggestionToolItem(this.id, this.titleRes, this.customTitle, this.iconRes, this.enabled, this.longPressAction, this.iconName);
   }
 
   public static List<SuggestionToolItem> getDefaultTools()
@@ -140,13 +194,14 @@ public class SuggestionToolItem
             longPressAction = null;
           }
           String customTitle = obj.optString("custom_title", null);
+          String iconName = obj.optString("icon_name", null);
 
           if (id.startsWith(SuggestionActionHelper.TASKER_PREFIX))
           {
             if (!seenIds.contains(id))
             {
               seenIds.add(id);
-              result.add(new SuggestionToolItem(id, customTitle, R.drawable.ic_tasker_bolt, enabled, longPressAction));
+              result.add(new SuggestionToolItem(id, customTitle, R.drawable.ic_tasker_bolt, enabled, longPressAction, iconName));
             }
           }
           else
@@ -189,7 +244,7 @@ public class SuggestionToolItem
             if (!seenIds.contains(action.id))
             {
               seenIds.add(action.id);
-              result.add(new SuggestionToolItem(action.id, action.title, R.drawable.ic_tasker_bolt, false, null));
+              result.add(new SuggestionToolItem(action.id, action.title, R.drawable.ic_tasker_bolt, false, null, action.iconName));
             }
           }
         }
@@ -217,6 +272,10 @@ public class SuggestionToolItem
         if (item.customTitle != null && !item.customTitle.trim().isEmpty())
         {
           obj.put("custom_title", item.customTitle.trim());
+        }
+        if (item.iconName != null && !item.iconName.trim().isEmpty())
+        {
+          obj.put("icon_name", item.iconName.trim());
         }
         if (item.longPressAction != null && !item.longPressAction.trim().isEmpty())
         {

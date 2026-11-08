@@ -144,7 +144,7 @@
     </provider>
   </application>
 
-  <!-- To query enabled input methods and speech recognition services -->
+  <!-- To query enabled input methods, speech recognition services, and Tasker -->
   <queries>
     <intent>
       <action android:name="android.view.InputMethod" />
@@ -155,5 +155,7 @@
     <intent>
       <action android:name="android.speech.RecognizerIntent" />
     </intent>
+    <package android:name="net.dinglisch.android.tasker" />
+    <package android:name="net.dinglisch.android.taskerm" />
   </queries>
 </manifest>

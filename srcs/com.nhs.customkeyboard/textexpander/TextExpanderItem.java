@@ -47,7 +47,8 @@ public final class TextExpanderItem
 
     public boolean is_tasker_task()
     {
-        return output != null && (output.startsWith(PREFIX_TASKER_TASK) || output.startsWith("@task:"));
+        return (output != null && (output.startsWith(PREFIX_TASKER_TASK) || output.startsWith("@task:") || output.startsWith("task:")))
+                || (keyword != null && keyword.startsWith("task:"));
     }
 
     public String get_task_name()
@@ -58,6 +59,10 @@ public final class TextExpanderItem
             return output.substring(PREFIX_TASKER_TASK.length()).trim();
         if (output.startsWith("@task:"))
             return output.substring(6).trim();
+        if (output.startsWith("task:"))
+            return output.substring(5).trim();
+        if (keyword != null && keyword.startsWith("task:"))
+            return keyword.substring(5).trim();
         return output.trim();
     }
 

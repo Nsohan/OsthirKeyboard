@@ -441,6 +441,29 @@ public final class TextExpanderEngine implements TextExpanderManager.OnSnippetsC
         {
             // Execute Tasker Task asynchronously
             String taskName = resolved.tasker_task_to_run;
+            String resolvedTaskName = taskName;
+            long timeoutMs = 15000;
+            try
+            {
+                String storedJson = com.nhs.customkeyboard.prefs.TaskerAutomationManager.load(ctx);
+                if (storedJson != null)
+                {
+                    com.nhs.customkeyboard.TaskerAutomationConfig config = com.nhs.customkeyboard.TaskerAutomationConfig.parse(storedJson);
+                    if (config != null)
+                    {
+                        timeoutMs = config.timeout_ms;
+                        if (config.tasks != null)
+                        {
+                            if (config.tasks.containsKey(taskName))
+                                resolvedTaskName = config.tasks.get(taskName);
+                            else if (taskName.startsWith("task:") && config.tasks.containsKey(taskName.substring(5).trim()))
+                                resolvedTaskName = config.tasks.get(taskName.substring(5).trim());
+                        }
+                    }
+                }
+            }
+            catch (Exception ignored) {}
+
             String text1 = "";
             String text2 = "";
             try
@@ -452,7 +475,8 @@ public final class TextExpanderEngine implements TextExpanderManager.OnSnippetsC
             }
             catch (Exception ignored) {}
 
-            TaskerBridge.run_task(ctx, taskName, text1, text2, item.keyword, 15000,
+            String kw = item.keyword != null ? (item.keyword.startsWith("task:") ? item.keyword.substring(5).trim() : item.keyword) : "";
+            TaskerBridge.run_task(ctx, resolvedTaskName, text1, text2, kw, timeoutMs,
                     new TaskerBridge.ResultCallback()
                     {
                         @Override

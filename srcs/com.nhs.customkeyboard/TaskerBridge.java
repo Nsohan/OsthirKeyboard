@@ -134,14 +134,14 @@ public final class TaskerBridge
         var_values.add(keyword != null ? keyword : "");
 
         // Legacy compatibility aliases
-        var_names.add("%nhck_text1");
+        var_names.add("%text1");
         var_values.add(text1 != null ? text1 : "");
         if (text2 != null && !text2.isEmpty())
         {
-            var_names.add("%nhck_text2");
+            var_names.add("%text2");
             var_values.add(text2);
         }
-        var_names.add("%nhck_keyword");
+        var_names.add("%keyword");
         var_values.add(keyword != null ? keyword : "");
         run_task_internal(ctx, task_name, var_names, var_values, timeout_ms, callback);
     }
@@ -212,28 +212,28 @@ public final class TaskerBridge
         }
 
         // Legacy compatibility aliases
-        var_names.add("%nhck_text1");
+        var_names.add("%text1");
         var_values.add(text1 != null ? text1 : "");
         if (text2 != null && !text2.isEmpty())
         {
-            var_names.add("%nhck_text2");
+            var_names.add("%text2");
             var_values.add(text2);
         }
         if (prefix != null)
         {
-            var_names.add("%nhck_prefix");
+            var_names.add("%prefix");
             var_values.add(prefix);
         }
-        var_names.add("%nhck_keyword");
+        var_names.add("%keyword");
         var_values.add(keyword != null ? keyword : "");
         if (suffix != null)
         {
-            var_names.add("%nhck_suffix");
+            var_names.add("%suffix");
             var_values.add(suffix);
         }
         if (keyword_stop)
         {
-            var_names.add("%nhck_keyword_stop");
+            var_names.add("%keyword_stop");
             var_values.add("true");
         }
         run_task_internal(ctx, task_name, var_names, var_values, timeout_ms, callback);
