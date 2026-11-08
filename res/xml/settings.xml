@@ -195,7 +195,10 @@
         android:icon="@drawable/ic_clipboard_outline">
       <PreferenceCategory android:title="@string/pref_category_clipboard" android:layout="@layout/pref_category_settings">
         <SwitchPreferenceCompat android:key="clipboard_history_enabled" android:icon="@drawable/ic_clipboard" android:title="@string/pref_clipboard_history_enabled_title" android:summary="@string/pref_clipboard_history_enabled_summary" android:defaultValue="true"/>
-        <ListPreference android:key="clipboard_history_duration" android:icon="@drawable/ic_clipboard" android:title="@string/pref_clipboard_history_duration" android:summary="%s" android:defaultValue="5" android:entries="@array/pref_clipboard_duration_entries" android:entryValues="@array/pref_clipboard_duration_values" android:dependency="clipboard_history_enabled"/>
+        <ListPreference android:key="clipboard_history_duration" android:icon="@drawable/ic_clipboard" android:title="@string/pref_clipboard_history_duration" android:summary="%s" android:defaultValue="60" android:entries="@array/pref_clipboard_duration_entries" android:entryValues="@array/pref_clipboard_duration_values" android:dependency="clipboard_history_enabled"/>
+        <SwitchPreferenceCompat android:key="clipboard_suggestion_bar_enabled" android:icon="@drawable/ic_suggestions" android:title="@string/pref_clipboard_suggestion_bar_title" android:defaultValue="true" android:dependency="clipboard_history_enabled"/>
+        <SwitchPreferenceCompat android:key="clipboard_extract_entities_enabled" android:icon="@drawable/ic_search" android:title="@string/pref_clipboard_extract_entities_title" android:defaultValue="true" android:dependency="clipboard_suggestion_bar_enabled"/>
+        <SwitchPreferenceCompat android:key="clipboard_save_screenshots_enabled" android:icon="@drawable/ic_theme" android:title="@string/pref_clipboard_save_screenshots_title" android:defaultValue="false" android:dependency="clipboard_history_enabled"/>
       </PreferenceCategory>
     </PreferenceScreen>
 
@@ -207,13 +210,28 @@
         android:icon="@drawable/ic_swipe" />
   </PreferenceCategory>
 
-  <!-- Group 4: Tasker & Automation, About -->
+  <!-- Group 4: Automation, About -->
   <PreferenceCategory android:key="cat_group_about" android:layout="@layout/pref_category_space">
-    <!-- 9. Tasker & Automation -->
+    <!-- 9. Automation -->
     <PreferenceScreen
         android:key="screen_tasker"
         android:title="@string/pref_screen_tasker_title"
+        android:summary="@string/pref_screen_tasker_summary"
         android:icon="@drawable/ic_tasker_bolt">
+      <PreferenceCategory android:title="@string/pref_screen_text_expander_title" android:layout="@layout/pref_category_settings">
+        <com.nhs.customkeyboard.prefs.TextExpanderPreference
+            android:key="screen_text_expander"
+            android:title="@string/pref_screen_text_expander_title"
+            android:summary="@string/pref_screen_text_expander_summary"
+            android:icon="@drawable/ic_special_key"
+            android:widgetLayout="@layout/pref_widget_chevron" />
+        <com.nhs.customkeyboard.prefs.CalculationPreference
+            android:key="screen_calculation"
+            android:title="@string/pref_screen_calculation_title"
+            android:summary="@string/pref_screen_calculation_summary"
+            android:icon="@drawable/ic_numpad"
+            android:widgetLayout="@layout/pref_widget_chevron" />
+      </PreferenceCategory>
       <PreferenceCategory android:title="@string/pref_category_tasker" android:layout="@layout/pref_category_settings">
         <com.nhs.customkeyboard.prefs.TaskerAutomationBuilderLinkPreference
             android:icon="@drawable/ic_tasker"

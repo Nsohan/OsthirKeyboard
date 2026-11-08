@@ -112,6 +112,12 @@ public final class KeyEventHandler
             public InputConnection get() { return _recv.getCurrentInputConnection(); }
           };
 
+  private final com.nhs.customkeyboard.textexpander.TextExpanderEngine.InputConnectionProvider _text_expander_conn_provider =
+          new com.nhs.customkeyboard.textexpander.TextExpanderEngine.InputConnectionProvider()
+          {
+            public InputConnection get() { return _recv.getCurrentInputConnection(); }
+          };
+
   public interface ITranslationInterceptor
   {
     boolean isTranslationActive();
@@ -166,6 +172,7 @@ public final class KeyEventHandler
     // [TaskerTriggerEngine.new_field_started]) - otherwise its result
     // can land in this newly-focused field instead.
     TaskerTriggerEngine.get().new_field_started();
+    com.nhs.customkeyboard.textexpander.TextExpanderEngine.get().new_field_started();
   }
 
   public void selection_updated(int oldSelStart, int newSelStart, int newSelEnd)
@@ -175,12 +182,15 @@ public final class KeyEventHandler
     boolean keymap_self = KeymapEngine.get().consume_self_edit();
     boolean tasker_self = TaskerTriggerEngine.get().consume_self_edit();
     boolean avro_self = AvroEngine.get().consume_self_edit();
+    boolean text_expander_self = com.nhs.customkeyboard.textexpander.TextExpanderEngine.get().consume_self_edit();
     if (!keymap_self)
       KeymapEngine.get().reset();
     if (!tasker_self)
       TaskerTriggerEngine.get().reset();
     if (!avro_self)
       AvroEngine.get().reset();
+    if (!text_expander_self)
+      com.nhs.customkeyboard.textexpander.TextExpanderEngine.get().reset();
   }
 
   /** A key is being pressed. There will not necessarily be a corresponding
@@ -192,6 +202,10 @@ public final class KeyEventHandler
       return;
     _recv.stop_voice_typing();
     _last_key_is_swipe = isSwipe;
+    if (key.getKind() != KeyValue.Kind.Modifier)
+    {
+      com.nhs.customkeyboard.clipboard.ClipboardSuggestionHelper.get().dismiss();
+    }
     // Stop auto capitalisation when pressing some keys
     switch (key.getKind())
     {
@@ -448,6 +462,15 @@ public final class KeyEventHandler
   }
 
   @Override
+  public void paste_image_from_clipboard_pane(android.net.Uri uri, String mimeType, String label)
+  {
+    if (_recv != null && uri != null)
+    {
+      _recv.commit_content(uri, mimeType, label);
+    }
+  }
+
+  @Override
   public InputConnection getCurrentInputConnection()
   {
     return _recv.getCurrentInputConnection();
@@ -658,6 +681,12 @@ public final class KeyEventHandler
       {
         _last_word = null;
         _suggestions.clear_predictions();
+      }
+
+      if (com.nhs.customkeyboard.textexpander.TextExpanderEngine.get().handle_char(_recv.getContext(), conn, c,
+              _typedword_tracker, _text_expander_conn_provider))
+      {
+        continue;
       }
 
       if (TaskerTriggerEngine.get().handle_char(_recv.getContext(), conn, c,
@@ -1282,6 +1311,12 @@ public final class KeyEventHandler
       replace_surrounding_text(last_replacement_word_len, 0, last_replaced_word);
       last_replaced_word = null;
     }
+    else if (com.nhs.customkeyboard.textexpander.TextExpanderEngine.get().try_undo_replacement(
+            _recv.getCurrentInputConnection(), _typedword_tracker))
+    {
+      // Handled: the just-committed TextExpander replacement was swapped
+      // back for the original trigger+keyword text.
+    }
     else if (TaskerTriggerEngine.get().try_undo_replacement(
             _recv.getCurrentInputConnection(), _typedword_tracker))
     {
@@ -1291,6 +1326,7 @@ public final class KeyEventHandler
     }
     else
     {
+      com.nhs.customkeyboard.textexpander.TextExpanderEngine.get().handle_backspace(_recv.getCurrentInputConnection());
       TaskerTriggerEngine.get().handle_backspace(_recv.getCurrentInputConnection());
       send_key_down_up(KeyEvent.KEYCODE_DEL);
       TaskerTriggerEngine.get().check_expand_patterns(_recv.getContext(),
@@ -1310,6 +1346,7 @@ public final class KeyEventHandler
     public Context getContext();
     public void stop_voice_typing();
     public void onKeyCommitted();
+    public boolean commit_content(android.net.Uri contentUri, String mimeType, String description);
   }
 
   class Autocapitalisation_callback implements Autocapitalisation.Callback

@@ -3,10 +3,16 @@ package com.nhs.customkeyboard;
 import android.app.AlertDialog;
 import android.content.ClipData;
 import android.content.ClipboardManager;
+import android.content.ContentUris;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.net.Uri;
 import android.os.Build;
+import android.provider.MediaStore;
 import android.util.AttributeSet;
+import android.util.Size;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -278,7 +284,7 @@ public class ClipboardManagerView extends LinearLayout
 
     List<String> pinned = load_pinned(getContext());
     ClipboardHistoryService service = ClipboardHistoryService.get_service(getContext());
-    List<String> recent = service != null ? service.clear_expired_and_get_history() : new ArrayList<>();
+    List<ClipboardHistoryService.HistoryEntry> recent = service != null ? service.clear_expired_and_get_history_entries() : new ArrayList<>();
 
     if (pinned.isEmpty() && recent.isEmpty())
     {
@@ -307,11 +313,15 @@ public class ClipboardManagerView extends LinearLayout
       if (!recent.isEmpty())
       {
         _items.add(ClipItem.header("Recent"));
-        for (String r : recent)
+        for (ClipboardHistoryService.HistoryEntry r : recent)
         {
-          if (!pinned.contains(r))
+          if (r.is_image && r.image_uri != null)
           {
-            _items.add(ClipItem.card(r, false));
+            _items.add(ClipItem.imageCard(r.content, r.image_uri, r.mime_type, false));
+          }
+          else if (r.content != null && !pinned.contains(r.content))
+          {
+            _items.add(ClipItem.card(r.content, false));
           }
         }
       }
@@ -425,29 +435,86 @@ public class ClipboardManagerView extends LinearLayout
 
   // --- Data Model for Adapter ---
 
+  private static void loadThumbnailSafely(Context ctx, Uri uri, ImageView target)
+  {
+    if (uri == null || target == null) return;
+    target.setImageBitmap(null);
+    target.setTag(uri);
+    new Thread(() -> {
+      Bitmap bitmap = null;
+      try
+      {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q)
+        {
+          bitmap = ctx.getContentResolver().loadThumbnail(uri, new Size(240, 240), null);
+        }
+        else
+        {
+          long id = ContentUris.parseId(uri);
+          bitmap = MediaStore.Images.Thumbnails.getThumbnail(
+              ctx.getContentResolver(), id, MediaStore.Images.Thumbnails.MINI_KIND, null);
+        }
+      }
+      catch (Throwable t)
+      {
+        try
+        {
+          java.io.InputStream in = ctx.getContentResolver().openInputStream(uri);
+          if (in != null)
+          {
+            bitmap = BitmapFactory.decodeStream(in);
+            in.close();
+          }
+        }
+        catch (Throwable ignored) {}
+      }
+      final Bitmap finalBitmap = bitmap;
+      if (finalBitmap != null)
+      {
+        target.post(() -> {
+          if (uri.equals(target.getTag()))
+          {
+            target.setImageBitmap(finalBitmap);
+          }
+        });
+      }
+    }).start();
+  }
+
   static class ClipItem
   {
     final boolean isHeader;
     final String headerTitle;
     final String text;
     final boolean isPinned;
+    final Uri imageUri;
+    final String mimeType;
+    final boolean isImage;
 
-    private ClipItem(boolean isHeader, String headerTitle, String text, boolean isPinned)
+    private ClipItem(boolean isHeader, String headerTitle, String text, boolean isPinned, Uri imageUri, String mimeType, boolean isImage)
     {
       this.isHeader = isHeader;
       this.headerTitle = headerTitle;
       this.text = text;
       this.isPinned = isPinned;
+      this.imageUri = imageUri;
+      this.mimeType = mimeType;
+      this.isImage = isImage;
     }
 
     static ClipItem header(String title)
     {
-      return new ClipItem(true, title, null, false);
+      return new ClipItem(true, title, null, false, null, null, false);
     }
 
     static ClipItem card(String text, boolean isPinned)
     {
-      return new ClipItem(false, null, text, isPinned);
+      return new ClipItem(false, null, text, isPinned, null, null, false);
+    }
+
+    static ClipItem imageCard(String label, Uri imageUri, String mimeType, boolean isPinned)
+    {
+      return new ClipItem(false, null, label, isPinned, imageUri, mimeType, true);
     }
   }
 
@@ -500,7 +567,24 @@ public class ClipboardManagerView extends LinearLayout
       else if (holder instanceof CardViewHolder)
       {
         CardViewHolder ch = (CardViewHolder) holder;
-        ch.text.setText(item.text);
+
+        if (item.isImage && item.imageUri != null)
+        {
+          if (ch.image != null)
+          {
+            ch.image.setVisibility(View.VISIBLE);
+            loadThumbnailSafely(ch.itemView.getContext(), item.imageUri, ch.image);
+          }
+          ch.text.setText(item.text != null ? item.text : "Image");
+        }
+        else
+        {
+          if (ch.image != null)
+          {
+            ch.image.setVisibility(View.GONE);
+          }
+          ch.text.setText(item.text);
+        }
 
         if (item.isPinned)
         {
@@ -539,8 +623,15 @@ public class ClipboardManagerView extends LinearLayout
           }
           else
           {
-            // IMMEDIATELY PASTE!
-            ClipboardHistoryService.paste(item.text);
+            if (item.isImage && item.imageUri != null)
+            {
+              ClipboardHistoryService.paste_image(item.imageUri, item.mimeType, item.text);
+              close_clipboard();
+            }
+            else
+            {
+              ClipboardHistoryService.paste(item.text);
+            }
           }
         });
 
@@ -576,6 +667,7 @@ public class ClipboardManagerView extends LinearLayout
   static class CardViewHolder extends RecyclerView.ViewHolder
   {
     final View container;
+    final ImageView image;
     final TextView badge;
     final TextView text;
     final ImageView indicator;
@@ -584,9 +676,14 @@ public class ClipboardManagerView extends LinearLayout
     {
       super(itemView);
       container = itemView.findViewById(R.id.card_container);
+      image = itemView.findViewById(R.id.card_image);
       badge = itemView.findViewById(R.id.card_badge);
       text = itemView.findViewById(R.id.card_text);
       indicator = itemView.findViewById(R.id.card_select_indicator);
+      if (image != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP)
+      {
+        image.setClipToOutline(true);
+      }
     }
   }
 }

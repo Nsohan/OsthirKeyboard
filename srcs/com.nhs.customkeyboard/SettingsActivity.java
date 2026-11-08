@@ -1,9 +1,13 @@
 package com.nhs.customkeyboard;
 
+import android.Manifest;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
@@ -16,6 +20,7 @@ import androidx.preference.PreferenceFragmentCompat;
 import androidx.preference.PreferenceGroup;
 import androidx.preference.PreferenceManager;
 import androidx.preference.PreferenceScreen;
+import androidx.preference.SwitchPreferenceCompat;
 
 import android.content.res.Resources;
 import android.view.ViewGroup;
@@ -34,6 +39,8 @@ import com.nhs.customkeyboard.prefs.SlideBarPreferenceDialogFragment;
 import com.nhs.customkeyboard.prefs.AboutHeaderPreference;
 import com.nhs.customkeyboard.prefs.SuggestionToolsPreference;
 import com.nhs.customkeyboard.prefs.TaskerAutomationPreference;
+import com.nhs.customkeyboard.prefs.TextExpanderPreference;
+import com.nhs.customkeyboard.prefs.CalculationPreference;
 
 public class SettingsActivity extends AppCompatActivity
   implements PreferenceFragmentCompat.OnPreferenceStartScreenCallback
@@ -193,10 +200,84 @@ public class SettingsActivity extends AppCompatActivity
    and every nested <PreferenceScreen> page (distinguished by ARG_PREFERENCE_ROOT). */
   public static class SettingsFragment extends PreferenceFragmentCompat
   {
+    private static final int REQUEST_STORAGE_PERMISSION = 2001;
+
+    private boolean hasStoragePermission()
+    {
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
+      {
+        return ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.READ_MEDIA_IMAGES) == PackageManager.PERMISSION_GRANTED;
+      }
+      else
+      {
+        return ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED;
+      }
+    }
+
+    private void requestStoragePermission()
+    {
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
+      {
+        requestPermissions(new String[]{Manifest.permission.READ_MEDIA_IMAGES}, REQUEST_STORAGE_PERMISSION);
+      }
+      else
+      {
+        requestPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, REQUEST_STORAGE_PERMISSION);
+      }
+    }
+
+    private void setupScreenshotPermissionPreference()
+    {
+      SwitchPreferenceCompat pref = findPreference("clipboard_save_screenshots_enabled");
+      if (pref != null)
+      {
+        pref.setOnPreferenceChangeListener((preference, newValue) -> {
+          boolean enabled = (Boolean) newValue;
+          if (enabled)
+          {
+            if (!hasStoragePermission())
+            {
+              requestStoragePermission();
+              return false;
+            }
+          }
+          return true;
+        });
+      }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults)
+    {
+      if (requestCode == REQUEST_STORAGE_PERMISSION)
+      {
+        SwitchPreferenceCompat pref = findPreference("clipboard_save_screenshots_enabled");
+        if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED)
+        {
+          if (pref != null)
+          {
+            pref.setChecked(true);
+          }
+        }
+        else
+        {
+          if (pref != null)
+          {
+            pref.setChecked(false);
+          }
+          Toast.makeText(requireContext(), R.string.storage_permission_required_for_screenshots, Toast.LENGTH_SHORT).show();
+        }
+        return;
+      }
+      super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+    }
+
     @Override
     public void onCreatePreferences(Bundle savedInstanceState, String rootKey)
     {
       setPreferencesFromResource(R.xml.settings, rootKey);
+
+      setupScreenshotPermissionPreference();
 
       boolean foldableDevice = FoldStateTracker.isFoldableDevice(requireContext());
       set_enabled_if_present("margin_bottom_portrait_unfolded", foldableDevice);
@@ -408,6 +489,11 @@ public class SettingsActivity extends AppCompatActivity
     public void onResume()
     {
       super.onResume();
+      SwitchPreferenceCompat screenshotPref = findPreference("clipboard_save_screenshots_enabled");
+      if (screenshotPref != null && screenshotPref.isChecked() && !hasStoragePermission())
+      {
+        screenshotPref.setChecked(false);
+      }
       update_languages_summary();
       Preference p = findPreference("layouts");
       if (p instanceof LayoutsPreference)
@@ -415,6 +501,12 @@ public class SettingsActivity extends AppCompatActivity
       Preference tasker_pref = findPreference("tasker_automation");
       if (tasker_pref instanceof TaskerAutomationPreference)
         ((TaskerAutomationPreference)tasker_pref).refresh_summary();
+      Preference expander_pref = findPreference("screen_text_expander");
+      if (expander_pref instanceof TextExpanderPreference)
+        ((TextExpanderPreference)expander_pref).refresh_summary();
+      Preference calc_pref = findPreference("screen_calculation");
+      if (calc_pref instanceof CalculationPreference)
+        ((CalculationPreference)calc_pref).refresh_summary();
     }
 
     @Override

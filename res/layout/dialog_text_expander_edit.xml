@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:paddingStart="20dp"
+    android:paddingEnd="20dp"
+    android:paddingTop="20dp"
+    android:paddingBottom="8dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <!-- Header Row: Title on Left, Enabled Switch on Right -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="16dp">
+
+            <TextView
+                android:id="@+id/tv_dialog_title"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/text_expander_dialog_title_add"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:textColor="@color/settings_on_surface" />
+
+            <androidx.appcompat.widget.SwitchCompat
+                android:id="@+id/switch_dialog_enabled"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/text_expander_field_enabled"
+                android:textColor="@color/settings_on_surface"
+                android:textSize="14sp"
+                android:switchPadding="8dp"
+                android:checked="true" />
+        </LinearLayout>
+
+        <!-- Row 1: Prefix (weight 1) & Trigger Keyword (weight 3) -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:baselineAligned="false">
+
+            <!-- Prefix Field (~w-1/3 so 'Prefix' hint doesn't truncate) -->
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/til_trigger_prefix"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1.2"
+                android:hint="@string/text_expander_field_prefix_hint"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/et_trigger_prefix"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="monospace"
+                    android:inputType="textNoSuggestions"
+                    android:maxLines="1"
+                    android:text="@@" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- Trigger Keyword Field -->
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/til_trigger_keyword"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="2.6"
+                android:layout_marginStart="10dp"
+                android:hint="@string/text_expander_field_keyword_hint"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/et_trigger_keyword"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="monospace"
+                    android:inputType="textNoSuggestions"
+                    android:maxLines="1" />
+            </com.google.android.material.textfield.TextInputLayout>
+        </LinearLayout>
+
+        <!-- Row 2: Content Label on Left, [+ Insert Variable] Button on Right -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="6dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/text_expander_field_output_title"
+                android:textColor="@color/settings_on_surface"
+                android:textSize="14sp"
+                android:textStyle="bold" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_insert_variable"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:paddingStart="10dp"
+                android:paddingEnd="10dp"
+                android:text="@string/text_expander_btn_insert_var"
+                android:textSize="12sp"
+                app:icon="@drawable/ic_add"
+                app:iconSize="16dp" />
+        </LinearLayout>
+
+        <!-- Row 3: Multiline Content Input -->
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/til_output"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:hintEnabled="false"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/et_output"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:fontFamily="monospace"
+                android:gravity="top|start"
+                android:hint="@string/text_expander_field_output_hint"
+                android:inputType="textMultiLine|textNoSuggestions"
+                android:minLines="3" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <!-- Row 4: Helper Caption -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:text="@string/text_expander_field_output_help"
+            android:textColor="@color/settings_on_surface_variant"
+            android:textSize="12sp" />
+
+    </LinearLayout>
+</ScrollView>

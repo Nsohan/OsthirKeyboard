@@ -285,10 +285,14 @@
     <string name="pref_clipboard_history_enabled_title">Enable clipboard</string>
     <string name="pref_clipboard_history_enabled_summary">Keep recently copied text in clipboard history</string>
     <string name="pref_clipboard_history_duration">Clipboard memory duration</string>
-    <string name="pref_clipboard_history_duration_1">At most 1 minute</string>
-    <string name="pref_clipboard_history_duration_5">At most 5 minutes</string>
-    <string name="pref_clipboard_history_duration_30">At most 30 minutes</string>
+    <string name="pref_clipboard_history_duration_30">30 minutes</string>
+    <string name="pref_clipboard_history_duration_60">1 hour</string>
     <string name="pref_clipboard_history_duration_stop">Until the app stops</string>
+    <string name="storage_permission_required_for_screenshots">Storage permission is required to save recent screenshots</string>
+    <string name="pref_clipboard_suggestion_bar_title">Show recently copied text and images in suggestions bar</string>
+    <string name="pref_clipboard_extract_entities_title">Show addresses, phone numbers, and other items pulled from recently copied text</string>
+    <string name="pref_clipboard_save_screenshots_title">Save recent screenshots in clipboard</string>
+    <string name="clipboard_chip_screenshot">Screenshot</string>
     <string name="pref_dialog_edit_text">Custom definition</string>
     <string name="dictionaries_from_internet">Download a dictionary from the Internet</string>
     <string name="dictionaries_download_success">Dictionary installed</string>
@@ -444,7 +448,8 @@
     <string name="pref_screen_typing_title" translatable="false">Typing &amp; Gestures</string>
     <string name="pref_screen_clipboard_title" translatable="false">Clipboard</string>
     <string name="pref_screen_dictionary_title" translatable="false">Installed dictionaries</string>
-    <string name="pref_screen_tasker_title" translatable="false">Tasker &amp; Automation</string>
+    <string name="pref_screen_tasker_title" translatable="false">Automation</string>
+    <string name="pref_screen_tasker_summary" translatable="false">Text Expander, Tasker task, Calculator and others...</string>
     <string name="pref_screen_about_title" translatable="false">About</string>
 
     <string name="pref_category_haptics" translatable="false">Haptic Feedback</string>
@@ -531,4 +536,53 @@
     <string name="tasker_plugin_save" translatable="false">Save</string>
     <string name="tasker_plugin_card_info_title" translatable="false">How it works</string>
     <string name="tasker_plugin_card_info_body" translatable="false">Tasker automatically replaces any %variables with their real runtime values before sending to the keyboard. When replying to a keyboard automation trigger (e.g. ##runtask or ..expand), %nhck_requestid matches the reply to the right request.</string>
+
+    <!-- Text Expander -->
+    <string name="pref_screen_text_expander_title">Text Expander</string>
+    <string name="pref_screen_text_expander_summary">Manage shortcuts that expand into text, dynamic variables, or Tasker tasks</string>
+    <string name="text_expander_activity_title">Text Expander</string>
+    <string name="text_expander_activity_subtitle">Define shortcuts that expand into text, dynamic variables, or Tasker tasks</string>
+    <string name="text_expander_empty_title">No Snippets Yet</string>
+    <string name="text_expander_empty_desc">Tap \'+ Add Snippet\' below to create your first text expansion shortcut.</string>
+    <string name="text_expander_btn_add">Add Snippet</string>
+    <string name="text_expander_dialog_title_add">Add Snippet</string>
+    <string name="text_expander_dialog_title_edit">Edit Snippet</string>
+    <string name="text_expander_field_prefix_hint">Prefix</string>
+    <string name="text_expander_field_keyword_hint">Trigger Keyword</string>
+    <string name="text_expander_field_output_title">Content</string>
+    <string name="text_expander_btn_insert_var">Insert Variable</string>
+    <string name="text_expander_field_output_hint">user@example.com</string>
+    <string name="text_expander_field_output_help">Static text, $date, $time, $cursor, etc.</string>
+    <string name="text_expander_field_enabled">Enabled</string>
+    <string name="text_expander_delete_title">Delete Snippet?</string>
+    <string name="text_expander_delete_msg">Delete snippet \"%1$s\"? This cannot be undone.</string>
+    <string name="text_expander_error_empty">Trigger prefix and keyword cannot be empty</string>
+    <string name="text_expander_saved">Snippet saved</string>
+    <string name="text_expander_deleted">Snippet deleted</string>
+    <!-- Calculation -->
+    <string name="pref_screen_calculation_title">Calculation</string>
+    <string name="pref_screen_calculation_summary">Inline math calculation (e.g. 50*2== to 50*2= 100)</string>
+    <string name="calculation_activity_title">Calculation</string>
+    <string name="calculation_activity_subtitle">Evaluate arithmetic expressions inline while typing</string>
+    <string name="calculation_switch_title">Inline Calculation</string>
+    <string name="calculation_switch_desc">Evaluate math expressions like 50*2== automatically</string>
+    <string name="calculation_trigger_label">Trigger Word</string>
+    <string name="calculation_trigger_help">Characters that trigger evaluation when typed after an expression</string>
+    <string name="calculation_format_label">Result Format</string>
+    <string name="calculation_format_help">How the evaluated expression and result appear in text</string>
+    <string name="calculation_preview_header">LIVE PREVIEW</string>
+    <string name="calculation_guide_title">SUPPORTED OPERATORS &amp; EXAMPLES</string>
+    <string name="calculation_guide_body">+  Addition: 2+2== → 2+2= 4\n-  Subtraction: 10-3== → 10-3= 7\n* or ×  Multiplication: 50*2== → 50*2= 100\n/ or ÷  Division: 10/4== → 10/4= 2.5\n%  Modulo: 10%3== → 10%3= 1\n^  Power: 2^3== → 2^3= 8\n()  Parentheses: (10+5)*2== → (10+5)*2= 30\n.  Decimals: 12.5*4== → 12.5*4= 50\n\nUndo: Press Backspace immediately after calculation to revert the result.</string>
+    <string name="text_expander_calc_title">Inline Calculator</string>
+    <string name="text_expander_calc_subtitle">Calculate math expressions like 50*2==</string>
+    <string name="text_expander_calc_trigger_hint">Trigger</string>
+    <string name="text_expander_calc_format_hint">Output Format</string>
+    <string name="text_expander_calc_mode_replace_last_eq">Replace last \'=\' with space (e.g. 50*2= 100)</string>
+    <string name="text_expander_calc_mode_append">Append to trigger (e.g. 50*2==100)</string>
+    <string name="text_expander_calc_mode_replace_all">Replace expression (e.g. 100)</string>
+    <string name="text_expander_calc_hint">Type math expressions with +, -, *, /, %, ^, parentheses and decimals.</string>
+    <string name="btn_edit">Edit</string>
+    <string name="btn_delete">Delete</string>
+    <string name="save">Save</string>
+    <string name="cancel">Cancel</string>
 </resources>

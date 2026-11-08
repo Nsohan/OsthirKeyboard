@@ -2,8 +2,13 @@ package com.nhs.customkeyboard.suggestions;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.ContentUris;
+import android.graphics.Bitmap;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Build.VERSION;
+import android.provider.MediaStore;
+import android.util.Size;
 import android.text.InputType;
 import android.text.SpannableStringBuilder;
 import android.text.Spanned;
@@ -46,9 +51,17 @@ import com.nhs.customkeyboard.R;
 import com.nhs.customkeyboard.SettingsActivity;
 import com.nhs.customkeyboard.dict.Dictionaries;
 import com.nhs.customkeyboard.dict.SupportedDictionaries;
+import com.bumptech.glide.Glide;
+import com.nhs.customkeyboard.clipboard.ClipboardSuggestionHelper;
 
 public class CandidatesView extends LinearLayout
 {
+  public interface OnClipboardChipPasteListener
+  {
+    void onPasteText(String text);
+    void onPasteImage(Uri uri, String mimeType, String label);
+  }
+
   public interface OnMenuToggleListener
   {
     void onMenuToggled(boolean isOpen);
@@ -75,6 +88,10 @@ public class CandidatesView extends LinearLayout
 
   private View _tools_action_scroll;
   private LinearLayout _tools_action_bar;
+  private HorizontalScrollView _clipboard_chip_scroll;
+  private LinearLayout _clipboard_chip_container;
+  private List<ClipboardSuggestionHelper.ChipItem> _current_clipboard_chips = new ArrayList<>();
+  private OnClipboardChipPasteListener _clipboard_chip_paste_listener;
   private boolean _has_suggestions = false;
 
   private TextView _emoji_view;
@@ -105,6 +122,11 @@ public class CandidatesView extends LinearLayout
   public void setOnTranslateToggleListener(OnTranslateToggleListener listener)
   {
     _translate_toggle_listener = listener;
+  }
+
+  public void setOnClipboardChipPasteListener(OnClipboardChipPasteListener listener)
+  {
+    _clipboard_chip_paste_listener = listener;
   }
 
   public boolean isMenuOpen()
@@ -163,10 +185,20 @@ public class CandidatesView extends LinearLayout
   }
 
   @Override
+  protected void onAttachedToWindow()
+  {
+    super.onAttachedToWindow();
+    ClipboardSuggestionHelper.get().setListener(chips -> {
+      post(() -> update_clipboard_chips(chips));
+    });
+  }
+
+  @Override
   protected void onDetachedFromWindow()
   {
     super.onDetachedFromWindow();
     cancel_expand_tools_debounce();
+    ClipboardSuggestionHelper.get().setListener(null);
     if (_expanded_popup != null && _expanded_popup.isShowing())
     {
       _expanded_popup.dismiss();
@@ -183,6 +215,8 @@ public class CandidatesView extends LinearLayout
     _tools_spacer = findViewById(R.id.tools_spacer);
     _tools_action_scroll = findViewById(R.id.tools_action_scroll);
     _tools_action_bar = findViewById(R.id.tools_action_bar);
+    _clipboard_chip_scroll = findViewById(R.id.clipboard_chip_scroll);
+    _clipboard_chip_container = findViewById(R.id.clipboard_chip_container);
     _scroll_view = findViewById(R.id.candidates_scroll);
     _container = findViewById(R.id.candidates_container);
 
@@ -190,6 +224,10 @@ public class CandidatesView extends LinearLayout
     setup_action_buttons();
     setup_dictionary_switch_button();
     setup_voice_typing_button();
+
+    ClipboardSuggestionHelper.get().setListener(chips -> {
+      post(() -> update_clipboard_chips(chips));
+    });
   }
 
   public void set_candidates(Suggestions s)
@@ -239,6 +277,10 @@ public class CandidatesView extends LinearLayout
           if (_tools_action_scroll != null && _tools_action_scroll.getVisibility() != View.GONE)
           {
             _tools_action_scroll.setVisibility(View.GONE);
+          }
+          if (_clipboard_chip_scroll != null && _clipboard_chip_scroll.getVisibility() != View.GONE)
+          {
+            _clipboard_chip_scroll.setVisibility(View.GONE);
           }
         }
       }
@@ -726,6 +768,7 @@ public class CandidatesView extends LinearLayout
     if (_tools_open)
     {
       if (_tools_spacer != null) _tools_spacer.setVisibility(View.VISIBLE);
+      if (_clipboard_chip_scroll != null) _clipboard_chip_scroll.setVisibility(View.GONE);
       if (_tools_action_scroll != null) _tools_action_scroll.setVisibility(View.GONE);
       if (_candidates_words_layout != null) _candidates_words_layout.setVisibility(View.GONE);
       else
@@ -740,8 +783,28 @@ public class CandidatesView extends LinearLayout
     else
     {
       if (_tools_spacer != null) _tools_spacer.setVisibility(View.GONE);
-      if (_has_suggestions)
+      boolean hasChips = (_current_clipboard_chips != null && !_current_clipboard_chips.isEmpty());
+      if (hasChips)
       {
+        if (_clipboard_chip_scroll != null)
+        {
+          _clipboard_chip_scroll.setVisibility(View.VISIBLE);
+          _clipboard_chip_scroll.setTranslationX(0f);
+          _clipboard_chip_scroll.setAlpha(1f);
+          _clipboard_chip_scroll.setScaleX(1f);
+        }
+        if (_tools_action_scroll != null) _tools_action_scroll.setVisibility(View.GONE);
+        if (_candidates_words_layout != null)
+          _candidates_words_layout.setVisibility(View.GONE);
+        else
+        {
+          if (_scroll_view != null) _scroll_view.setVisibility(View.GONE);
+          if (_emoji_view != null) _emoji_view.setVisibility(View.GONE);
+        }
+      }
+      else if (_has_suggestions)
+      {
+        if (_clipboard_chip_scroll != null) _clipboard_chip_scroll.setVisibility(View.GONE);
         if (_tools_expanded_over_suggestions)
         {
           if (_tools_action_scroll != null)
@@ -778,6 +841,7 @@ public class CandidatesView extends LinearLayout
       }
       else
       {
+        if (_clipboard_chip_scroll != null) _clipboard_chip_scroll.setVisibility(View.GONE);
         boolean showActionBar = (_status_no_dict == null || _status_no_dict.getVisibility() != View.VISIBLE);
         if (_tools_action_scroll != null)
         {
@@ -799,6 +863,163 @@ public class CandidatesView extends LinearLayout
             should_show_dictionary_switch ? View.VISIBLE : View.GONE);
       if (_voice_typing_button != null)
         _voice_typing_button.setVisibility(show_voice_typing ? View.VISIBLE : View.GONE);
+    }
+  }
+
+  public void refresh_clipboard_chips()
+  {
+    ClipboardSuggestionHelper.get().setListener(chips -> {
+      post(() -> update_clipboard_chips(chips));
+    });
+    update_clipboard_chips(ClipboardSuggestionHelper.get().getActiveChips());
+  }
+
+  private void loadThumbnailSafely(Context ctx, Uri uri, ImageView target)
+  {
+    if (uri == null || target == null) return;
+    new Thread(() -> {
+      Bitmap bitmap = null;
+      try
+      {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q)
+        {
+          bitmap = ctx.getContentResolver().loadThumbnail(uri, new Size(96, 96), null);
+        }
+        else
+        {
+          long id = ContentUris.parseId(uri);
+          bitmap = MediaStore.Images.Thumbnails.getThumbnail(
+              ctx.getContentResolver(), id, MediaStore.Images.Thumbnails.MICRO_KIND, null);
+        }
+      }
+      catch (Throwable t)
+      {
+        Logs.exn("CandidatesView", t);
+      }
+      final Bitmap finalBitmap = bitmap;
+      if (finalBitmap != null)
+      {
+        target.post(() -> {
+          try
+          {
+            target.setImageBitmap(finalBitmap);
+          }
+          catch (Throwable ignored) {}
+        });
+      }
+    }).start();
+  }
+
+  public void update_clipboard_chips(List<ClipboardSuggestionHelper.ChipItem> chips)
+  {
+    try
+    {
+      _current_clipboard_chips = (chips != null) ? chips : new ArrayList<>();
+      if (_clipboard_chip_container == null) return;
+      _clipboard_chip_container.removeAllViews();
+
+      if (_current_clipboard_chips.isEmpty())
+      {
+        update_toolbar_visibility();
+        return;
+      }
+
+      Context ctx = getContext();
+      float density = getResources().getDisplayMetrics().density;
+      int margin = (int) (4 * density);
+
+      for (ClipboardSuggestionHelper.ChipItem chip : _current_clipboard_chips)
+      {
+        View chipView = inflate(ctx, R.layout.clipboard_suggestion_chip, null);
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+            ViewGroup.LayoutParams.WRAP_CONTENT,
+            (int)(32 * density));
+        lp.setMargins(margin, 0, margin, 0);
+        chipView.setLayoutParams(lp);
+
+        ImageView thumbView = chipView.findViewById(R.id.clipboard_chip_thumbnail);
+        ImageView iconView = chipView.findViewById(R.id.clipboard_chip_icon);
+        TextView textView = chipView.findViewById(R.id.clipboard_chip_text);
+
+        if (thumbView != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP)
+        {
+          thumbView.setClipToOutline(true);
+        }
+
+        TypedValue labelColor = new TypedValue();
+        if (ctx.getTheme().resolveAttribute(R.attr.colorLabel, labelColor, true))
+        {
+          if (iconView != null) iconView.setColorFilter(labelColor.data);
+          if (textView != null) textView.setTextColor(labelColor.data);
+        }
+
+        boolean isImageChip = (chip.type == ClipboardSuggestionHelper.ChipType.SCREENSHOT ||
+                               chip.type == ClipboardSuggestionHelper.ChipType.IMAGE) && chip.imageUri != null;
+        if (isImageChip)
+        {
+          if (iconView != null) iconView.setVisibility(View.GONE);
+          if (thumbView != null)
+          {
+            thumbView.setVisibility(View.VISIBLE);
+            loadThumbnailSafely(ctx, chip.imageUri, thumbView);
+          }
+        }
+        else
+        {
+          if (thumbView != null) thumbView.setVisibility(View.GONE);
+          if (iconView != null)
+          {
+            iconView.setVisibility(View.VISIBLE);
+            iconView.setImageResource(R.drawable.ic_clipboard);
+          }
+        }
+
+        if (textView != null)
+        {
+          String display = chip.displayText;
+          if (display != null)
+          {
+            display = display.replace('\n', ' ').trim();
+            if (display.length() > 25)
+            {
+              display = display.substring(0, 24) + "…";
+            }
+          }
+          textView.setText(display);
+        }
+
+        chipView.setOnClickListener(v -> {
+          try
+          {
+            VibratorCompat.vibrate(v, Config.globalConfig());
+          }
+          catch (Exception ignored) {}
+
+          if (isImageChip)
+          {
+            if (_clipboard_chip_paste_listener != null)
+            {
+              _clipboard_chip_paste_listener.onPasteImage(chip.imageUri, chip.mimeType, chip.displayText);
+            }
+          }
+          else
+          {
+            if (_clipboard_chip_paste_listener != null)
+            {
+              _clipboard_chip_paste_listener.onPasteText(chip.pasteText);
+            }
+          }
+          ClipboardSuggestionHelper.get().dismiss();
+        });
+
+        _clipboard_chip_container.addView(chipView);
+      }
+
+      update_toolbar_visibility();
+    }
+    catch (Throwable t)
+    {
+      Logs.exn("CandidatesView", t);
     }
   }
 

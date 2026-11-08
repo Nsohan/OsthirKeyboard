@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/clipboard_chip_root"
+    android:layout_width="wrap_content"
+    android:layout_height="32dp"
+    android:layout_gravity="center_vertical"
+    android:orientation="horizontal"
+    android:gravity="center_vertical"
+    android:paddingStart="4dp"
+    android:paddingEnd="12dp"
+    android:background="@drawable/bg_clipboard_chip"
+    android:clickable="true"
+    android:focusable="true">
+
+    <ImageView
+        android:id="@+id/clipboard_chip_thumbnail"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:layout_marginStart="4dp"
+        android:layout_marginEnd="6dp"
+        android:scaleType="centerCrop"
+        android:background="@drawable/bg_clipboard_chip_thumb"
+        android:visibility="gone" />
+
+    <ImageView
+        android:id="@+id/clipboard_chip_icon"
+        android:layout_width="18dp"
+        android:layout_height="18dp"
+        android:layout_marginStart="4dp"
+        android:layout_marginEnd="6dp"
+        android:scaleType="fitCenter"
+        android:src="@drawable/ic_clipboard"
+        android:visibility="visible" />
+
+    <TextView
+        android:id="@+id/clipboard_chip_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:singleLine="true"
+        android:ellipsize="end"
+        android:maxWidth="220dp"
+        android:textSize="13sp"
+        android:textColor="?attr/colorLabel" />
+
+</LinearLayout>
+

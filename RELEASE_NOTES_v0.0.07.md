@@ -27,3 +27,4 @@ Welcome to **OsthirKeyboard v0.0.07**! This release unlinks main keyboard swipe 
 Found a bug or have a suggestion?
 - **Issues**: [GitHub Issues](https://github.com/Nsohan/OsthirKeyboard/issues)
 - **Repository**: [Nsohan/OsthirKeyboard](https://github.com/Nsohan/OsthirKeyboard)
+

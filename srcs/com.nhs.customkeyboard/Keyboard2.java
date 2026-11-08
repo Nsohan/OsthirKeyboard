@@ -51,6 +51,7 @@ import com.nhs.customkeyboard.translate.TranslationBarView;
 import com.nhs.customkeyboard.translate.TranslationPanelController;
 import com.nhs.customkeyboard.voice.VoiceTypingController;
 import com.nhs.customkeyboard.avro.AvroEngine;
+import com.nhs.customkeyboard.clipboard.ScreenshotObserver;
 import android.Manifest;
 import android.content.pm.PackageManager;
 import android.widget.ImageButton;
@@ -164,6 +165,7 @@ public class Keyboard2 extends InputMethodService
   private void refresh_tasker_automation()
   {
     TaskerTriggerEngine.get().reload(this);
+    com.nhs.customkeyboard.textexpander.TextExpanderEngine.get().reload(this);
   }
 
   KeyboardData loadLayout(int layout_id)
@@ -322,6 +324,7 @@ public class Keyboard2 extends InputMethodService
 
   @Override
   public void onDestroy() {
+    ScreenshotObserver.getInstance(this).unregister();
     if (sActiveInstance != null && sActiveInstance.get() == this)
       sActiveInstance = null;
     if (_voiceTypingController != null)
@@ -402,6 +405,20 @@ public class Keyboard2 extends InputMethodService
               _translationPanelController.open();
             }
           }
+        }
+      });
+      _candidates_view.setOnClipboardChipPasteListener(new CandidatesView.OnClipboardChipPasteListener()
+      {
+        @Override
+        public void onPasteText(String text)
+        {
+          ClipboardHistoryService.paste(text);
+        }
+
+        @Override
+        public void onPasteImage(android.net.Uri uri, String mimeType, String label)
+        {
+          commit_content(uri, mimeType, label);
         }
       });
     }
@@ -842,7 +859,60 @@ public class Keyboard2 extends InputMethodService
     set_menu_panel_visible(false);
     setInputView(_keyboard_container_view);
     updateNavigationBar();
+    ClipboardHistoryService chs = ClipboardHistoryService.get_service(this);
+    if (chs != null)
+    {
+      chs.add_current_clip();
+    }
+    if (_candidates_view != null)
+    {
+      _candidates_view.refresh_clipboard_chips();
+    }
+    ScreenshotObserver.getInstance(this).register();
     Logs.debug_startup_input_view(info, _config);
+  }
+
+  public boolean commit_content(android.net.Uri contentUri, String mimeType, String description)
+  {
+    InputConnection ic = getCurrentInputConnection();
+    EditorInfo info = getCurrentInputEditorInfo();
+    if (ic == null || info == null || contentUri == null)
+      return false;
+
+    if (mimeType == null || mimeType.isEmpty())
+      mimeType = "image/png";
+
+    String[] supportedMimes = androidx.core.view.inputmethod.EditorInfoCompat.getContentMimeTypes(info);
+    boolean isSupported = false;
+    for (String supported : supportedMimes)
+    {
+      if (android.content.ClipDescription.compareMimeTypes(mimeType, supported))
+      {
+        isSupported = true;
+        break;
+      }
+    }
+
+    if (!isSupported)
+    {
+      Toast.makeText(this, "Target field does not accept image pasting", Toast.LENGTH_SHORT).show();
+      return false;
+    }
+
+    androidx.core.view.inputmethod.InputContentInfoCompat inputContentInfo =
+        new androidx.core.view.inputmethod.InputContentInfoCompat(
+            contentUri,
+            new android.content.ClipDescription(description != null ? description : "Image", new String[]{mimeType}),
+            null
+        );
+
+    int flags = 0;
+    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N_MR1)
+    {
+      flags |= androidx.core.view.inputmethod.InputConnectionCompat.INPUT_CONTENT_GRANT_READ_URI_PERMISSION;
+    }
+
+    return androidx.core.view.inputmethod.InputConnectionCompat.commitContent(ic, info, inputContentInfo, flags, null);
   }
 
   @Override
@@ -1135,6 +1205,7 @@ public class Keyboard2 extends InputMethodService
     // later in whatever field happens to be focused at that point,
     // even with the keyboard no longer showing.
     TaskerTriggerEngine.get().new_field_started();
+    com.nhs.customkeyboard.textexpander.TextExpanderEngine.get().new_field_started();
   }
 
   @Override
@@ -1410,6 +1481,12 @@ public class Keyboard2 extends InputMethodService
 
     public void onKeyCommitted()
     {
+    }
+
+    @Override
+    public boolean commit_content(android.net.Uri contentUri, String mimeType, String description)
+    {
+      return Keyboard2.this.commit_content(contentUri, mimeType, description);
     }
   }
 

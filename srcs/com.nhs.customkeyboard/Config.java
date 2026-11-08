@@ -94,6 +94,9 @@ public final class Config
   public int circle_sensitivity;
   public boolean clipboard_history_enabled;
   public int clipboard_history_duration;
+  public boolean clipboard_suggestion_bar_enabled;
+  public boolean clipboard_extract_entities_enabled;
+  public boolean clipboard_save_screenshots_enabled;
   public boolean space_bar_auto_complete;
   public boolean physical_keyboard_hide;
   public float number_row_height_scale = 1.0f;
@@ -265,7 +268,10 @@ public final class Config
     current_layout_wide = _prefs.getInt("current_layout_landscape", 0);
     circle_sensitivity = Integer.valueOf(_prefs.getString("circle_sensitivity", "2"));
     clipboard_history_enabled = _prefs.getBoolean("clipboard_history_enabled", true);
-    clipboard_history_duration = Integer.parseInt(_prefs.getString("clipboard_history_duration", "5"));
+    clipboard_history_duration = Integer.parseInt(_prefs.getString("clipboard_history_duration", "60"));
+    clipboard_suggestion_bar_enabled = _prefs.getBoolean("clipboard_suggestion_bar_enabled", true);
+    clipboard_extract_entities_enabled = _prefs.getBoolean("clipboard_extract_entities_enabled", true);
+    clipboard_save_screenshots_enabled = _prefs.getBoolean("clipboard_save_screenshots_enabled", false);
     space_bar_auto_complete = _prefs.getBoolean("space_bar_auto_complete", false);
     physical_keyboard_hide = _prefs.getString("physical_keyboard_behavior", "hide").equals("hide");
     float screen_width_dp = dm.widthPixels / dm.density;
