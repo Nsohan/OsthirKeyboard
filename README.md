@@ -42,29 +42,56 @@ Just download the `.apk`, allow installs from unknown sources, and enable it as 
 
 ## Table of Contents
 
-1. [Overview](#overview)
-2. [Credits](#credits)
-3. [Core Concept: Display vs. Output vs. Final Result](#core-concept-display-vs-output-vs-final-result)
-4. [Independent Labels](#independent-labels)
-5. [Keymaps (Transliteration Engine)](#keymaps-transliteration-engine)
-6. [Keymap JSON Format](#keymap-json-format)
-7. [Toggle-Style Keymaps](#toggle-style-keymaps)
-8. [Keymap Behavior Rules](#keymap-behavior-rules)
-9. [The `swipekeymap` Attribute](#the-swipekeymap-attribute)
-10. [Shift Output Rules](#shift-output-rules)
-11. [Label Attribute Rules](#label-attribute-rules)
-12. [Space Bar Layout Indicator](#space-bar-layout-indicator)
-13. [Settings: Layout, Keymap, and Default Layout](#settings-layout-keymap-and-default-layout)
-14. [The Layout Dialog &amp; Keyboard Attributes Card](#the-layout-dialog--keyboard-attributes-card)
-15. [The Keymap Dialog](#the-keymap-dialog)
-16. [Keymap Builder](#keymap-builder)
-17. [Referential Integrity: Rename &amp; Delete Safety](#referential-integrity-rename--delete-safety)
-18. [Dictionary Suggestions with Keymaps](#dictionary-suggestions-with-keymaps)
-19. [Tasker Automation](#tasker-automation)
-20. [Engine Architecture](#engine-architecture)
-21. [Full XML Example](#full-xml-example)
-22. [Quick-Reference Rules Summary](#quick-reference-rules-summary)
-23. [Checking for Updates](#checking-for-updates)
+- [⌨️ NHSCustomKeyboard](#️-nhscustomkeyboard)
+    - [🤖 An Android Keyboard (Input Method) App](#-an-android-keyboard-input-method-app)
+    - [📥 **Download the latest APK**](#-download-the-latest-apk)
+  - [📱 Screenshots](#-screenshots)
+  - [Table of Contents](#table-of-contents)
+  - [Overview](#overview)
+  - [Credits](#credits)
+  - [Core Concept: Display vs. Output vs. Final Result](#core-concept-display-vs-output-vs-final-result)
+  - [Independent Labels](#independent-labels)
+  - [Keymaps (Transliteration Engine)](#keymaps-transliteration-engine)
+  - [Keymap JSON Format](#keymap-json-format)
+  - [Toggle-Style Keymaps](#toggle-style-keymaps)
+    - [How it works](#how-it-works)
+    - [Example keymap](#example-keymap)
+  - [Keymap Behavior Rules](#keymap-behavior-rules)
+    - [Rule 1 — Only primary tap output is transliterated](#rule-1--only-primary-tap-output-is-transliterated)
+    - [Rule 2 — Swipe outputs bypass the keymap unless `swipekeymap` is enabled](#rule-2--swipe-outputs-bypass-the-keymap-unless-swipekeymap-is-enabled)
+    - [Worked Example](#worked-example)
+  - [The `swipekeymap` Attribute](#the-swipekeymap-attribute)
+  - [Shift Output Rules](#shift-output-rules)
+  - [Label Attribute Rules](#label-attribute-rules)
+  - [Space Bar Layout Indicator](#space-bar-layout-indicator)
+  - [Settings: Layout, Keymap, and Default Layout](#settings-layout-keymap-and-default-layout)
+    - [Default layout options](#default-layout-options)
+    - [Other behaviors](#other-behaviors)
+  - [The Layout Dialog \& Keyboard Attributes Card](#the-layout-dialog--keyboard-attributes-card)
+  - [The Keymap Dialog](#the-keymap-dialog)
+  - [Keymap Builder](#keymap-builder)
+    - [Layout](#layout)
+    - [Row behavior](#row-behavior)
+    - [Quick Add](#quick-add)
+    - [Duplicate Detection \& "Dup only" Filter](#duplicate-detection--dup-only-filter)
+    - [Search / Filter (Exact Match, No Trimming)](#search--filter-exact-match-no-trimming)
+    - [Raw JSON Import](#raw-json-import)
+    - [Editing an Existing Keymap](#editing-an-existing-keymap)
+    - [Saving](#saving)
+  - [Referential Integrity: Rename \& Delete Safety](#referential-integrity-rename--delete-safety)
+  - [Dictionary Suggestions with Keymaps](#dictionary-suggestions-with-keymaps)
+  - [Tasker Automation](#tasker-automation)
+    - [Config JSON format](#config-json-format)
+    - [Triggers: replace vs. append](#triggers-replace-vs-append)
+    - [Expand patterns](#expand-patterns)
+    - [One-shot undo](#one-shot-undo)
+    - [Errors](#errors)
+    - [Automation Builder](#automation-builder)
+  - [Engine Architecture](#engine-architecture)
+  - [Full XML Example](#full-xml-example)
+  - [Quick-Reference Rules Summary](#quick-reference-rules-summary)
+  - [Checking for Updates](#checking-for-updates)
+  - [🙏 Thank You](#-thank-you)
 
 ---
 
@@ -113,7 +140,7 @@ The keyboard can **show one thing**, **send another**, and **finally convert it 
 
 ## Independent Labels
 
-Labels control only what is *displayed* on a key — they never affect what the key actually sends.
+Labels control only what is _displayed_ on a key — they never affect what the key actually sends.
 
 ```xml
 <key c="a" cL="🍎"/>
@@ -241,7 +268,7 @@ This design helps correct mistyped sequences immediately without pressing backsp
 
 ## Keymap Behavior Rules
 
-These rules define exactly *when* and *how* the keymap engine is applied.
+These rules define exactly _when_ and _how_ the keymap engine is applied.
 
 ### Rule 1 — Only primary tap output is transliterated
 
@@ -283,11 +310,11 @@ The resulting behavior (with `swipekeymap` **not** set) is:
 
 | Action             | XML Attribute Used | Keymap Applied? | Final Output |
 | ------------------ | ------------------ | :-------------: | :----------: |
-| Tap                | `c="a"`          |     ✅ Yes     |    `α`    |
-| Shift + Tap        | `C="A"`          |     ✅ Yes     |    `Α`    |
-| Swipe East         | `e="b"`          |      ❌ No      |    `b`    |
-| Shift + Swipe East | `E="B"`          |      ❌ No      |    `B`    |
-| Swipe North-East   | `ne="1"`         |      ❌ No      |    `1`    |
+| Tap                | `c="a"`            |     ✅ Yes      |     `α`      |
+| Shift + Tap        | `C="A"`            |     ✅ Yes      |     `Α`      |
+| Swipe East         | `e="b"`            |      ❌ No      |     `b`      |
+| Shift + Swipe East | `E="B"`            |      ❌ No      |     `B`      |
+| Swipe North-East   | `ne="1"`           |      ❌ No      |     `1`      |
 
 > **Important:** By default, swipe keys always send the exact value defined in the layout, unconditionally bypassing the keymap engine. This is intentional, so gesture shortcuts and symbol swipes stay predictable even on a transliterating layout — unless you explicitly opt in with `swipekeymap="true"`.
 
@@ -301,11 +328,11 @@ By default, only center-tap output (`c` / `C`) is transliterated — swipe outpu
 <keyboard name="QWERTY (US)" script="latin" keymap="tamil" swipekeymap="true">
 ```
 
-| `keymap` attribute | `swipekeymap` attribute | Behavior                                                                |
-| -------------------- | ------------------------- | ----------------------------------------------------------------------- |
-| Absent               | *(any)*                 | No transliteration at all —`swipekeymap` has no effect.              |
-| Present              | Absent or`"false"`      | Only center taps (`c` / `C`) are transliterated. **Default.** |
-| Present              | `"true"`                | Center taps**and** all 8 directional swipes are transliterated.   |
+| `keymap` attribute | `swipekeymap` attribute | Behavior                                                        |
+| ------------------ | ----------------------- | --------------------------------------------------------------- |
+| Absent             | _(any)_                 | No transliteration at all —`swipekeymap` has no effect.         |
+| Present            | Absent or`"false"`      | Only center taps (`c` / `C`) are transliterated. **Default.**   |
+| Present            | `"true"`                | Center taps**and** all 8 directional swipes are transliterated. |
 
 `swipekeymap` is **inert** on any layout that has no `keymap` attribute — it does nothing on its own.
 
@@ -435,8 +462,8 @@ Tapping **"Add new Keymap JSON"**, or an existing **Keymap N: name** row, opens 
   - Missing or empty `keymap_name`.
   - **Duplicate keys** — the JSON parser used for validation preserves every key occurrence, so duplicates are always caught and reported.
 - **OK is blocked** while any error is present.
-- **"Keymap Builder"** carries the dialog's *current, possibly-invalid* text directly into the guided builder.
-- **Overwrite protection** — saving under a name that already belongs to a *different* stored keymap prompts for confirmation before replacing it.
+- **"Keymap Builder"** carries the dialog's _current, possibly-invalid_ text directly into the guided builder.
+- **Overwrite protection** — saving under a name that already belongs to a _different_ stored keymap prompts for confirmation before replacing it.
 - The input box is height-capped and scrollable for large keymaps.
 
 Use this dialog to **copy the raw JSON** of a keymap when needed.
@@ -501,7 +528,7 @@ A fixed section directly above **Create Keymap** lets you fill the current trail
   - the exact term `" n"` (including the leading space),
     but **not** rows that only contain `"n"` without the leading space.
 - This exact-match, no-trim behavior applies to both **Keys** and **Output** searches.
-- Combines with **"Dup only"** using AND — with both active, only rows that are both a duplicate *and* match the search are shown.
+- Combines with **"Dup only"** using AND — with both active, only rows that are both a duplicate _and_ match the search are shown.
 - The current trailing empty row is always exempt from every filter.
 
 ### Raw JSON Import
@@ -577,13 +604,13 @@ There is a single, app-wide config (not a list, unlike layouts/keymaps):
 }
 ```
 
-| Key               | Required? | Meaning                                                                                                                                 |
-| ----------------- | :-------: | --------------------------------------------------------------------------------------------------------------------------------------- |
-| `nhck_replace`  | Optional | Trigger prefix for**replace-whole-field** commands. Default `"##"`.                                                             |
-| `nhck_append`   | Optional | Trigger prefix for**replace-trigger-only** commands. Default `"@@"`.                                                            |
-| `nhck_timeout`  | Optional | Milliseconds to wait for a task's result before giving up. Default`"15000"`, must be between 1000 and 120000.                         |
-| any other key     |    —    | A**keyword** mapped to the exact **Tasker task name** to run when that keyword follows a trigger. At least one is required. |
-| `nhck_patterns` | Optional | Array of open-ended**expand patterns** (see below). Auto-filled with one example entry if omitted or empty.                       |
+| Key             | Required? | Meaning                                                                                                                     |
+| --------------- | :-------: | --------------------------------------------------------------------------------------------------------------------------- |
+| `nhck_replace`  | Optional  | Trigger prefix for**replace-whole-field** commands. Default `"##"`.                                                         |
+| `nhck_append`   | Optional  | Trigger prefix for**replace-trigger-only** commands. Default `"@@"`.                                                        |
+| `nhck_timeout`  | Optional  | Milliseconds to wait for a task's result before giving up. Default`"15000"`, must be between 1000 and 120000.               |
+| any other key   |     —     | A**keyword** mapped to the exact **Tasker task name** to run when that keyword follows a trigger. At least one is required. |
+| `nhck_patterns` | Optional  | Array of open-ended**expand patterns** (see below). Auto-filled with one example entry if omitted or empty.                 |
 
 `nhck_replace` and `nhck_append` must be different from each other, and every keyword must be unique. If any of `nhck_replace`, `nhck_append`, `nhck_timeout`, or `nhck_patterns` is left out, the app fills in its default and re-saves the config so the stored JSON always matches what's actually in effect — and the config dialog always shows you all of these keys up front (rather than requiring you to know a default exists to override it).
 
@@ -598,7 +625,7 @@ Given a task keyword `runtask1` mapped to Tasker task `"Task 1"`:
 
 Each entry in `nhck_patterns` describes an open-ended expander, independent of the fixed keyword list above: typing `[prefix]`, then any non-empty text, then `[suffix]` (e.g. `..5+1 ` for prefix `".."` / suffix `" "`) runs `[task]` with that in-between text as `%keyword`, and replaces just that `prefix+content+suffix` span with the result — the same field-editing behavior as an `nhck_append` trigger, never the whole field.
 
-An entry can optionally add `"regex"` to also constrain *what* the in-between content is allowed to look like. When present, the content must match `regex` **in full** (as if wrapped in `^...$`) — a match somewhere inside it isn't enough. If it doesn't fully match, this entry simply doesn't fire: nothing is deleted, no task runs, and the check just runs again on the next keystroke, so the user can keep typing until it does match (or gives up). For example:
+An entry can optionally add `"regex"` to also constrain _what_ the in-between content is allowed to look like. When present, the content must match `regex` **in full** (as if wrapped in `^...$`) — a match somewhere inside it isn't enough. If it doesn't fully match, this entry simply doesn't fire: nothing is deleted, no task runs, and the check just runs again on the next keystroke, so the user can keep typing until it does match (or gives up). For example:
 
 ```json
 { "prefix": "==", "regex": "\d+.+\d", "suffix": "\n", "task": "doMath" }
@@ -659,19 +686,19 @@ InputConnection
 
 **Component responsibilities:**
 
-| Component                           | Responsibility                                                                                                                                                                                 |
-| ----------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Component                         | Responsibility                                                                                                                                                                                 |
+| --------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `Pointers.java`                   | Multi-touch tracking, swipe detection, long press, sliding keys, modifier latching/locking, gesture handling                                                                                   |
 | `KeyModifier.java`                | Shift / Ctrl / Alt / Meta / Fn, compose keys, dead keys, Hangul composition, gesture modifiers, selection mode                                                                                 |
 | `Keymap.java`                     | Loads a keymap's JSON, stores its mappings, provides lookups                                                                                                                                   |
 | `KeymapManager.java`              | Persists all saved keymaps, resolves by name, handles add/remove/rename                                                                                                                        |
-| `KeymapEngine.java`               | Prefix matching, longest-sequence replacement, live conversion, toggle-style cycling, word-tracker synchronization, swipe-gating via`swipekeymap`                                            |
-| `KeymapXmlAttrUtils.java`         | Reads/writes the`name`, `keymap`, and `swipekeymap` attributes on a layout's raw XML, used by both the Layout dialog's Keyboard Attributes card and rename/delete propagation            |
-| `KeymapBuilderActivity.java`      | The guided keymap editor — rows, quick add, duplicate detection, search/filter, raw JSON import                                                                                               |
+| `KeymapEngine.java`               | Prefix matching, longest-sequence replacement, live conversion, toggle-style cycling, word-tracker synchronization, swipe-gating via`swipekeymap`                                              |
+| `KeymapXmlAttrUtils.java`         | Reads/writes the`name`, `keymap`, and `swipekeymap` attributes on a layout's raw XML, used by both the Layout dialog's Keyboard Attributes card and rename/delete propagation                  |
+| `KeymapBuilderActivity.java`      | The guided keymap editor — rows, quick add, duplicate detection, search/filter, raw JSON import                                                                                                |
 | `LayoutsPreference.java`          | The Settings list combining Layout and Keymap rows, default layout selection, referential-integrity enforcement on rename/delete                                                               |
 | `TaskerAutomationConfig.java`     | Parses, validates, and re-serializes the single Tasker Automation JSON (triggers, timeout, task keywords, expand patterns), auto-filling missing defaults                                      |
 | `TaskerTriggerEngine.java`        | Watches typed characters for a configured trigger+keyword or expand pattern, runs the matching Tasker task, and applies its result (replace-field or replace-trigger), including one-shot undo |
-| `TaskerAutomationPreference.java` | The Settings row that opens the Tasker Automation JSON config editor and reloads`TaskerTriggerEngine` on save                                                                                |
+| `TaskerAutomationPreference.java` | The Settings row that opens the Tasker Automation JSON config editor and reloads`TaskerTriggerEngine` on save                                                                                  |
 
 ---
 

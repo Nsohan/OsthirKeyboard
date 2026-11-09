@@ -1021,6 +1021,7 @@ public class Keyboard2View extends View
       return;
     }
 
+    boolean isTaskIcon = false;
     String text;
 
     if (is_space_bar
@@ -1042,7 +1043,21 @@ public class Keyboard2View extends View
       else
       {
         KeyValue shown = key.getOutputValue(0, _mods.has(KeyValue.Modifier.SHIFT));
-        if (shown != null)
+        if (shown != null && shown.getKind() == KeyValue.Kind.Tasker)
+        {
+          String sym = shown.getString();
+          String taskName = shown.getTaskName();
+          if (sym == null || sym.isEmpty() || sym.equals(taskName))
+          {
+            isTaskIcon = true;
+            text = TaskerTriggerEngine.get().get_task_icon(getContext(), taskName);
+          }
+          else
+          {
+            text = sym;
+          }
+        }
+        else if (shown != null)
         {
           if (_mods.has(KeyValue.Modifier.SHIFT)
                   && (key.keyOutputs == null || key.keyOutputs[0] == null)
@@ -1055,11 +1070,31 @@ public class Keyboard2View extends View
             text = shown.getString();
           }
         }
+        else if (kv.getKind() == KeyValue.Kind.Tasker)
+        {
+          String sym = kv.getString();
+          String taskName = kv.getTaskName();
+          if (sym == null || sym.isEmpty() || sym.equals(taskName))
+          {
+            isTaskIcon = true;
+            text = TaskerTriggerEngine.get().get_task_icon(getContext(), taskName);
+          }
+          else
+          {
+            text = sym;
+          }
+        }
         else
         {
           text = kv.getString();
         }
       }
+    }
+
+    if (isTaskIcon)
+    {
+      textSize = _mainLabelSize;
+      p = tc.material_symbol_label_paint(labelColor(key, kv, isKeyDown, false), textSize);
     }
 
     canvas.drawText(
@@ -1085,8 +1120,72 @@ public class Keyboard2View extends View
     kv = modifyKey(kv, _mods);
     if (kv == null)
       return;
-    float textSize = scaleTextSize(kv, false);
-    Paint p = tc.sublabel_paint(kv.hasFlagsAny(KeyValue.FLAG_KEY_FONT), labelColor(key, kv, isKeyDown, true), textSize, a);
+
+    String label;
+    int labelIndex = sub_index + (_mods.has(KeyValue.Modifier.SHIFT) ? 9 : 0);
+    boolean isTaskIcon = false;
+
+    if (key.keyLabels != null
+            && key.keyLabels[labelIndex] != null
+            && !key.keyLabels[labelIndex].isEmpty())
+    {
+      label = key.keyLabels[labelIndex];
+    }
+    else
+    {
+      KeyValue shown = key.getOutputValue(sub_index, _mods.has(KeyValue.Modifier.SHIFT));
+      if (shown != null && shown.getKind() == KeyValue.Kind.Tasker)
+      {
+        String sym = shown.getString();
+        String taskName = shown.getTaskName();
+        if (sym == null || sym.isEmpty() || sym.equals(taskName))
+        {
+          isTaskIcon = true;
+          label = TaskerTriggerEngine.get().get_task_icon(getContext(), taskName);
+        }
+        else
+        {
+          label = sym;
+        }
+      }
+      else if (shown != null)
+      {
+        if (_mods.has(KeyValue.Modifier.SHIFT)
+                && (key.keyOutputs == null || key.keyOutputs[sub_index] == null)
+                && shown.getKind() == KeyValue.Kind.Char)
+        {
+          label = String.valueOf(Character.toUpperCase(shown.getChar()));
+        }
+        else
+        {
+          label = shown.getString();
+        }
+      }
+      else if (kv.getKind() == KeyValue.Kind.Tasker)
+      {
+        String sym = kv.getString();
+        String taskName = kv.getTaskName();
+        if (sym == null || sym.isEmpty() || sym.equals(taskName))
+        {
+          isTaskIcon = true;
+          label = TaskerTriggerEngine.get().get_task_icon(getContext(), taskName);
+        }
+        else
+        {
+          label = sym;
+        }
+      }
+      else
+      {
+        label = kv.getString();
+      }
+    }
+
+    float textSize = isTaskIcon ? _subLabelSize : scaleTextSize(kv, false);
+    Paint p = isTaskIcon
+            ? tc.material_symbol_sublabel_paint(labelColor(key, kv, isKeyDown, true), textSize, a)
+            : tc.sublabel_paint(kv.hasFlagsAny(KeyValue.FLAG_KEY_FONT), labelColor(key, kv, isKeyDown, true), textSize, a);
+
     float r = (tc != null && tc.border_radius > 0) ? tc.border_radius : (_previewMode ? dp(6) : 0f);
     float basePad = Math.max(dp(2.5f), _config.keyPadding * 1.2f);
     boolean isCorner = (a != Paint.Align.CENTER && v != Vertical.CENTER);
@@ -1103,46 +1202,18 @@ public class Keyboard2View extends View
     else
       x += (a == Paint.Align.LEFT) ? padH : keyW - padH;
 
-
-    String label;
-    int labelIndex = sub_index + (_mods.has(KeyValue.Modifier.SHIFT) ? 9 : 0);
-
-    if (key.keyLabels != null
-            && key.keyLabels[labelIndex] != null
-            && !key.keyLabels[labelIndex].isEmpty())
+    if (isTaskIcon)
     {
-      label = key.keyLabels[labelIndex];
+      canvas.drawText(label, x, y, p);
     }
     else
     {
-      KeyValue shown = key.getOutputValue(sub_index, _mods.has(KeyValue.Modifier.SHIFT));
-      if (shown != null)
-      {
-        if (_mods.has(KeyValue.Modifier.SHIFT)
-                && (key.keyOutputs == null || key.keyOutputs[sub_index] == null)
-                && shown.getKind() == KeyValue.Kind.Char)
-        {
-          label = String.valueOf(Character.toUpperCase(shown.getChar()));
-        }
-        else
-        {
-          label = shown.getString();
-        }
-      }
-      else
-      {
-        label = kv.getString();
-      }
+      int label_len = label.length();
+      // Limit the label of string keys to 3 characters
+      if (label_len > 3 && kv.getKind() == KeyValue.Kind.String)
+        label_len = 3;
+      canvas.drawText(label, 0, label_len, x, y, p);
     }
-
-
-
-
-    int label_len = label.length();
-    // Limit the label of string keys to 3 characters
-    if (label_len > 3 && kv.getKind() == KeyValue.Kind.String)
-      label_len = 3;
-    canvas.drawText(label, 0, label_len, x, y, p);
   }
 
   private void drawIndication(Canvas canvas, KeyboardData.Key k, float x,

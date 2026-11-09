@@ -130,6 +130,10 @@ public final class TaskerAutomationConfig
         {
             query = query.substring("tasker:".length()).trim();
         }
+        else if (query.startsWith("task:"))
+        {
+            query = query.substring("task:".length()).trim();
+        }
         if (task_icons.containsKey(query))
         {
             return task_icons.get(query);

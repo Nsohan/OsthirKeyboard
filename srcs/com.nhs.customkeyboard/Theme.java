@@ -7,6 +7,8 @@ import android.graphics.Paint;
 import android.graphics.Typeface;
 import android.util.AttributeSet;
 
+import com.nhs.customkeyboard.tasker.MaterialSymbols;
+
 public class Theme
 {
   // Key colors
@@ -46,6 +48,7 @@ public class Theme
   public Theme(Context context, AttributeSet attrs)
   {
     getKeyFont(context); // _key_font will be accessed
+    getMaterialFont(context);
     TypedArray s = context.getTheme().obtainStyledAttributes(attrs, R.styleable.keyboard, 0, 0);
     colorKey = s.getColor(R.styleable.keyboard_colorKey, 0);
     colorKeyActivated = s.getColor(R.styleable.keyboard_colorKeyActivated, 0);
@@ -107,12 +110,20 @@ public class Theme
   }
 
   static Typeface _key_font = null;
+  static Typeface _material_font = null;
 
   static public Typeface getKeyFont(Context context)
   {
     if (_key_font == null)
       _key_font = Typeface.createFromAsset(context.getAssets(), "special_font.ttf");
     return _key_font;
+  }
+
+  static public Typeface getMaterialFont(Context context)
+  {
+    if (_material_font == null && context != null)
+      _material_font = MaterialSymbols.getTypeface(context);
+    return _material_font;
   }
 
   public static final class Computed
@@ -167,6 +178,8 @@ public class Theme
       final Paint _special_label_paint;
       final Paint _sublabel_paint;
       final Paint _special_sublabel_paint;
+      final Paint _material_label_paint;
+      final Paint _material_sublabel_paint;
       final int _label_alpha_bits;
       final int _sublabel_alpha_bits;
 
@@ -214,6 +227,8 @@ public class Theme
         _special_label_paint = init_label_paint(config, _key_font);
         _sublabel_paint = init_label_paint(config, null);
         _special_sublabel_paint = init_label_paint(config, _key_font);
+        _material_label_paint = init_label_paint(config, _material_font);
+        _material_sublabel_paint = init_label_paint(config, _material_font);
         _label_alpha_bits = (config.labelBrightness & 0xFF) << 24;
         _sublabel_alpha_bits = (config.secondaryLabelBrightness & 0xFF) << 24;
       }
@@ -233,6 +248,21 @@ public class Theme
         p.setTextSize(text_size);
         p.setTextAlign(align);
         return p;
+      }
+
+      public Paint material_symbol_label_paint(int color, float text_size)
+      {
+        _material_label_paint.setColor((color & 0x00FFFFFF) | _label_alpha_bits);
+        _material_label_paint.setTextSize(text_size);
+        return _material_label_paint;
+      }
+
+      public Paint material_symbol_sublabel_paint(int color, float text_size, Paint.Align align)
+      {
+        _material_sublabel_paint.setColor((color & 0x00FFFFFF) | _sublabel_alpha_bits);
+        _material_sublabel_paint.setTextSize(text_size);
+        _material_sublabel_paint.setTextAlign(align);
+        return _material_sublabel_paint;
       }
     }
 

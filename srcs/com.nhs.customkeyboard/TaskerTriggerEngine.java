@@ -144,6 +144,24 @@ public class TaskerTriggerEngine
         return INSTANCE;
     }
 
+    public TaskerAutomationConfig get_config()
+    {
+        return _config;
+    }
+
+    public String get_task_icon(Context ctx, String taskOrKeyword)
+    {
+        if (_config == null && ctx != null)
+        {
+            reload(ctx);
+        }
+        if (_config != null)
+        {
+            return _config.getIconForTask(taskOrKeyword);
+        }
+        return com.nhs.customkeyboard.tasker.MaterialSymbols.DEFAULT_ICON;
+    }
+
     public interface InputConnectionProvider
     {
         InputConnection get();

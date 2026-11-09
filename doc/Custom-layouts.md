@@ -89,7 +89,10 @@ Each key has a center position and 8 compass directions. Every position supports
 * **Legacy numeric notation**: `key0` (center), `key1`..`key8` (directions).
 
 ### Visible Labels (Visual Overrides)
-Labels control **what is visually printed on the key**, completely independent of what is typed:
+Labels control **what is visually printed on the key**, completely independent of what is typed. There are multiple ways to declare labels:
+
+#### 1. Dedicated XML Attributes (`...L`) — *Recommended*
+Every output/swipe direction has a corresponding label attribute:
 
 | Position | Normal Label (matches output) | Shifted Label (matches output) |
 | :--- | :--- | :--- |
@@ -103,7 +106,21 @@ Labels control **what is visually printed on the key**, completely independent o
 | **South (↓)** | `sL` (matches `s`) | `SL` (matches `S`) |
 | **South-East (↘)** | `seL` (matches `se`) | `SEL` (matches `SE`) |
 
-> **Important Rule**: Labels never affect what the key types. If a label attribute is omitted (missing), the keyboard automatically displays the output key value instead.
+> **Important Rule**: Labels never affect what the key types. If a label attribute is omitted (missing), the keyboard automatically displays the output key value instead (or the task's configured icon for Tasker tasks).
+
+#### 2. Inline Prefix Syntax (`legend:action`)
+You can declare a visible legend directly inside the action value using `legend:action`:
+* `se="🎃:task:task1"` → Displays `🎃`, fires Tasker task `task1`.
+* `se="📧:'myemail@domain.com'"` → Displays `📧`, outputs the quoted email string.
+* `c="⏯:keyevent:85"` → Displays `⏯`, sends media play/pause keycode 85.
+* `c="CA:ctrl,a,ctrl,c"` → Displays `CA`, sends macro sequence.
+
+*(Note: If both an inline legend and a dedicated attribute like `seL` are present, the dedicated attribute `seL` takes priority).*
+
+#### 3. Secondary Indication Hint (`indication`)
+An optional extra hint printed near the bottom center of the key:
+* `<key c="2" indication="ABC" />`
+* `<key c="0" indication="+" />`
 
 #### Label Examples:
 ```xml
@@ -112,6 +129,9 @@ Labels control **what is visually printed on the key**, completely independent o
 
 <!-- Swipe ↘ outputs email address, but displays an envelope icon 📧 -->
 <key c="e" se="myemail@domain.com" seL="📧" />
+
+<!-- Inline syntax: displays 📧 and outputs email -->
+<key c="e" se="📧:'myemail@domain.com'" />
 ```
 
 ### Gestures & Long Press
@@ -130,11 +150,15 @@ Labels control **what is visually printed on the key**, completely independent o
 You can bind a key tap, swipe, long press, or gesture to trigger a Tasker task directly without typing characters into your active input field:
 * Use the prefix `task:<task_name>` (or `tasker:<task_name>`), for example:
   ```xml
-  <!-- Tap 'e' types 'e'. Swiping ↘ runs Tasker task 'task1' showing 🎃. Shifted swipe ↘ runs 'task2' showing 🎁 -->
-  <key c="e" nw="!" ne="3" sw="\#" se="task:task1" seL="🎃" SE="task:task2" SEL="🎁" />
+  <!-- 'se' has no label -> auto-renders the Material Symbol icon configured for 'task1' in Settings. -->
+  <!-- 'SE' has SEL="🎁" -> overrides the icon and displays the custom emoji 🎁. -->
+  <key c="t" ne="5" sw="%" se="task:task1" SE="task:task2" SEL="🎁" />
   ```
+* **Automatic Icon Rendering**:
+  * If a label (`cL`, `seL`, `SEL`, etc., or `🎃:task:task1`) is specified, that label **overrides** and is displayed as text or emoji.
+  * If the label is omitted (e.g. `se="task:task1"` or `c="task:my_task"`), the keyboard **automatically renders the Material Symbol icon** selected for that task in **Settings > Tasker Automation** (or the default `"bolt"` icon).
 * Tasker keys fire the task via `TaskerBridge`, automatically passing cursor context (`%nhck_text1`, `%nhck_text2`, `%nhck_keyword`).
-* **Settings Mapping Required**: The task keyword (e.g. `task1`) must be configured in **Settings > Tasker & Automation** (e.g. `"task1": "My Full Task Name"`). If a task key is swiped/tapped without being mapped in Settings, an error toast will notify you to configure it first, preventing accidental calls.
+* **Settings Mapping Required**: The task keyword (e.g. `task1`) must be configured in **Settings > Tasker Automation** (e.g. `"task1": "My Full Task Name"`). If a task key is swiped/tapped without being mapped in Settings, an error toast will notify you to configure it first, preventing accidental calls.
 * If the task returns text output, it will be inserted; if it is a fire-and-forget task (or returns nothing), your text input remains completely untouched.
 
 ### Possible Key Values

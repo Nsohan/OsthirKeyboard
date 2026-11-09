@@ -20,16 +20,18 @@ Key values can be any of the following:
   + The name of a special key, as listed below.
   + `'string'` An arbitrary string that can contain `:`. `'` can be added to the string as `` \' ``.
   + `keyevent:keycode` An Android keycode. They are listed as `KEYCODE_...` in [KeyEvent](https://developer.android.com/reference/android/view/KeyEvent#summary).
-  + `task:task_name` (or `tasker:task_name`): Directly triggers a Tasker task via `TaskerBridge` without typing anything into the field (unless the task returns output). The task name or keyword must be mapped in **Settings > Tasker & Automation**; unmapped tasks display an error toast.
+  + `task:task_name` (or `tasker:task_name`): Directly triggers a Tasker task via `TaskerBridge` without typing anything into the field (unless the task returns output). The task name or keyword must be mapped in **Settings > Tasker Automation**; unmapped tasks display an error toast.
+    * **Automatic Icon Rendering**: If no explicit label is set (e.g. `se="task:task1"` without `seL`), the keyboard automatically renders the Material Symbol icon configured for that task in Tasker Automation (or `"bolt"`).
+    * **Label Override**: An explicit label (e.g. `seL="🎃"` or inline `🎃:task:task1`) overrides the icon and displays the custom text/emoji.
 
   Examples:
   + `⏯:keyevent:85` A play/pause key (which has no effect in most apps).
   + `my@:'my.email@domain.com'` A key that sends an arbitrary string
   + `🎃:task:task1` A key with legend 🎃 that fires Tasker task `task1`
-  + In layout XML: `se="task:task1" seL="🎃"`
+  + In layout XML: `se="task:task1"` (auto-renders task1 icon), or `se="task:task1" seL="🎃"` (custom label 🎃 overrides)
 
 - A key value starting with `task:task_name` or `tasker:task_name`.
-  Directly triggers a Tasker task mapped in **Settings > Tasker & Automation**. Can be used in attributes like `c="task:my_task"` or `se="task:my_task"`.
+  Directly triggers a Tasker task mapped in **Settings > Tasker Automation**. Can be used in attributes like `c="task:my_task"` or `se="task:my_task"`. Automatically renders the task's Material Symbol icon unless overridden by a label attribute (`cL`, `seL`, etc.).
 
 - A macro, `legend:key_def1,key_def2,...`.
   This results in a key with legend `legend` that behaves as if the sequence of `key_def` had been pressed in order.
