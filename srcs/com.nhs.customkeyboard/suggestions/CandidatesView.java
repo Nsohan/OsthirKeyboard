@@ -218,6 +218,10 @@ public class CandidatesView extends LinearLayout
     _tools_action_bar = findViewById(R.id.tools_action_bar);
     _clipboard_chip_scroll = findViewById(R.id.clipboard_chip_scroll);
     _clipboard_chip_container = findViewById(R.id.clipboard_chip_container);
+    if (_clipboard_chip_container != null)
+    {
+      _clipboard_chip_container.setGravity(Gravity.CENTER);
+    }
     _scroll_view = findViewById(R.id.candidates_scroll);
     _container = findViewById(R.id.candidates_container);
 
@@ -918,6 +922,11 @@ public class CandidatesView extends LinearLayout
       _current_clipboard_chips = (chips != null) ? chips : new ArrayList<>();
       if (_clipboard_chip_container == null) return;
       _clipboard_chip_container.removeAllViews();
+      _clipboard_chip_container.setGravity(Gravity.CENTER);
+      if (_clipboard_chip_scroll != null)
+      {
+        _clipboard_chip_scroll.scrollTo(0, 0);
+      }
 
       if (_current_clipboard_chips.isEmpty())
       {
