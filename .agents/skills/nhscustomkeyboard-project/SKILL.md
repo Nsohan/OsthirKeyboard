@@ -209,7 +209,7 @@ NHSCustomKeyboard/
 ├── srcs/
 │   ├── layouts/                 # XML layout definitions (latn_qwerty_us.xml, etc.)
 │   └── compose/                 # Compose sequence JSON files -> ComposeKeyData.java
-├── assets/                      # special_font.ttf (built by fontforge)
+├── assets/                      # material_symbols_outlined.ttf & material_symbols.json (Google Material Symbols)
 ├── test/                        # JUnit unit tests
 ├── scripts/                     # Helper scripts
 ├── doc/                         # Documentation
@@ -237,7 +237,6 @@ The build uses **Gradle Kotlin DSL** with Android Gradle Plugin 8.13.2.
 ### Custom Gradle Tasks
 | Task | What it does |
 |---|---|
-| `buildKeyboardFont` | Runs FontForge to build `assets/special_font.ttf` from SVG sources in `srcs/special_font/` |
 | `genEmojis` | Runs `gen_emoji.py` -> `res/raw/emojis.txt` |
 | `genLayoutsList` | Runs `gen_layouts.py` -> `res/values/layouts.xml` (list of built-in layouts) |
 | `genMethodXml` | Runs `gen_method_xml.py` -> `res/xml/method.xml` (subtypes) |
@@ -469,7 +468,7 @@ InputConnection         -> Final text committed to the app
 - Base theme colors are defined in `res/values/attrs.xml` as `<declare-styleable name="keyboard">` attributes.
 - `Theme.java` reads all color/border values via `TypedArray` from the active style.
 - `Theme.Computed` pre-calculates all `Paint` objects for efficient drawing in `Keyboard2View`.
-- The special key font (`special_font.ttf`) is loaded once as a singleton via `Theme.getKeyFont()`.
+- The key font (`material_symbols_outlined.ttf`) is loaded once as a singleton via `Theme.getKeyFont()`.
 - Custom themes with wallpaper: image is picked -> cropped (user-controlled rect via `CropImageView`) -> saved as a theme entry -> loaded via Glide in the keyboard view.
 - The active theme ID is stored as a `SharedPreferences` string (`"system"` = system default).
 

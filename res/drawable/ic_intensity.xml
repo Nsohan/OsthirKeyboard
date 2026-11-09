@@ -1,17 +1,9 @@
-<vector xmlns:android="http://schemas.android.com/apk/res/android" android:height="24dp" android:viewportHeight="57.6" android:viewportWidth="57.6" android:width="24dp">
-      
-    <path android:fillColor="#FFFFFFFF" android:pathData="M28.8,28.8m-6,0a6,6 0,1 1,12 0a6,6 0,1 1,-12 0" android:strokeColor="#FFFFFFFF" android:strokeLineCap="round" android:strokeLineJoin="round" android:strokeWidth="1"/>
-      
-    <path android:fillColor="#FFFFFFFF" android:pathData="M44.97,42.97a21.5,21.5 0,0 0,0 -28.37" android:strokeColor="#FFFFFFFF" android:strokeLineCap="round" android:strokeLineJoin="round" android:strokeWidth="1"/>
-      
-    <path android:fillColor="#FFFFFFFF" android:pathData="M12.63,14.63a21.5,21.5 0,0 0,0 28.34" android:strokeColor="#FFFFFFFF" android:strokeLineCap="round" android:strokeLineJoin="round" android:strokeWidth="1"/>
-      
-    <path android:fillColor="#FFFFFFFF" android:pathData="M20.1,22.1a11,11 0,0 0,0 13.4" android:strokeColor="#FFFFFFFF" android:strokeLineCap="round" android:strokeLineJoin="round" android:strokeWidth="1"/>
-      
-    <path android:fillColor="#FFFFFFFF" android:pathData="M37.5,35.5a11,11 0,0 0,0 -13.4" android:strokeColor="#FFFFFFFF" android:strokeLineCap="round" android:strokeLineJoin="round" android:strokeWidth="1"/>
-      
-    <path android:fillColor="#FFFFFFFF" android:pathData="M16.43,18.43a16.15,16.15 0,0 0,0 20.74" android:strokeColor="#FFFFFFFF" android:strokeLineCap="round" android:strokeLineJoin="round" android:strokeWidth="1"/>
-      
-    <path android:fillColor="#FFFFFFFF" android:pathData="M41.17,39.17a16.15,16.15 0,0 0,0 -20.74" android:strokeColor="#FFFFFFFF" android:strokeLineCap="round" android:strokeLineJoin="round" android:strokeWidth="1"/>
-    
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="960"
+    android:viewportHeight="960">
+  <path
+      android:fillColor="#FFFFFFFF"
+      android:pathData="M536 616 760 280 424 504Q397 522 395.5 559.0Q394 596 418.0 620.0Q442 644 480.0 643.5Q518 643 536 616ZM480 160Q539 160 593.5 176.5Q648 193 696 226L620 274Q587 257 551.5 248.5Q516 240 480 240Q347 240 253.5 333.5Q160 427 160 560Q160 602 171.5 643.0Q183 684 204 720H756Q779 682 789.5 641.0Q800 600 800 556Q800 520 791.5 486.0Q783 452 766 420L814 344Q844 391 861.5 444.0Q879 497 880 554Q881 611 867.0 663.0Q853 715 826 762Q815 780 796.0 790.0Q777 800 756 800H204Q183 800 164.0 790.0Q145 780 134 762Q108 717 94.0 666.5Q80 616 80 560Q80 477 111.5 404.5Q143 332 197.5 277.5Q252 223 325.0 191.5Q398 160 480 160ZM487 473Q487 473 487.0 473.0Q487 473 487 473Q487 473 487.0 473.0Q487 473 487 473Q487 473 487.0 473.0Q487 473 487 473Q487 473 487.0 473.0Q487 473 487 473Q487 473 487.0 473.0Q487 473 487 473Z" />
 </vector>

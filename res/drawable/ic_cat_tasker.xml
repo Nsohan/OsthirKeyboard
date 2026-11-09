@@ -1,7 +1,9 @@
-<!-- ic_cat_tasker.xml -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
-    android:width="24dp" android:height="24dp"
-    android:viewportWidth="24" android:viewportHeight="24">
-    <path android:fillColor="#FFFFFFFF"
-        android:pathData="M13,2 L4,14 H11 L10,22 L20,9 H13 Z"/>
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="960"
+    android:viewportHeight="960">
+  <path
+      android:fillColor="#FFFFFFFF"
+      android:pathData="M422 728 629 480H469L498 253L313 520H452ZM320 880 360 600H160L520 80H600L560 400H800L400 880ZM471 490Z" />
 </vector>

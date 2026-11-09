@@ -7,11 +7,13 @@ import androidx.preference.CheckBoxPreference;
 import androidx.preference.PreferenceCategory;
 import androidx.preference.PreferenceViewHolder;
 import android.util.AttributeSet;
+import android.util.TypedValue;
 import android.widget.TextView;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import com.nhs.customkeyboard.*;
+import com.nhs.customkeyboard.tasker.MaterialSymbolDrawable;
 
 /** This class implements the "extra keys" preference but also defines the
     possible extra keys. */
@@ -150,6 +152,8 @@ public class ExtraKeysPreference extends PreferenceCategory
     String additional_info = null;
     switch (name)
     {
+      case "tab": return "Tab";
+      case "shareText": return "Share";
       case "capslock": id = R.string.key_descr_capslock; break;
       case "change_method": id = R.string.key_descr_change_method; break;
       case "compose": id = R.string.key_descr_compose; break;
@@ -157,28 +161,28 @@ public class ExtraKeysPreference extends PreferenceCategory
       case "cut": id = R.string.key_descr_cut; break;
       case "end":
         id = R.string.key_descr_end;
-        additional_info = format_key_combination(new String[]{"fn", "right"});
+        additional_info = format_key_combination(res, new String[]{"fn", "right"});
         break;
       case "home":
         id = R.string.key_descr_home;
-        additional_info = format_key_combination(new String[]{"fn", "left"});
+        additional_info = format_key_combination(res, new String[]{"fn", "left"});
         break;
       case "page_down":
         id = R.string.key_descr_page_down;
-        additional_info = format_key_combination(new String[]{"fn", "down"});
+        additional_info = format_key_combination(res, new String[]{"fn", "down"});
         break;
       case "page_up":
         id = R.string.key_descr_page_up;
-        additional_info = format_key_combination(new String[]{"fn", "up"});
+        additional_info = format_key_combination(res, new String[]{"fn", "up"});
         break;
       case "paste": id = R.string.key_descr_paste; break;
       case "pasteAsPlainText":
         id = R.string.key_descr_pasteAsPlainText;
-        additional_info = format_key_combination(new String[]{"fn", "paste"});
+        additional_info = format_key_combination(res, new String[]{"fn", "paste"});
         break;
       case "redo":
         id = R.string.key_descr_redo;
-        additional_info = format_key_combination(new String[]{"fn", "undo"});
+        additional_info = format_key_combination(res, new String[]{"fn", "undo"});
         break;
       case "delete_word":
         id = R.string.key_descr_delete_word;
@@ -279,24 +283,94 @@ public class ExtraKeysPreference extends PreferenceCategory
     return descr;
   }
 
-  static String key_title(String key_name, KeyValue kv)
+  public static int get_key_icon_res(String key_name)
+  {
+    switch (key_name)
+    {
+      case "compose": return R.drawable.ic_tune;
+      case "voice_typing": return R.drawable.ic_mic;
+      case "switch_clipboard": return R.drawable.ic_clipboard;
+      case "copy": return R.drawable.ic_tool_copy;
+      case "paste": return R.drawable.ic_tool_paste;
+      case "cut": return R.drawable.ic_tool_cut;
+      case "selectAll": return R.drawable.ic_tool_select_all;
+      case "shareText": return R.drawable.ic_open_in_new;
+      case "pasteAsPlainText": return R.drawable.ic_text_edit;
+      case "undo": return R.drawable.ic_tool_undo;
+      case "redo": return R.drawable.ic_tool_redo;
+      case "delete_word":
+      case "forward_delete_word": return R.drawable.ic_delete;
+      case "tab": return R.drawable.ic_keyboard;
+      case "capslock": return R.drawable.ic_capital;
+      case "change_method": return R.drawable.ic_globe;
+      case "page_up": return R.drawable.ic_dpad_up;
+      case "page_down": return R.drawable.ic_dpad_down;
+      case "home": return R.drawable.ic_jump_to_start;
+      case "end": return R.drawable.ic_jump_to_end;
+      default: return 0;
+    }
+  }
+
+  public static boolean is_icon_key(String key_name)
+  {
+    return get_key_icon_res(key_name) != 0;
+  }
+
+  static String key_title(Resources res, String key_name, KeyValue kv)
   {
     switch (key_name)
     {
       case "f11_placeholder": return "F11";
       case "f12_placeholder": return "F12";
+      case "tab": return "Tab";
+      case "shareText": return "Share";
     }
-    return kv.getString();
+    if (is_icon_key(key_name))
+    {
+      String descr = key_description(res, key_name);
+      if (descr != null)
+        return descr;
+      return key_name;
+    }
+    String str = (kv != null) ? kv.getString() : key_name;
+    String descr = key_description(res, key_name);
+    if (descr != null)
+      return str + " (" + descr + ")";
+    return str;
+  }
+
+  static String format_key_name_human(Resources res, String key_name)
+  {
+    switch (key_name)
+    {
+      case "up": return "↑";
+      case "down": return "↓";
+      case "left": return "←";
+      case "right": return "→";
+      case "backspace": return "⌫";
+      case "forward_delete": return "⌦";
+      case "undo": return res.getString(R.string.key_descr_undo);
+      case "paste": return res.getString(R.string.key_descr_paste);
+      default:
+        KeyValue kv = KeyValue.getKeyByName(key_name);
+        if (kv != null)
+        {
+          String s = kv.getString();
+          if (s != null && (s.length() != 1 || s.charAt(0) < 0xE000 || s.charAt(0) > 0xF8FF))
+            return s;
+        }
+        return key_name;
+    }
   }
 
   /** Format a key combination */
-  static String format_key_combination(String[] keys)
+  static String format_key_combination(Resources res, String[] keys)
   {
     StringBuilder out = new StringBuilder();
     for (int i = 0; i < keys.length; i++)
     {
       if (i > 0) out.append(" + ");
-      out.append(KeyValue.getKeyByName(keys[i]).getString());
+      out.append(format_key_name_human(res, keys[i]));
     }
     return out.toString();
   }
@@ -305,7 +379,7 @@ public class ExtraKeysPreference extends PreferenceCategory
   static String format_key_combination_gesture(Resources res, String key_name)
   {
     return res.getString(R.string.key_descr_gesture) + " + "
-      + KeyValue.getKeyByName(key_name).getString();
+      + format_key_name_human(res, key_name);
   }
 
   /** Place an extra key next to the key specified by the first argument, on
@@ -391,24 +465,21 @@ public class ExtraKeysPreference extends PreferenceCategory
     {
       super(ctx);
       KeyValue kv = KeyValue.getKeyByName(key_name);
-      String title = key_title(key_name, kv);
-      String descr = key_description(ctx.getResources(), key_name);
-      if (descr != null)
-        title += " (" + descr + ")";
+      String title = key_title(ctx.getResources(), key_name, kv);
       setKey(pref_key_of_key_name(key_name));
       setDefaultValue(default_checked);
       setTitle(title);
-      setIcon(com.nhs.customkeyboard.R.drawable.ic_pref_default);
       setSingleLineTitle(false);
-    }
 
-    @Override
-    public void onBindViewHolder(PreferenceViewHolder holder)
-    {
-      super.onBindViewHolder(holder);
-      TextView title = (TextView)holder.findViewById(android.R.id.title);
-      if (title != null)
-        title.setTypeface(Theme.getKeyFont(getContext()));
+      int iconRes = get_key_icon_res(key_name);
+      if (iconRes != 0)
+      {
+        setIcon(iconRes);
+      }
+      else
+      {
+        setIcon(null);
+      }
     }
   }
 }

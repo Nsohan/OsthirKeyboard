@@ -35,31 +35,31 @@ public class SuggestionActionHelper
       this.subtitle = subtitle;
       this.iconRes = iconRes;
       this.isTasker = isTasker;
-      this.iconName = iconName;
+      this.iconName = (iconName != null && !iconName.trim().isEmpty()) ? iconName.trim() : getActionIconName(id);
     }
   }
 
   public static List<ActionItem> getStandardActions(Context ctx)
   {
     List<ActionItem> list = new ArrayList<>();
-    list.add(new ActionItem("copy", ctx.getString(R.string.tool_copy), null, R.drawable.ic_tool_copy, false));
-    list.add(new ActionItem("cut", ctx.getString(R.string.tool_cut), null, R.drawable.ic_tool_cut, false));
-    list.add(new ActionItem("paste", ctx.getString(R.string.tool_paste), null, R.drawable.ic_tool_paste, false));
-    list.add(new ActionItem("selectAll", ctx.getString(R.string.tool_select_all), null, R.drawable.ic_tool_select_all, false));
-    list.add(new ActionItem("undo", ctx.getString(R.string.tool_undo), null, R.drawable.ic_tool_undo, false));
-    list.add(new ActionItem("redo", ctx.getString(R.string.tool_redo), null, R.drawable.ic_tool_redo, false));
-    list.add(new ActionItem("delete", ctx.getString(R.string.tool_delete), null, R.drawable.ic_tool_backspace, false));
-    list.add(new ActionItem("delete_word", ctx.getString(R.string.tool_delete_word), null, R.drawable.ic_delete, false));
-    list.add(new ActionItem("clipboard", ctx.getString(R.string.tool_clipboard), null, R.drawable.ic_tool_clipboard, false));
-    list.add(new ActionItem("translate", ctx.getString(R.string.tool_translate), null, R.drawable.ic_tool_translate, false));
-    list.add(new ActionItem("voice_typing", ctx.getString(R.string.tool_voice_typing), null, R.drawable.ic_mic, false));
-    list.add(new ActionItem("share", ctx.getString(R.string.tool_share), null, R.drawable.ic_open_in_new, false));
-    list.add(new ActionItem("paste_plain", ctx.getString(R.string.tool_paste_plain), null, R.drawable.ic_clipboard_paste, false));
-    list.add(new ActionItem("capslock", ctx.getString(R.string.tool_caps_lock), null, R.drawable.ic_capital, false));
-    list.add(new ActionItem("switch_keyboard", ctx.getString(R.string.tool_switch_keyboard), null, R.drawable.ic_keyboard, false));
-    list.add(new ActionItem("theme", ctx.getString(R.string.tool_theme), null, R.drawable.ic_palette, false));
-    list.add(new ActionItem("gif", ctx.getString(R.string.tool_gif), null, R.drawable.ic_gif, false));
-    list.add(new ActionItem("settings", ctx.getString(R.string.tool_settings), null, R.drawable.ic_tool_settings, false));
+    list.add(new ActionItem("copy", ctx.getString(R.string.tool_copy), null, R.drawable.ic_tool_copy, false, "content_copy"));
+    list.add(new ActionItem("cut", ctx.getString(R.string.tool_cut), null, R.drawable.ic_tool_cut, false, "content_cut"));
+    list.add(new ActionItem("paste", ctx.getString(R.string.tool_paste), null, R.drawable.ic_tool_paste, false, "content_paste"));
+    list.add(new ActionItem("selectAll", ctx.getString(R.string.tool_select_all), null, R.drawable.ic_tool_select_all, false, "select_all"));
+    list.add(new ActionItem("undo", ctx.getString(R.string.tool_undo), null, R.drawable.ic_tool_undo, false, "undo"));
+    list.add(new ActionItem("redo", ctx.getString(R.string.tool_redo), null, R.drawable.ic_tool_redo, false, "redo"));
+    list.add(new ActionItem("delete", ctx.getString(R.string.tool_delete), null, R.drawable.ic_tool_backspace, false, "backspace"));
+    list.add(new ActionItem("delete_word", ctx.getString(R.string.tool_delete_word), null, R.drawable.ic_delete, false, "delete"));
+    list.add(new ActionItem("clipboard", ctx.getString(R.string.tool_clipboard), null, R.drawable.ic_tool_clipboard, false, "assignment"));
+    list.add(new ActionItem("translate", ctx.getString(R.string.tool_translate), null, R.drawable.ic_tool_translate, false, "translate"));
+    list.add(new ActionItem("voice_typing", ctx.getString(R.string.tool_voice_typing), null, R.drawable.ic_mic, false, "mic"));
+    list.add(new ActionItem("share", ctx.getString(R.string.tool_share), null, R.drawable.ic_open_in_new, false, "share"));
+    list.add(new ActionItem("paste_plain", ctx.getString(R.string.tool_paste_plain), null, R.drawable.ic_clipboard_paste, false, "format_clear"));
+    list.add(new ActionItem("capslock", ctx.getString(R.string.tool_caps_lock), null, R.drawable.ic_capital, false, "keyboard_capslock"));
+    list.add(new ActionItem("switch_keyboard", ctx.getString(R.string.tool_switch_keyboard), null, R.drawable.ic_keyboard, false, "keyboard"));
+    list.add(new ActionItem("theme", ctx.getString(R.string.tool_theme), null, R.drawable.ic_palette, false, "palette"));
+    list.add(new ActionItem("gif", ctx.getString(R.string.tool_gif), null, R.drawable.ic_gif, false, "gif"));
+    list.add(new ActionItem("settings", ctx.getString(R.string.tool_settings), null, R.drawable.ic_tool_settings, false, "settings"));
     return list;
   }
 
@@ -145,6 +145,43 @@ public class SuggestionActionHelper
     }
 
     return actionId;
+  }
+
+  public static String getActionIconName(String actionId)
+  {
+    if (actionId == null || actionId.trim().isEmpty())
+    {
+      return "close";
+    }
+
+    if (actionId.startsWith(TASKER_PREFIX))
+    {
+      return "bolt";
+    }
+
+    switch (actionId)
+    {
+      case "copy": return "content_copy";
+      case "cut": return "content_cut";
+      case "paste": return "content_paste";
+      case "selectAll": return "select_all";
+      case "undo": return "undo";
+      case "redo": return "redo";
+      case "delete": return "backspace";
+      case "delete_word": return "delete";
+      case "clipboard": return "assignment";
+      case "translate": return "translate";
+      case "voice_typing": return "mic";
+      case "share": return "share";
+      case "paste_plain": return "format_clear";
+      case "capslock":
+      case "caps_lock": return "keyboard_capslock";
+      case "switch_keyboard": return "keyboard";
+      case "theme": return "palette";
+      case "gif": return "gif";
+      case "settings": return "settings";
+      default: return "star";
+    }
   }
 
   public static int getActionIconRes(String actionId)

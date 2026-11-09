@@ -1,11 +1,9 @@
-<!-- ic_cat_typing.xml -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
-    android:width="24dp" android:height="24dp"
-    android:viewportWidth="24" android:viewportHeight="24">
-    <path android:fillColor="#FFFFFFFF"
-        android:pathData="M12,10 a2,2 0 1,0 0.01,0 Z"/>
-    <path android:fillColor="#FFFFFFFF" android:strokeColor="#FFFFFFFF" android:strokeWidth="1.4"
-        android:pathData="M12,3 a9,9 0 1,0 0.01,0 Z"/>
-    <path android:fillColor="#FFFFFFFF" android:strokeColor="#FFFFFFFF" android:strokeWidth="1.4"
-        android:pathData="M12,6.5 a5.5,5.5 0 1,0 0.01,0 Z"/>
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="960"
+    android:viewportHeight="960">
+  <path
+      android:fillColor="#FFFFFFFF"
+      android:pathData="M160 760Q127 760 103.5 736.5Q80 713 80 680V280Q80 247 103.5 223.5Q127 200 160 200H800Q833 200 856.5 223.5Q880 247 880 280V680Q880 713 856.5 736.5Q833 760 800 760ZM160 680H800Q800 680 800.0 680.0Q800 680 800 680V280Q800 280 800.0 280.0Q800 280 800 280H160Q160 280 160.0 280.0Q160 280 160 280V680Q160 680 160.0 680.0Q160 680 160 680ZM320 640H640V560H320ZM200 520H280V440H200ZM320 520H400V440H320ZM440 520H520V440H440ZM560 520H640V440H560ZM680 520H760V440H680ZM200 400H280V320H200ZM320 400H400V320H320ZM440 400H520V320H440ZM560 400H640V320H560ZM680 400H760V320H680ZM160 680Q160 680 160.0 680.0Q160 680 160 680V280Q160 280 160.0 280.0Q160 280 160 280Q160 280 160.0 280.0Q160 280 160 280V680Q160 680 160.0 680.0Q160 680 160 680Z" />
 </vector>

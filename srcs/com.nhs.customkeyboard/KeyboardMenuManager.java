@@ -64,13 +64,20 @@ public class KeyboardMenuManager
     public final String id;
     public final int titleRes;
     public final int iconRes;
+    public final String iconName;
     public final Runnable action;
 
     public MenuItemInfo(String id, int titleRes, int iconRes, Runnable action)
     {
+      this(id, titleRes, iconRes, null, action);
+    }
+
+    public MenuItemInfo(String id, int titleRes, int iconRes, String iconName, Runnable action)
+    {
       this.id = id;
       this.titleRes = titleRes;
       this.iconRes = iconRes;
+      this.iconName = iconName;
       this.action = action;
     }
   }
@@ -259,45 +266,64 @@ public class KeyboardMenuManager
     }
   }
 
+  private static String getMenuIconName(String id)
+  {
+    if (id == null) return "apps";
+    switch (id)
+    {
+      case "theme": return "palette";
+      case "text_edit": return "edit_note";
+      case "gif": return "gif";
+      case "emoji": return "sentiment_satisfied";
+      case "translate": return "translate";
+      case "clipboard": return "assignment";
+      case "settings": return "settings";
+      case "resize": return "aspect_ratio";
+      case "sticker": return "sticker";
+      case "one_handed": return "pan_tool";
+      default: return "apps";
+    }
+  }
+
   private List<MenuItemInfo> createDefaultItems()
   {
     List<MenuItemInfo> list = new ArrayList<>();
     // Page 1 - Row 1: Theme & Text edit
-    list.add(new MenuItemInfo("theme", R.string.menu_item_theme, R.drawable.ic_palette, () -> {
+    list.add(new MenuItemInfo("theme", R.string.menu_item_theme, R.drawable.ic_palette, "palette", () -> {
       _keyboardService.set_menu_panel_visible(false);
       Intent intent = new Intent(_keyboardService, com.nhs.customkeyboard.theme.ThemeActivity.class);
       intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
       _keyboardService.startActivity(intent);
     }));
-    list.add(new MenuItemInfo("text_edit", R.string.menu_item_text_edit, R.drawable.ic_text_edit, () -> {
+    list.add(new MenuItemInfo("text_edit", R.string.menu_item_text_edit, R.drawable.ic_text_edit, "edit_note", () -> {
       _keyboardService.show_text_edit_pane();
     }));
 
     // Page 1 - Row 2: GIF & Emoji
-    list.add(new MenuItemInfo("gif", R.string.menu_item_gif, R.drawable.ic_gif, () -> {
+    list.add(new MenuItemInfo("gif", R.string.menu_item_gif, R.drawable.ic_gif, "gif", () -> {
       _keyboardService.set_menu_panel_visible(false);
       _keyboardService.show_gif_pane();
     }));
-    list.add(new MenuItemInfo("emoji", R.string.menu_item_emoji, R.drawable.ic_emoji_menu, () -> {
+    list.add(new MenuItemInfo("emoji", R.string.menu_item_emoji, R.drawable.ic_emoji_menu, "sentiment_satisfied", () -> {
       _keyboardService.set_menu_panel_visible(false);
       _keyboardService.show_emoji_pane();
     }));
 
     // Page 1 - Row 3: Translate & Clipboard
-    list.add(new MenuItemInfo("translate", R.string.menu_item_translate, R.drawable.ic_translate, () -> {
+    list.add(new MenuItemInfo("translate", R.string.menu_item_translate, R.drawable.ic_translate, "translate", () -> {
       _keyboardService.set_menu_panel_visible(false);
       _keyboardService.toggle_translate_bar();
     }));
-    list.add(new MenuItemInfo("clipboard", R.string.menu_item_clipboard, R.drawable.ic_gboard_clipboard, () -> {
+    list.add(new MenuItemInfo("clipboard", R.string.menu_item_clipboard, R.drawable.ic_gboard_clipboard, "assignment", () -> {
       _keyboardService.show_clipboard_pane();
     }));
 
     // Page 1 - Row 4: Settings & Resize
-    list.add(new MenuItemInfo("settings", R.string.menu_item_settings, R.drawable.ic_settings_gear, () -> {
+    list.add(new MenuItemInfo("settings", R.string.menu_item_settings, R.drawable.ic_settings_gear, "settings", () -> {
       _keyboardService.set_menu_panel_visible(false);
       _keyboardService.start_activity(SettingsActivity.class);
     }));
-    list.add(new MenuItemInfo("resize", R.string.menu_item_resize, R.drawable.ic_resize, () -> {
+    list.add(new MenuItemInfo("resize", R.string.menu_item_resize, R.drawable.ic_resize, "aspect_ratio", () -> {
       _keyboardService.set_menu_panel_visible(false);
       if (_keyboardService.getResizeManager() != null)
       {
@@ -306,11 +332,11 @@ public class KeyboardMenuManager
     }));
 
     // Page 2 - Row 1: Sticker & One-handed
-    list.add(new MenuItemInfo("sticker", R.string.menu_item_sticker, R.drawable.ic_sticker, () -> {
+    list.add(new MenuItemInfo("sticker", R.string.menu_item_sticker, R.drawable.ic_sticker, "sticker", () -> {
       _keyboardService.set_menu_panel_visible(false);
       _keyboardService.show_emoji_pane();
     }));
-    list.add(new MenuItemInfo("one_handed", R.string.menu_item_one_handed, R.drawable.ic_one_handed, () -> {
+    list.add(new MenuItemInfo("one_handed", R.string.menu_item_one_handed, R.drawable.ic_one_handed, "pan_tool", () -> {
       _keyboardService.set_menu_panel_visible(false);
       _keyboardService.toggle_one_handed();
     }));
@@ -497,7 +523,12 @@ public class KeyboardMenuManager
           slotView.setTranslationY(0f);
           slotView.setScaleX(1.0f);
           slotView.setScaleY(1.0f);
-          iconView.setImageResource(item.iconRes);
+          String iconName = item.iconName != null ? item.iconName : getMenuIconName(item.id);
+          int iconPx = (int) (24 * _keyboardService.getResources().getDisplayMetrics().density);
+          TypedValue tvColor = new TypedValue();
+          _keyboardService.getTheme().resolveAttribute(android.R.attr.textColorPrimary, tvColor, true);
+          int iconColor = tvColor.data != 0 ? tvColor.data : ContextCompat.getColor(_keyboardService, R.color.settings_primary);
+          iconView.setImageDrawable(new com.nhs.customkeyboard.tasker.MaterialSymbolDrawable(_keyboardService, iconName, iconPx, iconColor));
           textView.setText(item.titleRes);
 
           if (_isEditMode)

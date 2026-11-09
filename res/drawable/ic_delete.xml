@@ -1,1 +1,9 @@
-<!-- drawable/delete.xml --><vector xmlns:android="http://schemas.android.com/apk/res/android" android:height="24dp" android:width="24dp" android:viewportWidth="24" android:viewportHeight="24"><path android:fillColor="#FFFFFFFF" android:pathData="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z" /></vector>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="960"
+    android:viewportHeight="960">
+  <path
+      android:fillColor="#FFFFFFFF"
+      android:pathData="M280 840Q247 840 223.5 816.5Q200 793 200 760V240H160V160H360V120H600V160H800V240H760V760Q760 793 736.5 816.5Q713 840 680 840ZM680 240H280V760Q280 760 280.0 760.0Q280 760 280 760H680Q680 760 680.0 760.0Q680 760 680 760ZM360 680H440V320H360ZM520 680H600V320H520ZM280 240V760Q280 760 280.0 760.0Q280 760 280 760Q280 760 280.0 760.0Q280 760 280 760Z" />
+</vector>

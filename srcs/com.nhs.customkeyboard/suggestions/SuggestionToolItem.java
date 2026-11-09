@@ -31,7 +31,12 @@ public class SuggestionToolItem
 
   public SuggestionToolItem(String id, int titleRes, int iconRes, boolean enabled, String longPressAction)
   {
-    this(id, titleRes, null, iconRes, enabled, longPressAction);
+    this(id, titleRes, null, iconRes, enabled, longPressAction, null);
+  }
+
+  public SuggestionToolItem(String id, int titleRes, int iconRes, boolean enabled, String longPressAction, String iconName)
+  {
+    this(id, titleRes, null, iconRes, enabled, longPressAction, iconName);
   }
 
   public SuggestionToolItem(String id, String customTitle, int iconRes, boolean enabled, String longPressAction)
@@ -95,12 +100,24 @@ public class SuggestionToolItem
 
   public android.graphics.drawable.Drawable getDrawable(Context ctx, int color, int sizePx)
   {
-    if (isTasker() && ctx != null)
+    if (ctx == null) return null;
+    String name = iconName;
+    if (name == null || name.trim().isEmpty())
     {
-      String icon = getTaskerIconName(ctx);
-      return new com.nhs.customkeyboard.tasker.MaterialSymbolDrawable(ctx, icon, sizePx, color);
+      if (isTasker())
+      {
+        name = getTaskerIconName(ctx);
+      }
+      else
+      {
+        name = SuggestionActionHelper.getActionIconName(id);
+      }
     }
-    if (iconRes != 0 && ctx != null)
+    if (name != null && !name.trim().isEmpty())
+    {
+      return new com.nhs.customkeyboard.tasker.MaterialSymbolDrawable(ctx, name, sizePx, color);
+    }
+    if (iconRes != 0)
     {
       return androidx.core.content.ContextCompat.getDrawable(ctx, iconRes);
     }
@@ -141,24 +158,24 @@ public class SuggestionToolItem
   public static List<SuggestionToolItem> getDefaultTools()
   {
     List<SuggestionToolItem> list = new ArrayList<>();
-    list.add(new SuggestionToolItem("paste", R.string.tool_paste, R.drawable.ic_tool_paste, true, "clipboard"));
-    list.add(new SuggestionToolItem("copy", R.string.tool_copy, R.drawable.ic_tool_copy, true, "selectAll"));
-    list.add(new SuggestionToolItem("cut", R.string.tool_cut, R.drawable.ic_tool_cut, false));
-    list.add(new SuggestionToolItem("selectAll", R.string.tool_select_all, R.drawable.ic_tool_select_all, false));
-    list.add(new SuggestionToolItem("translate", R.string.tool_translate, R.drawable.ic_tool_translate, true));
-    list.add(new SuggestionToolItem("undo", R.string.tool_undo, R.drawable.ic_tool_undo, false));
-    list.add(new SuggestionToolItem("redo", R.string.tool_redo, R.drawable.ic_tool_redo, false));
-    list.add(new SuggestionToolItem("delete", R.string.tool_delete, R.drawable.ic_tool_backspace, false));
-    list.add(new SuggestionToolItem("delete_word", R.string.tool_delete_word, R.drawable.ic_delete, false));
-    list.add(new SuggestionToolItem("clipboard", R.string.tool_clipboard, R.drawable.ic_tool_clipboard, false));
-    list.add(new SuggestionToolItem("voice_typing", R.string.tool_voice_typing, R.drawable.ic_mic, false));
-    list.add(new SuggestionToolItem("share", R.string.tool_share, R.drawable.ic_open_in_new, false));
-    list.add(new SuggestionToolItem("paste_plain", R.string.tool_paste_plain, R.drawable.ic_clipboard_paste, false));
-    list.add(new SuggestionToolItem("capslock", R.string.tool_caps_lock, R.drawable.ic_capital, false));
-    list.add(new SuggestionToolItem("switch_keyboard", R.string.tool_switch_keyboard, R.drawable.ic_keyboard, false));
-    list.add(new SuggestionToolItem("theme", R.string.tool_theme, R.drawable.ic_palette, false));
-    list.add(new SuggestionToolItem("gif", R.string.tool_gif, R.drawable.ic_gif, false));
-    list.add(new SuggestionToolItem("settings", R.string.tool_settings, R.drawable.ic_tool_settings, false));
+    list.add(new SuggestionToolItem("paste", R.string.tool_paste, R.drawable.ic_tool_paste, true, "clipboard", "content_paste"));
+    list.add(new SuggestionToolItem("copy", R.string.tool_copy, R.drawable.ic_tool_copy, true, "selectAll", "content_copy"));
+    list.add(new SuggestionToolItem("cut", R.string.tool_cut, R.drawable.ic_tool_cut, false, null, "content_cut"));
+    list.add(new SuggestionToolItem("selectAll", R.string.tool_select_all, R.drawable.ic_tool_select_all, false, null, "select_all"));
+    list.add(new SuggestionToolItem("translate", R.string.tool_translate, R.drawable.ic_tool_translate, true, null, "translate"));
+    list.add(new SuggestionToolItem("undo", R.string.tool_undo, R.drawable.ic_tool_undo, false, null, "undo"));
+    list.add(new SuggestionToolItem("redo", R.string.tool_redo, R.drawable.ic_tool_redo, false, null, "redo"));
+    list.add(new SuggestionToolItem("delete", R.string.tool_delete, R.drawable.ic_tool_backspace, false, null, "backspace"));
+    list.add(new SuggestionToolItem("delete_word", R.string.tool_delete_word, R.drawable.ic_delete, false, null, "delete"));
+    list.add(new SuggestionToolItem("clipboard", R.string.tool_clipboard, R.drawable.ic_tool_clipboard, false, null, "assignment"));
+    list.add(new SuggestionToolItem("voice_typing", R.string.tool_voice_typing, R.drawable.ic_mic, false, null, "mic"));
+    list.add(new SuggestionToolItem("share", R.string.tool_share, R.drawable.ic_open_in_new, false, null, "share"));
+    list.add(new SuggestionToolItem("paste_plain", R.string.tool_paste_plain, R.drawable.ic_clipboard_paste, false, null, "format_clear"));
+    list.add(new SuggestionToolItem("capslock", R.string.tool_caps_lock, R.drawable.ic_capital, false, null, "keyboard_capslock"));
+    list.add(new SuggestionToolItem("switch_keyboard", R.string.tool_switch_keyboard, R.drawable.ic_keyboard, false, null, "keyboard"));
+    list.add(new SuggestionToolItem("theme", R.string.tool_theme, R.drawable.ic_palette, false, null, "palette"));
+    list.add(new SuggestionToolItem("gif", R.string.tool_gif, R.drawable.ic_gif, false, null, "gif"));
+    list.add(new SuggestionToolItem("settings", R.string.tool_settings, R.drawable.ic_tool_settings, false, null, "settings"));
     return list;
   }
 
@@ -210,7 +227,8 @@ public class SuggestionToolItem
             if (base != null && !seenIds.contains(base.id))
             {
               seenIds.add(base.id);
-              result.add(new SuggestionToolItem(base.id, base.titleRes, customTitle, base.iconRes, enabled, longPressAction));
+              String resolvedIcon = (iconName != null && !iconName.trim().isEmpty()) ? iconName : base.iconName;
+              result.add(new SuggestionToolItem(base.id, base.titleRes, customTitle, base.iconRes, enabled, longPressAction, resolvedIcon));
             }
           }
         }
