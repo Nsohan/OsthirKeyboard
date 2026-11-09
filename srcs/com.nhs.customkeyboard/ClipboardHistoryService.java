@@ -93,6 +93,19 @@ public final class ClipboardHistoryService
     return dst;
   }
 
+  public static boolean isUriAccessible(Context ctx, Uri uri)
+  {
+    if (uri == null || ctx == null) return false;
+    try (java.io.InputStream in = ctx.getContentResolver().openInputStream(uri))
+    {
+      return in != null;
+    }
+    catch (Throwable t)
+    {
+      return false;
+    }
+  }
+
   public synchronized List<HistoryEntry> clear_expired_and_get_history_entries()
   {
     long now_ms = System.currentTimeMillis();
@@ -102,9 +115,24 @@ public final class ClipboardHistoryService
     {
       HistoryEntry ent = it.next();
       if (ent.expiry_timestamp <= now_ms)
+      {
         it.remove();
+      }
+      else if (ent.is_image)
+      {
+        if (ent.image_uri == null || !isUriAccessible(_context, ent.image_uri))
+        {
+          it.remove();
+        }
+        else
+        {
+          dst.add(ent);
+        }
+      }
       else
+      {
         dst.add(ent);
+      }
     }
     return dst;
   }
@@ -112,12 +140,48 @@ public final class ClipboardHistoryService
   /** This will call [on_clipboard_history_change]. */
   public synchronized void remove_history_entry(String clip)
   {
+    remove_history_entry(clip, null);
+  }
+
+  public synchronized void remove_history_entry(String clip, Uri imageUri)
+  {
     int last_pos = _history.size() - 1;
     boolean last_pos_changed = false;
     for (int pos = last_pos; pos >= 0; pos--)
     {
-      if (!_history.get(pos).content.equals(clip))
+      HistoryEntry ent = _history.get(pos);
+      boolean matches;
+      if (imageUri != null)
+      {
+        matches = ent.is_image && (imageUri.equals(ent.image_uri) || imageUri.equals(ent.source_uri));
+      }
+      else
+      {
+        matches = !ent.is_image && ent.content != null && ent.content.equals(clip);
+      }
+      if (!matches)
         continue;
+
+      // Clean up cached file if it exists in internal cache
+      if (ent.is_image && ent.image_uri != null)
+      {
+        try
+        {
+          String path = ent.image_uri.getPath();
+          if (path != null && path.contains("clipboard_images"))
+          {
+            File cacheDir = new File(_context.getCacheDir(), "clipboard_images");
+            String fileName = ent.image_uri.getLastPathSegment();
+            if (fileName != null)
+            {
+              File file = new File(cacheDir, fileName);
+              if (file.exists()) file.delete();
+            }
+          }
+        }
+        catch (Throwable ignored) {}
+      }
+
       // Removing the current clipboard, clear the system clipboard.
       if (pos == last_pos)
         last_pos_changed = true;
@@ -162,17 +226,53 @@ public final class ClipboardHistoryService
 
   public synchronized void add_image_clip(android.net.Uri uri, String mimeType, String label)
   {
-    add_image_clip(uri, mimeType, label, System.currentTimeMillis(), true);
+    add_image_clip(uri, uri, mimeType, label, System.currentTimeMillis(), true);
   }
 
   public synchronized void add_image_clip(android.net.Uri uri, String mimeType, String label, long timestamp, boolean isScreenshot)
   {
+    add_image_clip(uri, uri, mimeType, label, timestamp, isScreenshot);
+  }
+
+  public synchronized void add_image_clip(android.net.Uri uri, android.net.Uri sourceUri, String mimeType, String label, long timestamp, boolean isScreenshot)
+  {
     if (!Config.globalConfig().clipboard_history_enabled)
       return;
-    int size = _history.size();
-    if (size >= MAX_HISTORY_SIZE)
-      _history.remove(size - 1);
-    _history.add(0, new HistoryEntry(label, uri, mimeType, true));
+    if (uri == null || !isUriAccessible(_context, uri))
+      return;
+
+    // Check if this image already exists in history
+    int existingIndex = -1;
+    for (int i = 0; i < _history.size(); i++)
+    {
+      HistoryEntry entry = _history.get(i);
+      if (entry.is_image)
+      {
+        if ((sourceUri != null && (sourceUri.equals(entry.source_uri) || sourceUri.equals(entry.image_uri)))
+            || (uri != null && (uri.equals(entry.image_uri) || uri.equals(entry.source_uri))))
+        {
+          existingIndex = i;
+          break;
+        }
+      }
+    }
+
+    if (existingIndex == 0)
+    {
+      // Consecutive duplicate: already at top of history!
+      return;
+    }
+    if (existingIndex > 0)
+    {
+      // Remove older duplicate so it moves to top
+      _history.remove(existingIndex);
+    }
+    else if (_history.size() >= MAX_HISTORY_SIZE)
+    {
+      _history.remove(_history.size() - 1);
+    }
+
+    _history.add(0, new HistoryEntry(label, uri, sourceUri, mimeType, true));
     if (isScreenshot)
     {
       com.nhs.customkeyboard.clipboard.ClipboardSuggestionHelper.get().onNewScreenshot(uri, mimeType, label, timestamp);
@@ -187,7 +287,9 @@ public final class ClipboardHistoryService
 
   private void cache_and_add_image_clip(Uri sourceUri, String mimeType, String label, long timestamp, boolean isScreenshot)
   {
-    Uri finalUri = sourceUri;
+    if (sourceUri == null) return;
+    Uri finalUri = null;
+    File cachedFile = null;
     try
     {
       File cacheDir = new File(_context.getCacheDir(), "clipboard_images");
@@ -214,34 +316,51 @@ public final class ClipboardHistoryService
           }
         }
       }
-      File cachedFile = new File(cacheDir, "clip_" + System.currentTimeMillis() + ext);
+      cachedFile = new File(cacheDir, "clip_" + System.currentTimeMillis() + ext);
       java.io.InputStream in = _context.getContentResolver().openInputStream(sourceUri);
-      if (in != null)
+      if (in == null)
       {
-        java.io.OutputStream out = new java.io.FileOutputStream(cachedFile);
-        byte[] buffer = new byte[8192];
-        int read;
-        while ((read = in.read(buffer)) != -1)
-        {
-          out.write(buffer, 0, read);
-        }
-        out.flush();
-        out.close();
-        in.close();
-
-        finalUri = androidx.core.content.FileProvider.getUriForFile(
-            _context,
-            _context.getPackageName() + ".fileprovider",
-            cachedFile
-        );
+        return;
       }
+      java.io.OutputStream out = new java.io.FileOutputStream(cachedFile);
+      byte[] buffer = new byte[8192];
+      int read;
+      long totalRead = 0;
+      while ((read = in.read(buffer)) != -1)
+      {
+        out.write(buffer, 0, read);
+        totalRead += read;
+      }
+      out.flush();
+      out.close();
+      in.close();
+
+      if (totalRead <= 0 || !cachedFile.exists() || cachedFile.length() <= 0)
+      {
+        if (cachedFile.exists()) cachedFile.delete();
+        return;
+      }
+
+      finalUri = androidx.core.content.FileProvider.getUriForFile(
+          _context,
+          _context.getPackageName() + ".fileprovider",
+          cachedFile
+      );
     }
     catch (Throwable t)
     {
       Logs.exn("ClipboardHistoryService", t);
+      if (cachedFile != null && cachedFile.exists())
+      {
+        try { cachedFile.delete(); } catch (Throwable ignored) {}
+      }
+      return;
     }
 
-    add_image_clip(finalUri, mimeType, label, timestamp, isScreenshot);
+    if (finalUri != null)
+    {
+      add_image_clip(finalUri, sourceUri, mimeType, label, timestamp, isScreenshot);
+    }
   }
 
   public synchronized void clear_history()
@@ -312,6 +431,15 @@ public final class ClipboardHistoryService
           String label = (clip.getDescription() != null && clip.getDescription().getLabel() != null)
               ? clip.getDescription().getLabel().toString()
               : "Image";
+          // Check if top history entry is already this exact image clip to avoid redundant caching & duplication
+          if (!_history.isEmpty())
+          {
+            HistoryEntry top = _history.get(0);
+            if (top.is_image && uri != null && (uri.equals(top.source_uri) || uri.equals(top.image_uri)))
+            {
+              continue;
+            }
+          }
           cache_and_add_image_clip(uri, mimeType, label, clipTimestamp, false);
           continue;
         }
@@ -341,6 +469,7 @@ public final class ClipboardHistoryService
   {
     public final String content;
     public final android.net.Uri image_uri;
+    public final android.net.Uri source_uri;
     public final String mime_type;
     public final boolean is_image;
 
@@ -349,13 +478,19 @@ public final class ClipboardHistoryService
 
     public HistoryEntry(String c)
     {
-      this(c, null, null, false);
+      this(c, null, null, null, false);
     }
 
     public HistoryEntry(String c, android.net.Uri imageUri, String mimeType, boolean isImage)
     {
+      this(c, imageUri, imageUri, mimeType, isImage);
+    }
+
+    public HistoryEntry(String c, android.net.Uri imageUri, android.net.Uri sourceUri, String mimeType, boolean isImage)
+    {
       content = c;
       image_uri = imageUri;
+      source_uri = sourceUri != null ? sourceUri : imageUri;
       mime_type = mimeType;
       is_image = isImage;
       final int historyTtlMinutes = _service != null ? _service.get_history_ttl_minutes() : 60;

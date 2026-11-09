@@ -36,6 +36,7 @@ import android.view.MotionEvent;
 import android.view.ViewConfiguration;
 import android.widget.Toast;
 import androidx.preference.PreferenceManager;
+import com.nhs.customkeyboard.ClipboardHistoryService;
 import com.nhs.customkeyboard.TaskerAutomationConfig;
 import com.nhs.customkeyboard.TaskerBridge;
 import com.nhs.customkeyboard.VibratorCompat;
@@ -967,6 +968,10 @@ public class CandidatesView extends LinearLayout
                                chip.type == ClipboardSuggestionHelper.ChipType.IMAGE) && chip.imageUri != null;
         if (isImageChip)
         {
+          if (!ClipboardHistoryService.isUriAccessible(ctx, chip.imageUri))
+          {
+            continue;
+          }
           if (iconView != null) iconView.setVisibility(View.GONE);
           if (thumbView != null)
           {

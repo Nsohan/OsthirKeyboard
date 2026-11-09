@@ -240,15 +240,24 @@ public class ClipboardManagerView extends LinearLayout
     List<String> pinned = load_pinned(getContext());
     ClipboardHistoryService service = ClipboardHistoryService.get_service(getContext());
 
-    for (String text : _selectedItems)
+    for (String key : _selectedItems)
     {
-      if (pinned.contains(text))
+      if (pinned.contains(key))
       {
-        pinned.remove(text);
+        pinned.remove(key);
       }
       if (service != null)
       {
-        service.remove_history_entry(text);
+        Uri uri = null;
+        try { uri = Uri.parse(key); } catch (Exception ignored) {}
+        if (uri != null && uri.getScheme() != null && "content".equalsIgnoreCase(uri.getScheme()))
+        {
+          service.remove_history_entry(null, uri);
+        }
+        else
+        {
+          service.remove_history_entry(key, null);
+        }
       }
     }
     save_pinned(getContext(), pinned);
@@ -362,7 +371,7 @@ public class ClipboardManagerView extends LinearLayout
                 save_pinned(ctx, pinned);
               }
               ClipboardHistoryService service = ClipboardHistoryService.get_service(ctx);
-              if (service != null) service.remove_history_entry(item.text);
+              if (service != null) service.remove_history_entry(item.text, item.imageUri);
             }
             reload_data();
           }
@@ -376,7 +385,7 @@ public class ClipboardManagerView extends LinearLayout
               save_pinned(ctx, pinned);
             }
             ClipboardHistoryService service = ClipboardHistoryService.get_service(ctx);
-            if (service != null) service.remove_history_entry(item.text);
+            if (service != null) service.remove_history_entry(item.text, item.imageUri);
             reload_data();
           }
           else if (which == 2)
@@ -516,6 +525,15 @@ public class ClipboardManagerView extends LinearLayout
     {
       return new ClipItem(false, null, label, isPinned, imageUri, mimeType, true);
     }
+
+    String getIdentifier()
+    {
+      if (isImage && imageUri != null)
+      {
+        return imageUri.toString();
+      }
+      return text != null ? text : "";
+    }
   }
 
   // --- Recycler Adapter ---
@@ -599,7 +617,7 @@ public class ClipboardManagerView extends LinearLayout
         if (_isEditMode)
         {
           ch.indicator.setVisibility(View.VISIBLE);
-          boolean selected = _selectedItems.contains(item.text);
+          boolean selected = _selectedItems.contains(item.getIdentifier());
           ch.indicator.setAlpha(selected ? 1.0f : 0.3f);
           ch.indicator.setImageResource(selected ? R.drawable.ic_check : R.drawable.ic_tool_select_all);
         }
@@ -611,13 +629,14 @@ public class ClipboardManagerView extends LinearLayout
         ch.container.setOnClickListener(v -> {
           if (_isEditMode)
           {
-            if (_selectedItems.contains(item.text))
+            String id = item.getIdentifier();
+            if (_selectedItems.contains(id))
             {
-              _selectedItems.remove(item.text);
+              _selectedItems.remove(id);
             }
             else
             {
-              _selectedItems.add(item.text);
+              _selectedItems.add(id);
             }
             notifyItemChanged(position);
           }
