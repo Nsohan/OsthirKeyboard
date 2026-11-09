@@ -1,6 +1,7 @@
 package com.nhs.customkeyboard;
 
 import android.content.Context;
+import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Color;
 import android.graphics.drawable.GradientDrawable;
@@ -17,6 +18,7 @@ import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -31,6 +33,7 @@ import com.nhs.customkeyboard.tasker.MaterialSymbolPickerDialog;
 import com.nhs.customkeyboard.tasker.MaterialSymbols;
 import com.nhs.customkeyboard.textexpander.TextExpanderEngine;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
@@ -48,6 +51,8 @@ public class TaskerAutomationBuilderActivity extends AppCompatActivity
 
     private LinearLayout _tasks_container;
     private TextView _error_text;
+    private SeekBar _timeout_seekbar;
+    private TextView _timeout_val_text;
 
     private final List<TaskRow> _task_rows = new ArrayList<>();
     private List<String> _cached_tasker_tasks = new ArrayList<>();
@@ -126,6 +131,37 @@ public class TaskerAutomationBuilderActivity extends AppCompatActivity
 
         _tasks_container = findViewById(R.id.tab_tasks_container);
         _error_text = findViewById(R.id.tab_error_text);
+        _timeout_seekbar = findViewById(R.id.tab_timeout_seekbar);
+        _timeout_val_text = findViewById(R.id.tab_timeout_val);
+
+        if (_timeout_seekbar != null)
+        {
+            _timeout_seekbar.setMax(120);
+            _timeout_seekbar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener()
+            {
+                @Override
+                public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser)
+                {
+                    int sec = Math.max(1, progress);
+                    if (_timeout_val_text != null)
+                    {
+                        _timeout_val_text.setText(getString(R.string.tasker_builder_timeout_unit_sec, sec));
+                    }
+                }
+
+                @Override
+                public void onStartTrackingTouch(SeekBar seekBar) {}
+
+                @Override
+                public void onStopTrackingTouch(SeekBar seekBar) {}
+            });
+        }
+
+        View guideBtn = findViewById(R.id.tab_view_guide_button);
+        if (guideBtn != null)
+        {
+            guideBtn.setOnClickListener(v -> startActivity(new Intent(this, TaskerAutomationGuideActivity.class)));
+        }
 
         // Pre-query Tasker tasks in background
         new Thread(() -> {
@@ -174,6 +210,30 @@ public class TaskerAutomationBuilderActivity extends AppCompatActivity
         if (_task_rows.isEmpty())
         {
             add_task_row("", "", MaterialSymbols.DEFAULT_ICON);
+        }
+
+        long timeoutMs = 60000;
+        if (config != null)
+        {
+            timeoutMs = config.timeout_ms;
+        }
+        else if (stored != null)
+        {
+            try
+            {
+                JSONObject obj = new JSONObject(stored);
+                timeoutMs = Long.parseLong(obj.optString(TaskerAutomationConfig.KEY_TIMEOUT_MS, "60000"));
+            }
+            catch (Exception ignored) {}
+        }
+        int timeoutSec = (int) Math.max(1, Math.min(120, timeoutMs / 1000));
+        if (_timeout_seekbar != null)
+        {
+            _timeout_seekbar.setProgress(timeoutSec);
+        }
+        if (_timeout_val_text != null)
+        {
+            _timeout_val_text.setText(getString(R.string.tasker_builder_timeout_unit_sec, timeoutSec));
         }
     }
 
@@ -382,7 +442,35 @@ public class TaskerAutomationBuilderActivity extends AppCompatActivity
 
         try
         {
-            root.put(TaskerAutomationConfig.KEY_TIMEOUT_MS, "15000");
+            int timeoutSec = _timeout_seekbar != null ? Math.max(1, _timeout_seekbar.getProgress()) : 60;
+            String replaceTrigger = "##";
+            String appendTrigger = "@@";
+            JSONArray patterns = null;
+
+            String stored = TaskerAutomationManager.load(this);
+            if (stored != null)
+            {
+                try
+                {
+                    JSONObject existing = new JSONObject(stored);
+                    replaceTrigger = existing.optString(TaskerAutomationConfig.KEY_REPLACE_TRIGGER, "##");
+                    appendTrigger = existing.optString(TaskerAutomationConfig.KEY_APPEND_TRIGGER, "@@");
+                    patterns = existing.optJSONArray(TaskerAutomationConfig.KEY_EXPAND_PATTERNS);
+                }
+                catch (Exception ignored) {}
+            }
+            if (replaceTrigger == null || replaceTrigger.trim().isEmpty())
+                replaceTrigger = "##";
+            if (appendTrigger == null || appendTrigger.trim().isEmpty())
+                appendTrigger = "@@";
+
+            root.put(TaskerAutomationConfig.KEY_REPLACE_TRIGGER, replaceTrigger);
+            root.put(TaskerAutomationConfig.KEY_APPEND_TRIGGER, appendTrigger);
+            root.put(TaskerAutomationConfig.KEY_TIMEOUT_MS, String.valueOf(timeoutSec * 1000));
+            if (patterns != null)
+            {
+                root.put(TaskerAutomationConfig.KEY_EXPAND_PATTERNS, patterns);
+            }
 
             int validCount = 0;
             for (int i = 0; i < _task_rows.size(); i++)

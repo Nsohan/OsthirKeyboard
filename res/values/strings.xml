@@ -371,22 +371,22 @@
     <string name="pref_default_layout_last_used">Last used layout</string>
 
     <string name="pref_category_tasker">Tasker Automation</string>
-    <string name="pref_tasker_automation_title">Tasker Automation</string>
-    <string name="pref_tasker_automation_summary_configured">%1$d task(s) configured</string>
-    <string name="pref_tasker_automation_summary_empty">Not configured</string>
+    <string name="pref_tasker_automation_title">Automation Json</string>
+    <string name="pref_tasker_automation_summary_configured">Import, export, or edit raw JSON • %1$d task(s) configured</string>
+    <string name="pref_tasker_automation_summary_empty">Import, export, or edit raw JSON (empty)</string>
     <string name="pref_tasker_plugins_link_title">Get AM Tasker Plugins</string>
     <string name="pref_tasker_plugins_link_summary">Tasker plugins for this keyboard (send/return text, request IDs, and more) - opens the releases page</string>
     <string name="pref_tasker_guide_title">How to use Tasker Automation</string>
     <string name="pref_tasker_guide_summary">Full walkthrough: triggers, expand patterns, the config format, and how to build the Tasker task side</string>
     <string name="tasker_guide_activity_title">Tasker Automation Guide</string>
-    <string name="tasker_dialog_title">Tasker Automation</string>
+    <string name="tasker_dialog_title">Automation Json</string>
     <string name="tasker_error_timeout">Tasker task timed out or did not respond</string>
     <string name="tasker_error_task_failed">Tasker reported the task failed</string>
     <string name="tasker_error_generic">Could not reach Tasker. Is it installed and is \"Allow External Access\" enabled?</string>
 
-    <string name="pref_tasker_builder_title">Automation Builder</string>
+    <string name="pref_tasker_builder_title">Tasker Automation</string>
     <string name="pref_tasker_builder_summary">Edit the Tasker Automation config with a guided form instead of raw JSON</string>
-    <string name="tasker_builder_activity_title">Automation Builder</string>
+    <string name="tasker_builder_activity_title">Tasker Automation</string>
     <string name="tasker_builder_activity_subtitle">Build the Tasker Automation config without hand-writing JSON</string>
     <string name="tasker_builder_section_global">Triggers</string>
     <string name="tasker_builder_replace_trigger_label">nhck_replace</string>
@@ -433,6 +433,22 @@
     <string name="tasker_builder_select_icon">Select Icon</string>
     <string name="text_expander_task_dropdown_hint">Select Tasker Task (optional)</string>
     <string name="tasker_builder_saved_toast">Tasker automation saved</string>
+
+    <!-- Tasker Automation Builder Guide & Timeout -->
+    <string name="tasker_builder_timeout_title">Tasker Timeout</string>
+    <string name="tasker_builder_timeout_summary">Wait time for Tasker tasks to reply</string>
+    <string name="tasker_builder_timeout_unit_sec">%1$ds</string>
+    <string name="tasker_builder_guide_card_title">HOW TO USE TASKER TASKS</string>
+    <string name="tasker_builder_guide_tools_title">Suggestion Bar Tools</string>
+    <string name="tasker_builder_guide_tools_desc">Add tasks directly to your keyboard suggestion bar from Settings &gt; Suggestion Bar Tools &gt; Add Tasker Task.</string>
+    <string name="tasker_builder_guide_tools_chip">Settings → Suggestion Bar Tools</string>
+    <string name="tasker_builder_guide_layout_title">Keyboard Layout Keys</string>
+    <string name="tasker_builder_guide_layout_desc">Assign tasks to any key or swipe gesture in custom layout XML using task:name.</string>
+    <string name="tasker_builder_guide_layout_chip">c=\"task:task1\"</string>
+    <string name="tasker_builder_guide_triggers_title">Inline Typing Triggers</string>
+    <string name="tasker_builder_guide_triggers_desc">Type anywhere to run tasks instantly: @@name replaces just the trigger, while ##name replaces the whole text field.</string>
+    <string name="tasker_builder_guide_triggers_chip">@@task1  or  ##task1</string>
+    <string name="tasker_builder_guide_full_btn">View Full Tasker Guide</string>
 
     <string name="settings_title" translatable="false">Settings</string>
     <string name="pref_screen_languages_title" translatable="false">Languages &amp; Layouts</string>
